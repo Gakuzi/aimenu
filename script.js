@@ -1,8 +1,6 @@
-// IMPORTANT: The GoogleGenAI module is now imported dynamically inside generateWithAI()
-// to ensure the app can start and function offline without relying on the network.
-
 // This placeholder will be replaced by the GitHub Action secret
 const GEMINI_API_KEY = "__GEMINI_API_KEY__";
+const USER_API_KEY_STORAGE_KEY = 'userGeminiApiKey';
 
 const state = {
     settings: {
@@ -25,6 +23,38 @@ const closeSettingsBtn = document.getElementById('close-settings-btn');
 const settingsModal = document.getElementById('settings-modal');
 const preloader = document.getElementById('preloader');
 const toast = document.getElementById('toast');
+// API Key UI elements
+const apiKeyInput = document.getElementById('api-key-input');
+const toggleApiKeyVisibilityBtn = document.getElementById('toggle-api-key-visibility');
+const checkApiKeyBtn = document.getElementById('check-api-key-btn');
+const clearApiKeyBtn = document.getElementById('clear-api-key-btn');
+const apiKeyStatus = document.getElementById('api-key-status');
+
+
+// --- Key Management ---
+function getUserApiKey() {
+    return localStorage.getItem(USER_API_KEY_STORAGE_KEY);
+}
+
+function saveUserApiKey(key) {
+    localStorage.setItem(USER_API_KEY_STORAGE_KEY, key);
+}
+
+function clearUserApiKey() {
+    localStorage.removeItem(USER_API_KEY_STORAGE_KEY);
+}
+
+function getActiveApiKey() {
+    const userKey = getUserApiKey();
+    if (userKey && userKey.trim() !== '') {
+        return userKey;
+    }
+    if (GEMINI_API_KEY && GEMINI_API_KEY !== "__GEMINI_API_KEY__") {
+        return GEMINI_API_KEY;
+    }
+    return null;
+}
+
 
 // --- UI Logic ---
 
@@ -259,13 +289,7 @@ function processGeneratedPlan(plan) {
 
 async function generatePlan() {
     if (state.aiStatus !== 'ready') {
-        const useFallback = confirm("AI-функции недоступны. Использовать локальную базу данных для генерации простого меню?");
-        if (useFallback) {
-            showPreloader();
-            const plan = generateWithLocalDB();
-            processGeneratedPlan(plan);
-            hidePreloader();
-        }
+        showToast("AI недоступен. Проверьте ключ в настройках.", "warning");
         return;
     }
 
@@ -275,10 +299,8 @@ async function generatePlan() {
         processGeneratedPlan(plan);
         showToast("Меню сгенерировано с помощью Gemini!");
     } catch (error) {
-        console.error("AI generation failed, falling back to local DB:", error);
-        showToast("Ошибка AI. Используется локальная база.", 'warning', 4000);
-        const plan = generateWithLocalDB();
-        processGeneratedPlan(plan);
+        console.error("AI generation failed:", error);
+        showToast("Ошибка генерации. Попробуйте еще раз.", 'warning', 4000);
     } finally {
         hidePreloader();
     }
@@ -290,92 +312,90 @@ function updateAIStatusUI() {
     const modalIndicator = document.getElementById('ai-status-indicator');
     const headerIndicator = document.getElementById('header-ai-status');
     
-    if (!modalIndicator && !headerIndicator) return;
+    if (!modalIndicator || !headerIndicator) return;
 
     let statusText = 'Проверка...';
     let statusTitle = 'Статус AI: Проверка...';
-    const statusClass = state.aiStatus; // 'checking', 'ready', 'unavailable'
+    const statusClass = state.aiStatus;
 
     switch(state.aiStatus) {
         case 'ready':
-            statusText = 'Готово';
-            statusTitle = 'Статус AI: Готово';
+            statusText = getUserApiKey() ? 'Готово (ваш ключ)' : 'Готово';
+            statusTitle = `Статус AI: ${statusText}`;
             break;
         case 'unavailable':
             statusText = 'Недоступно';
-            statusTitle = 'Статус AI: Недоступно';
+            statusTitle = 'Статус AI: Ключ не настроен или недействителен.';
             break;
     }
     
-    // Update modal indicator
     if (modalIndicator) {
         const textEl = modalIndicator.querySelector('.status-text');
         modalIndicator.className = `ai-status-indicator ${statusClass}`;
         if(textEl) textEl.textContent = statusText;
     }
 
-    // Update header indicator
     if (headerIndicator) {
         headerIndicator.className = `header-status ${statusClass}`;
         headerIndicator.title = statusTitle;
     }
 }
 
-async function checkAIStatus() {
-    // No need to change status if it's already 'ready'
-    if (state.aiStatus === 'ready') return;
-
-    state.aiStatus = 'checking';
-    updateAIStatusUI();
-
-    if (GEMINI_API_KEY === "__GEMINI_API_KEY__" || !GEMINI_API_KEY) {
-        state.aiStatus = 'unavailable';
-        updateAIStatusUI();
-        console.warn("AI Status: Unavailable (API key placeholder not replaced).");
-        return;
-    }
-
+async function testApiKey(key) {
+    if (!key || key.trim() === '') return false;
+    
     let GoogleGenAI;
     try {
         ({ GoogleGenAI } = await import("https://esm.run/@google/generative-ai"));
-        const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-        
-        // Lightweight check to validate key and connectivity
+        const ai = new GoogleGenAI({ apiKey: key });
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: "hi",
-            config: {
-                thinkingConfig: { thinkingBudget: 0 } // Fast and cheap
-            }
+            config: { thinkingConfig: { thinkingBudget: 0 } }
         });
-        
-        if (response && response.text) {
-             state.aiStatus = 'ready';
-             console.log("AI Status: Ready.");
-        } else {
-            throw new Error("Invalid response from AI check.");
-        }
+        return !!(response && response.text);
     } catch (error) {
-        state.aiStatus = 'unavailable';
-        console.error("AI Status Check Failed:", error);
-    } finally {
-        updateAIStatusUI();
+        console.error("API Key test failed:", error);
+        return false;
     }
+}
+
+async function checkAIStatus() {
+    state.aiStatus = 'checking';
+    updateAIStatusUI();
+
+    const apiKey = getActiveApiKey();
+    if (!apiKey) {
+        state.aiStatus = 'unavailable';
+        updateAIStatusUI();
+        console.warn("AI Status: Unavailable (No active API key).");
+        return;
+    }
+    
+    const isValid = await testApiKey(apiKey);
+    state.aiStatus = isValid ? 'ready' : 'unavailable';
+    const keySource = getUserApiKey() ? 'User' : 'Built-in';
+    console.log(`AI Status: ${state.aiStatus}. Key source: ${keySource}`);
+    updateAIStatusUI();
 }
 
 
 // --- Gemini AI Integration ---
 async function generateWithAI() {
+    const apiKey = getActiveApiKey();
+    if (!apiKey) {
+        throw new Error("API-ключ не настроен.");
+    }
+    
     let GoogleGenAI, Type;
     try {
-        // Dynamically import the module ONLY when needed.
         ({ GoogleGenAI, Type } = await import("https://esm.run/@google/generative-ai"));
     } catch (e) {
         console.error("Failed to load GoogleGenAI module:", e);
-        throw new Error("Could not load AI module. Check network connection.");
+        throw new Error("Не удалось загрузить модуль AI. Проверьте подключение к сети.");
     }
 
-    const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+    const ai = new GoogleGenAI({ apiKey: apiKey });
 
     const prompt = `
         Создай план питания на ${state.settings.days} дней для ${state.settings.people} человек.
@@ -477,11 +497,67 @@ function setupEventListeners() {
         updateSettingsUI(); saveState();
     });
 
+    if (toggleApiKeyVisibilityBtn) {
+        toggleApiKeyVisibilityBtn.addEventListener('click', () => {
+            const openIcon = toggleApiKeyVisibilityBtn.querySelector('.eye-open');
+            const closedIcon = toggleApiKeyVisibilityBtn.querySelector('.eye-closed');
+            if (apiKeyInput.type === 'password') {
+                apiKeyInput.type = 'text';
+                openIcon.style.display = 'none';
+                closedIcon.style.display = 'block';
+            } else {
+                apiKeyInput.type = 'password';
+                openIcon.style.display = 'block';
+                closedIcon.style.display = 'none';
+            }
+        });
+    }
+
+    if (checkApiKeyBtn) {
+        checkApiKeyBtn.addEventListener('click', async () => {
+            const key = apiKeyInput.value.trim();
+            if (!key) {
+                apiKeyStatus.textContent = 'Пожалуйста, введите ключ.';
+                apiKeyStatus.className = 'api-status-message error';
+                return;
+            }
+
+            apiKeyStatus.textContent = 'Проверка...';
+            apiKeyStatus.className = 'api-status-message loading';
+            checkApiKeyBtn.disabled = true;
+            apiKeyInput.disabled = true;
+
+            const isValid = await testApiKey(key);
+            
+            if (isValid) {
+                saveUserApiKey(key);
+                apiKeyStatus.textContent = 'Ключ действителен и сохранен!';
+                apiKeyStatus.className = 'api-status-message success';
+                await checkAIStatus(); // Update global status
+            } else {
+                apiKeyStatus.textContent = 'Ошибка: неверный ключ или проблема с сетью.';
+                apiKeyStatus.className = 'api-status-message error';
+            }
+            
+            checkApiKeyBtn.disabled = false;
+            apiKeyInput.disabled = false;
+        });
+    }
+
+    if (clearApiKeyBtn) {
+        clearApiKeyBtn.addEventListener('click', async () => {
+            clearUserApiKey();
+            apiKeyInput.value = '';
+            apiKeyStatus.textContent = 'Ваш ключ удален. Используется встроенная конфигурация.';
+            apiKeyStatus.className = 'api-status-message';
+            await checkAIStatus(); // Re-check with built-in key
+        });
+    }
+
     document.getElementById('generate-btn')?.addEventListener('click', generatePlan);
 
     document.getElementById('generate-from-settings-btn')?.addEventListener('click', () => {
         hideModal(settingsModal);
-        // Delay to allow modal animation to finish before heavy work
         setTimeout(generatePlan, 300);
     });
 
@@ -508,12 +584,10 @@ function setupEventListeners() {
         reader.onload = function(event) {
             try {
                 const importedState = JSON.parse(event.target.result);
-                // Reset state before applying imported data for a clean import
                  Object.assign(state, {
                     settings: { days: 7, people: 3 },
                     menu: null, recipes: {}, shoppingList: [],
                 });
-                // Defensively merge imported state
                 if (importedState.settings) Object.assign(state.settings, importedState.settings);
                 if (importedState.menu) state.menu = importedState.menu;
                 if (importedState.recipes) state.recipes = importedState.recipes;
@@ -553,6 +627,12 @@ function setupEventListeners() {
 function init() {
     loadState();
     updateSettingsUI();
+    
+    const userKey = getUserApiKey();
+    if (apiKeyInput && userKey) {
+        apiKeyInput.value = userKey;
+    }
+
     renderMenu();
     renderAllRecipes();
     renderShoppingList();

@@ -142,6 +142,12 @@ button {
 button:active {
     transform: scale(0.95);
 }
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
 
 .main-action-btn {
     width: 100%;
@@ -449,6 +455,95 @@ button:active {
     min-width: 2ch;
     text-align: center;
 }
+
+/* API Key Section in Settings */
+.api-key-section {
+    padding-top: 24px;
+    margin-top: 16px;
+    border-top: 1px solid #F0EDE7;
+}
+
+.api-key-section h3 {
+    margin: 0 0 8px;
+    font-size: 16pt;
+    color: var(--text-primary);
+}
+
+.api-key-section .description {
+    font-size: 13pt;
+    color: var(--text-secondary);
+    margin: 0 0 16px;
+    line-height: 1.5;
+}
+.api-key-section .description a {
+    color: var(--accent-main);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.api-key-input-wrapper {
+    position: relative;
+    margin-bottom: 16px;
+}
+
+#api-key-input {
+    width: 100%;
+    padding: 16px 50px 16px 16px;
+    border: 1px solid #EAE4DD;
+    border-radius: 12px;
+    font-size: 14pt;
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    font-family: var(--font-main);
+}
+#api-key-input::placeholder {
+    color: #b0a89f;
+}
+
+#toggle-api-key-visibility {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    color: var(--accent-secondary);
+}
+
+.api-key-actions {
+    display: flex;
+    gap: 12px;
+}
+#clear-api-key-btn {
+    flex-grow: 0;
+    flex-shrink: 0;
+    background-color: #f0ede7;
+    color: var(--text-secondary);
+}
+#check-api-key-btn {
+    flex-grow: 1;
+    padding: 16px;
+    font-size: 15pt;
+}
+
+.api-status-message {
+    margin-top: 12px;
+    min-height: 1.5em;
+    font-size: 13pt;
+    font-weight: bold;
+    text-align: center;
+    transition: color 0.3s ease;
+}
+.api-status-message.success {
+    color: var(--accent-success);
+}
+.api-status-message.error {
+    color: var(--accent-warning);
+}
+.api-status-message.loading {
+    color: var(--text-secondary);
+}
+
 
 .modal-actions {
     display: flex;

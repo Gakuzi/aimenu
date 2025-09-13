@@ -121,6 +121,23 @@
                 </div>
             </div>
 
+            <div class="api-key-section">
+                <h3>Подключение к Gemini</h3>
+                <p class="description">Если встроенный ключ не работает, вы можете использовать свой. Получите его в <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.</p>
+                <div class="api-key-input-wrapper">
+                    <input type="password" id="api-key-input" placeholder="Введите ваш API ключ...">
+                    <button id="toggle-api-key-visibility" class="icon-btn" aria-label="Показать/скрыть ключ">
+                        <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        <svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                    </button>
+                </div>
+                <div class="api-key-actions">
+                    <button id="clear-api-key-btn" class="secondary-action-btn">Очистить</button>
+                    <button id="check-api-key-btn" class="main-action-btn">Проверить и сохранить</button>
+                </div>
+                <div id="api-key-status" class="api-status-message"></div>
+            </div>
+
             <div class="modal-actions">
                 <button id="import-btn" class="secondary-action-btn">Импорт</button>
                 <input type="file" id="import-file-input" style="display: none;" accept=".json">
