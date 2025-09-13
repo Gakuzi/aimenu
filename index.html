@@ -2,167 +2,147 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Меню на неделю</title>
-    
-    <!-- PWA for iOS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Меню семьи Климовых</title>
+
+    <!-- PWA-like behavior for iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Меню">
-    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBmaWxsPSIjOEI1RTNDIiBkPSJNNzguOCw1My4yYy0xMS41LDAtMjEuMyw2LjEtMjYuNCwxNS41Yy0wLjktNC4yLTMuNi0xNC4xLTkuOS0xOS44Yy04LjItNy40LTE3LjUtOS0yMS4yLTguNmMtMC43LDAuMS0xLjMsMC43LTEuMywxLjRjMCwwLjYsMC40LDEuMSwxLDEuM2MyLjYsMC45LDguMSwyLjMsMTQuNyw4LjJjNy40LDYuNywxMC4xLDE4LjUsMTAuNCwxOS44YzAuMSwwLjQsMC4yLDAuOCwwLjQsMS4yYzAuMywwLjgsMC44LDEuNSwxLjQsMi4xYzUuMSw1LjEsMTIuMSw4LjIsMTkuOCw4LjJjMTUuNSwwLDI4LTEyLjUsMjgtMjhDNzguOCw1My4yLDc4LjgsNTMuMiw3OC44LDUzLjJ6Ii8+PHBhdGggZmlsbD0iI0Q0QTM3MyIgZD0iTTc4LjgsMC4xQzYzLjIsMC4xLDUwLjgsMTIuNiw1MC44LDI4LjJjMCwzLjUsMC42LDYuOCwxLjgsOS45QzU2LDQwLjUsNTguMyw0Myw2MSw0NS40YzAuNiwwLjUsMS40LDAuNSwxLjksMGMxLjItMS4yLDE3LjYtMTcuNSwxNy42LTE3LjVjMy44LTMuOCwzLjgtMTAsMC0xMy44bC03LjgtNy44Yy0xLjgtMS44LTQuMy0yLjgtNi45LTIuOEM2NC4xLDQuNyw2Mi41LDUuNiw2MS4zLDYuOGwtMy4zLDMuM2MtMS4yLTEuMi0yLjItMi42LTMtNC4xQzU2LjgsMi4zLDU4LjUsMC4xLDU5LjcsMC4xSDc4Ljh6Ii8+PHBhdGggZmlsbD0iI0Y5RjdGNCIgZmlsbC1vcGFjaXR5PSIwLjciIGQ0iTTUxLjMyMC44Yy0wLjgtMS43LTEuMy0zLjUtMS4zLTUuNGMwLTIuMywwLjctNC41LDItNi40Yy0xLjMtMC42LTIuNy0xLTQuMS0xLjNjLTIuMi0wLjUtNC41LTAuOC02LjgtMC44aC0xLjRjLTIuOSwwLTUuNiwwLjYtOC4xLDEuOGMtMC41LDAuMi0xLDAuNS0xLjUsMC45YzIuMywyLjMsMy44LDUuNSwzLjgsOS4yYzAsMy4yLTEuMSw2LjItMyw4LjVjMC42LDAuNCwxLjIsMC44LDEuOCwxLjNjMi4zLDEuOCw0LjMsNCw2LDYuNWMwLjUsMC44LDEuMSwxLjUsMS44LDIuMmMwLjEtMC4xLDAuMi0wLjMsMC4zLTAuNGMwLjktMS43LDEuNC0zLjYsMS40LTUuNkM12LjYsMjQuNCw1Mi4xLDIyLjUsNTEuMywyMC44eiIvPjwvc3ZnPg==">
-    
+    <meta name="apple-mobile-web-app-title" content="Меню семьи Климовых">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDE4MCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiByeD0iNDAiIGZpbGw9IiNGOUY3RjQiLz4KPHBhdGggZD0iTTExMS4xMDkgNzEuODQzOEMxMTAuOTQxIDcwLjc1MzYgMTEwLjM5OSA2OS43NDU0IDEwOS41NzIgNjkuMDA0OEMxMDguNzQ1IDY4LjI2NDIgMTA3LjY4MSA2Ny44MzEgMTA2LjU3MSA2Ny44MzFINDguOTI4NkM0Ny44MTg0IDY3LjgzMSA0Ni43NTQ5IDY4LjI2NDIgNDUuOTI4IDY5LjAwNDhDNDUuMTAxMSA2OS43NDU0IDQ0LjU1OTIgNzAuNzUzNiA0NC4zOTA3IDcxLjg0MzhMNDAuNSA5My4wODkyVjEwMi4xNjdDNDAuNSAxMDQuNzkyIDQyLjM3OTQgMTA2LjY2NyA0NC44Mjg2IDEwNi42NjdINDAuNUM0MC41IDEwMy4yOSA0MS44NDM4IDEwMC4wNDkgNDQuMzkwNyA5Ny42MzA4TDExMS4xMDkgNzEuODQzOFoiIGZpbGw9IiM4QjVFM0MiLz4KPHBhdGggZD0iTTk2LjQyODYgMTE4LjVIMTMzLjI1N0MxMzQuMDM5IDExOC41IDEzNC44MDYgMTE4LjIzOCAxMzUuMzkzIDExNy43N0MxMzUuOTggMTE3LjMwMyAxMzYuMzIxIDExNi42NTQgMTM2LjM0OCAxMTUuOTY0TDEzOS41IDc1LjA4OTJWMzguNzVDMTM5LjUgMzYuMzIxOCAxMzcuNjIxIDM0LjQ0MjMgMTM1LjE3OSA MzQuNDQyM0g5MS41Qzg5LjA1NzcgMzQuNDQyMyA4Ny4xNzg2IDM2LjMyMTggODcuMTc4NiAzOC43NVYxMDIuMTY3Qzg3LjE3ODYgMTA0Ljc5MiA4OS4wNTc3IDEwNi42NjcgOTEuNSAxMDYuNjY3SDk2LjQyODZWMTE4LjVaIiBmaWxsPSIjRDNBMzcyIi8+Cjwvc3ZnPgo=">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Lato:wght@400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div id="app-container">
-        
-        <div id="loader" class="loader-overlay">
-            <div class="loader-content">
-                <div class="spinner"></div>
-                <p>Gemini создаёт ваше меню...</p>
-                <span>Это может занять до 30 секунд</span>
-            </div>
-        </div>
-
-        <!-- Экран настроек -->
-        <main id="settings-screen" class="screen is-active" data-screen="settings">
-            <header class="screen-header">
-                <h1>Настройки плана</h1>
-                <p>Укажите ваши предпочтения для создания идеального меню.</p>
-            </header>
-            <form id="settings-form" class="content-wrapper">
-                <div class="form-group">
-                    <label for="people-count">Количество человек</label>
-                    <div class="slider-container">
-                        <span id="people-value">2</span>
-                        <input type="range" id="people-count" min="1" max="8" value="2" step="1">
-                    </div>
+        <!-- Screens -->
+        <main id="main-content">
+            <section id="menu-screen" class="screen active">
+                <header class="screen-header">
+                    <h1>Меню на неделю</h1>
+                    <button id="settings-btn" class="icon-btn" aria-label="Открыть настройки">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    </button>
+                </header>
+                <div id="menu-content" class="content-area"></div>
+                 <div class="action-bar">
+                    <button id="generate-btn" class="main-action-btn">Сгенерировать меню</button>
                 </div>
-                <div class="form-group">
-                    <label for="day-count">Длительность (дней)</label>
-                    <div class="slider-container">
-                        <span id="days-value">7</span>
-                        <input type="range" id="day-count" min="3" max="14" value="7" step="1">
-                    </div>
+            </section>
+            
+            <section id="recipes-screen" class="screen">
+                <header class="screen-header">
+                    <h1>Все рецепты</h1>
+                </header>
+                <div id="recipes-list" class="content-area"></div>
+            </section>
+            
+            <section id="shopping-screen" class="screen">
+                <header class="screen-header">
+                     <h1>Список покупок</h1>
+                </header>
+                <div id="shopping-list-content" class="content-area">
+                    <div id="shopping-progress-container"></div>
+                    <ul id="shopping-list"></ul>
                 </div>
-                <div class="form-group">
-                    <label>Предпочтения</label>
-                    <div class="checkbox-group">
-                        <label><input type="checkbox" name="preference" value="no-pork">Без свинины</label>
-                        <label><input type="checkbox" name="preference" value="vegetarian">Вегетарианское</label>
-                        <label><input type="checkbox" name="preference" value="low-carb">Низкоуглеводное</label>
-                    </div>
+                <div class="action-bar">
+                    <button id="print-btn" class="secondary-action-btn">Версия для печати</button>
                 </div>
+            </section>
 
-                <div class="card ai-settings-card">
-                    <h2>Gemini AI</h2>
-                     <div class="form-group toggle-group">
-                        <label for="gemini-toggle">Использовать Gemini AI</label>
-                        <label class="switch">
-                            <input type="checkbox" id="gemini-toggle">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-                    <div class="form-group">
-                        <label for="gemini-api-key">API Ключ Gemini</label>
-                        <input type="password" id="gemini-api-key" placeholder="Введите ваш API ключ...">
-                        <p class="form-hint">Приложение может работать без ключа, используя встроенную базу рецептов.</p>
-                    </div>
-                </div>
-                
-                <button type="submit" id="create-menu-btn" class="btn btn-primary">Создать меню</button>
+            <section id="recipe-detail-screen" class="screen">
+                 <header class="screen-header">
+                    <button id="back-to-menu-btn" class="back-btn" aria-label="Назад к меню">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    <h1 id="recipe-detail-title">Рецепт</h1>
+                </header>
+                <div id="recipe-detail-content" class="content-area"></div>
+            </section>
 
-                <div class="data-sync-section">
-                    <h2>Синхронизация</h2>
-                    <p class="form-hint">Сохраните или загрузите ваш план питания для переноса между устройствами.</p>
-                    <div class="button-group">
-                        <button type="button" id="export-btn" class="btn btn-secondary">Экспорт</button>
-                        <label class="btn btn-secondary">Импорт<input type="file" id="import-file" style="display: none;"></label>
-                    </div>
-                </div>
-            </form>
-        </main>
-
-        <!-- Экран меню -->
-        <main id="menu-screen" class="screen" data-screen="menu">
-            <header class="screen-header">
-                <h1>Меню на неделю</h1>
-                <p>Ваш персональный план питания. Нажмите на блюдо для рецепта.</p>
-            </header>
-            <div id="menu-grid" class="content-wrapper">
-                <!-- Карточки дней будут вставлены сюда -->
-            </div>
-        </main>
-
-        <!-- Экран рецепта -->
-        <main id="recipe-screen" class="screen" data-screen="recipe">
-            <header class="screen-header with-back-button">
-                 <button class="back-btn" data-target="menu" aria-label="Назад к меню">&larr;</button>
-                <h1 id="recipe-name">Название блюда</h1>
-            </header>
-            <div class="content-wrapper">
-                <img id="recipe-image" src="" alt="Фото блюда" class="recipe-image-large">
-                <h2>Ингредиенты</h2>
-                <ul id="recipe-ingredients" class="ingredient-list"></ul>
-                <h2>Приготовление</h2>
-                <ol id="recipe-steps" class="step-list"></ol>
-                <button id="start-cooking-btn" class="btn btn-primary">Начать готовить</button>
-            </div>
         </main>
         
-        <!-- Экран приготовления -->
-        <main id="cooking-screen" class="screen" data-screen="cooking">
-            <header class="screen-header with-back-button">
-                 <button class="back-btn" data-target="recipe" aria-label="Назад к рецепту">&larr;</button>
-                <h1 id="cooking-recipe-name">Готовим: ...</h1>
-            </header>
-            <div id="cooking-steps-container" class="content-wrapper">
-                <!-- Шаги с таймерами будут здесь -->
-            </div>
-        </main>
-
-        <!-- Экран списка покупок -->
-        <main id="shopping-list-screen" class="screen" data-screen="shopping">
-            <header class="screen-header">
-                <h1>Список покупок</h1>
-                <p>Отмечайте купленные продукты.</p>
-            </header>
-            <div class="progress-container">
-                <div class="progress-bar-moon">
-                    <div id="progress-fill" class="progress-fill"></div>
-                </div>
-                <span id="progress-text">0%</span>
-            </div>
-            <div id="shopping-list-container" class="content-wrapper">
-                <!-- Список продуктов будет здесь -->
-            </div>
-            <div class="pwa-info content-wrapper">
-                <p><strong>Чтобы использовать как приложение:</strong><br>Откройте эту страницу в Safari → нажмите «Поделиться» → «Добавить на главный экран»</p>
-            </div>
-        </main>
+        <!-- Bottom Navigation -->
+        <nav id="bottom-nav">
+            <button class="nav-btn active" data-screen="menu-screen" aria-label="Меню">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+                <span>Меню</span>
+            </button>
+            <button class="nav-btn" data-screen="recipes-screen" aria-label="Рецепты">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                <span>Рецепты</span>
+            </button>
+            <button class="nav-btn" data-screen="shopping-screen" aria-label="Покупки">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                <span>Покупки</span>
+            </button>
+        </nav>
     </div>
 
-    <!-- Нижняя навигация -->
-    <nav class="bottom-nav">
-        <button class="nav-btn is-active" data-target="settings" aria-label="Настройки">
-            <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
-            <span>Настройки</span>
-        </button>
-        <button class="nav-btn" data-target="menu" aria-label="Меню">
-            <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
-            <span>Меню</span>
-        </button>
-        <button class="nav-btn" data-target="shopping" aria-label="Покупки">
-             <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
-            <span>Покупки</span>
-        </button>
-    </nav>
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content">
+            <header class="modal-header">
+                <h2>Настройки</h2>
+                <button id="close-settings-btn" class="icon-btn" aria-label="Закрыть настройки">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </header>
+            
+            <div class="setting-item">
+                <label for="days-input">Длительность (дней)</label>
+                <div class="stepper">
+                    <button id="days-decrement">-</button>
+                    <span id="days-value">7</span>
+                    <button id="days-increment">+</button>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <label for="people-input">Количество человек</label>
+                <div class="stepper">
+                    <button id="people-decrement">-</button>
+                    <span id="people-value">3</span>
+                    <button id="people-increment">+</button>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <label>Использовать Gemini AI</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="use-ai-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div id="ai-settings" class="setting-item hidden">
+                <label for="api-key-input">Gemini API Key</label>
+                <input type="password" id="api-key-input" placeholder="Введите ваш API ключ">
+            </div>
+
+            <div class="modal-actions">
+                <button id="import-btn" class="secondary-action-btn">Импорт</button>
+                <input type="file" id="import-file-input" style="display: none;" accept=".json">
+                <button id="export-btn" class="secondary-action-btn">Экспорт</button>
+            </div>
+            <p class="pwa-prompt">Чтобы использовать как приложение:<br>Нажмите «Поделиться» → «Добавить на главный экран».</p>
+        </div>
+    </div>
     
-    <script type="module" src="script.js"></script>
+    <!-- Preloader -->
+    <div id="preloader" class="preloader-overlay">
+        <div class="preloader-content">
+            <div class="spinner"></div>
+            <p>Планируем ваше меню...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="script.js" type="module"></script>
 </body>
 </html>

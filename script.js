@@ -1,455 +1,452 @@
-import { GoogleGenAI } from "https://esm.run/@google/genai";
+// IMPORTANT: This import is crucial for browser environments.
+import { GoogleGenAI, Type } from "https://esm.run/@google/generative-ai";
 
-document.addEventListener('DOMContentLoaded', () => {
+const state = {
+    settings: {
+        days: 7,
+        people: 3,
+        useAI: false,
+        apiKey: '',
+    },
+    menu: null,
+    recipes: {},
+    shoppingList: [],
+    currentScreen: 'menu-screen',
+    lastActiveTab: 'menu-screen',
+};
 
-    // --- DATABASE (Fallback) ---
-    const LOCAL_RECIPES_DB = [
-        { id: 'r1', name: 'Овсяная каша с ягодами', type: 'breakfast', ingredients: [{ name: 'Овсянка', amount: 50, unit: 'г' }, { name: 'Молоко', amount: 150, unit: 'мл' }, { name: 'Свежие ягоды', amount: 50, unit: 'г' }] , steps: [{ instruction: 'Сварите овсянку на молоке.', time: 5 }, { instruction: 'Добавьте ягоды.' }] },
-        { id: 'r2', name: 'Греческий салат', type: 'lunch', ingredients: [{ name: 'Огурцы', amount: 1, unit: 'шт' }, { name: 'Помидоры', amount: 2, unit: 'шт' }, { name: 'Сыр Фета', amount: 50, unit: 'г' }, { name: 'Оливковое масло', amount: 1, unit: 'ст.л.' }], steps: [{ instruction: 'Нарежьте овощи и сыр, заправьте маслом.' }] },
-        { id: 'r3', name: 'Куриная грудка с рисом', type: 'dinner', ingredients: [{ name: 'Куриная грудка', amount: 150, unit: 'г' }, { name: 'Рис', amount: 70, unit: 'г' }, { name: 'Брокколи', amount: 100, unit: 'г' }], steps: [{ instruction: 'Отварите рис.', time: 15 }, { instruction: 'Обжарьте куриную грудку.', time: 10 }, { instruction: 'Приготовьте брокколи на пару.', time: 7 }] },
-        { id: 'r4', name: 'Скрэмбл с тостом', type: 'breakfast', ingredients: [{ name: 'Яйцо', amount: 2, unit: 'шт' }, { name: 'Хлеб цельнозерновой', amount: 1, unit: 'ломтик' }, { name: 'Авокадо', amount: 0.5, unit: 'шт' }], steps: [{ instruction: 'Приготовьте скрэмбл.' }, { instruction: 'Подсушите хлеб и намажьте авокадо.' }] },
-        { id: 'r5', name: 'Чечевичный суп', type: 'lunch', ingredients: [{ name: 'Красная чечевица', amount: 100, unit: 'г' }, { name: 'Морковь', amount: 1, unit: 'шт' }, { name: 'Лук', amount: 1, unit: 'шт' }], steps: [{ instruction: 'Обжарьте лук и морковь.' }, { instruction: 'Добавьте чечевицу и воду, варите до готовности.', time: 25 }] },
-        { id: 'r6', name: 'Запеченный лосось со спаржей', type: 'dinner', ingredients: [{ name: 'Филе лосося', amount: 150, unit: 'г' }, { name: 'Спаржа', amount: 100, unit: 'г' }, { name: 'Лимон', amount: 0.5, unit: 'шт' }], steps: [{ instruction: 'Запекайте лосось со спаржей и лимоном в духовке.', time: 20 }] },
-    ];
-    
-    let activeRecipes = [...LOCAL_RECIPES_DB];
+// DOM Elements
+const screens = document.querySelectorAll('.screen');
+const navButtons = document.querySelectorAll('.nav-btn');
+const settingsBtn = document.getElementById('settings-btn');
+const closeSettingsBtn = document.getElementById('close-settings-btn');
+const settingsModal = document.getElementById('settings-modal');
+const preloader = document.getElementById('preloader');
+const toast = document.getElementById('toast');
 
-    // --- STATE MANAGEMENT ---
-    let state = {
-        settings: {
-            people: 2,
-            days: 7,
-            preferences: [],
-            useGemini: false,
-            apiKey: '',
-        },
-        menu: null,
-        shoppingList: null,
-        currentRecipeId: null,
-    };
+// --- UI Logic ---
 
-    const alarmSound = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YU9vT18=');
+function showScreen(screenId, isDetailView = false) {
+    state.currentScreen = screenId;
+    screens.forEach(screen => {
+        screen.classList.toggle('active', screen.id === screenId);
+    });
 
-    const loadState = () => {
-        try {
-            const savedState = localStorage.getItem('familyMenuState');
-            if (savedState) {
-                const loaded = JSON.parse(savedState);
-                // Merge carefully to avoid breaking app with old data structures
-                if (loaded.settings) state.settings = { ...state.settings, ...loaded.settings };
-                state.menu = loaded.menu || null;
-                state.shoppingList = loaded.shoppingList || null;
-                activeRecipes = loaded.activeRecipes || [...LOCAL_RECIPES_DB];
-            }
-        } catch (e) {
-            console.error("Failed to load state from localStorage:", e);
-            localStorage.removeItem('familyMenuState');
-        }
-    };
-
-    const saveState = () => {
-        try {
-            const stateToSave = {
-                settings: state.settings,
-                menu: state.menu,
-                shoppingList: state.shoppingList,
-                activeRecipes: activeRecipes
-            };
-            localStorage.setItem('familyMenuState', JSON.stringify(stateToSave));
-        } catch (e) {
-            console.error("Failed to save state to localStorage:", e);
-        }
-    };
-
-    // --- UI SELECTORS ---
-    const loader = document.getElementById('loader');
-    const navButtons = document.querySelectorAll('.nav-btn');
-    const settingsForm = document.getElementById('settings-form');
-    const createMenuBtn = document.getElementById('create-menu-btn');
-    
-    const peopleCountInput = document.getElementById('people-count');
-    const dayCountInput = document.getElementById('day-count');
-    const peopleValueSpan = document.getElementById('people-value');
-    const daysValueSpan = document.getElementById('days-value');
-    const geminiToggle = document.getElementById('gemini-toggle');
-    const geminiApiKeyInput = document.getElementById('gemini-api-key');
-
-    // --- NAVIGATION ---
-    const showScreen = (screenId) => {
-        const currentActive = document.querySelector('.screen.is-active');
-        const targetScreen = document.getElementById(`${screenId}-screen`);
-
-        if (!targetScreen || (currentActive && currentActive.id === targetScreen.id)) return;
-
-        if (currentActive) {
-            currentActive.classList.add('is-exiting');
-            currentActive.classList.remove('is-active');
-        }
-        
-        targetScreen.classList.remove('is-exiting');
-        targetScreen.classList.add('is-entering');
-        
-        requestAnimationFrame(() => {
-            targetScreen.classList.add('is-active');
-            targetScreen.classList.remove('is-entering');
-        });
-
+    if (!isDetailView) {
+        state.lastActiveTab = screenId;
         navButtons.forEach(btn => {
-            btn.classList.toggle('is-active', btn.dataset.target === screenId);
+            btn.classList.toggle('active', btn.dataset.screen === screenId);
         });
-    };
+    }
+}
 
-    // --- RENDERING ---
-    const renderSettings = () => {
-        peopleCountInput.value = state.settings.people;
-        peopleValueSpan.textContent = state.settings.people;
-        dayCountInput.value = state.settings.days;
-        daysValueSpan.textContent = state.settings.days;
-        geminiToggle.checked = state.settings.useGemini;
-        geminiApiKeyInput.value = state.settings.apiKey;
-        document.querySelectorAll('#settings-form input[name="preference"]').forEach(cb => {
-            cb.checked = state.settings.preferences.includes(cb.value);
-        });
-    };
+function showModal(modal) {
+    modal.classList.add('visible');
+}
 
-    const renderMenu = () => {
-        const grid = document.getElementById('menu-grid');
-        if (!state.menu) {
-            grid.innerHTML = '<div class="card"><p>Меню еще не создано. Перейдите в настройки, чтобы сгенерировать план питания.</p></div>';
-            showScreen('settings');
-            return;
-        }
-        grid.innerHTML = '';
-        const weekdays = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
-        Object.keys(state.menu).sort().forEach((dateStr) => {
-            const dayData = state.menu[dateStr];
-            const date = new Date(dateStr);
-            const dayCard = document.createElement('div');
-            dayCard.className = 'card day-card';
-            
-            const lunchRecipe = activeRecipes.find(r => r.name === dayData.lunch);
-            const dinnerRecipe = activeRecipes.find(r => r.name === dayData.dinner);
-            
-            let content = `<h2>${weekdays[date.getDay()]}, ${date.toLocaleDateString('ru-RU')}</h2>`;
-            if (lunchRecipe) content += `<div class="meal-item" data-recipe-id="${lunchRecipe.id}"><span>Обед</span><p>${lunchRecipe.name}</p></div>`;
-            if (dinnerRecipe) content += `<div class="meal-item" data-recipe-id="${dinnerRecipe.id}"><span>Ужин</span><p>${dinnerRecipe.name}</p></div>`;
-            
-            dayCard.innerHTML = content;
-            grid.appendChild(dayCard);
-        });
-    };
-    
-    const renderRecipe = (recipeId) => {
-        state.currentRecipeId = recipeId;
-        saveState();
-        const recipe = activeRecipes.find(r => r.id === recipeId);
-        if (!recipe) return;
+function hideModal(modal) {
+    modal.classList.remove('visible');
+}
 
-        document.getElementById('recipe-name').textContent = recipe.name;
-        document.getElementById('recipe-image').src = `https://placeholder.co/600x400/${'D4A373'.substring(1)}/${'F9F7F4'.substring(1)}?text=${encodeURIComponent(recipe.name)}`;
-        
-        const ingredientsList = document.getElementById('recipe-ingredients');
-        ingredientsList.innerHTML = recipe.ingredients.map(ing => `<li>${ing.name} - ${ing.amount * state.settings.people} ${ing.unit}</li>`).join('');
-        
-        const stepsList = document.getElementById('recipe-steps');
-        stepsList.innerHTML = recipe.steps.map(step => `<li>${step.instruction} ${step.time ? `(${step.time} мин)`: ''}</li>`).join('');
-        
-        showScreen('recipe');
-    };
-    
-    const renderShoppingList = () => {
-        const container = document.getElementById('shopping-list-container');
-        if (!state.shoppingList || state.shoppingList.length === 0) {
-            container.innerHTML = '<div class="card"><p>Список покупок пуст. Сначала сгенерируйте меню.</p></div>';
-            updateProgress(0, 0);
-            return;
-        }
-        container.innerHTML = '';
-        let purchasedCount = 0;
-        state.shoppingList.forEach((item, index) => {
-            const listItem = document.createElement('div');
-            listItem.className = `list-item ${item.purchased ? 'purchased' : ''}`;
-            listItem.dataset.index = index;
-            listItem.innerHTML = `
-                <div class="checkbox"></div>
-                <div class="item-details">
-                    <div class="item-name">${item.name}</div>
-                    <div class="item-amount">${item.totalAmount.toFixed(1)} ${item.unit}</div>
+function showPreloader() {
+    preloader.classList.add('visible');
+}
+
+function hidePreloader() {
+    preloader.classList.remove('visible');
+}
+
+function showToast(message, duration = 3000) {
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, duration);
+}
+
+// --- Rendering ---
+
+function renderMenu() {
+    const content = document.getElementById('menu-content');
+    if (!state.menu || state.menu.length === 0) {
+        content.innerHTML = `<p class="placeholder">Нажмите "Сгенерировать меню", чтобы начать планирование.</p>`;
+        return;
+    }
+    content.innerHTML = state.menu.map(day => `
+        <div class="day-card">
+            <h2>${day.day}</h2>
+            ${day.meals.map(meal => `
+                <div class="meal" data-recipe-id="${meal.recipeId}">
+                    <h3>${meal.name}</h3>
+                    <p>${meal.type}</p>
                 </div>
-            `;
-            container.appendChild(listItem);
-            if (item.purchased) purchasedCount++;
-        });
-        updateProgress(purchasedCount, state.shoppingList.length);
-    };
+            `).join('')}
+        </div>
+    `).join('');
 
-    const updateProgress = (purchased, total) => {
-        const percentage = total > 0 ? (purchased / total) * 100 : 0;
-        document.getElementById('progress-fill').style.height = `${percentage}%`;
-        document.getElementById('progress-text').textContent = `${Math.round(percentage)}% куплено`;
-    };
+    document.querySelectorAll('.meal').forEach(el => {
+        el.addEventListener('click', () => {
+            renderRecipeDetail(el.dataset.recipeId);
+            showScreen('recipe-detail-screen', true);
+        });
+    });
+}
+
+function renderAllRecipes() {
+    const list = document.getElementById('recipes-list');
+     if (!state.recipes || Object.keys(state.recipes).length === 0) {
+        list.innerHTML = `<p class="placeholder">Здесь появятся рецепты после генерации меню.</p>`;
+        return;
+    }
+    list.innerHTML = Object.values(state.recipes).map(recipe => `
+         <div class="meal" data-recipe-id="${recipe.id}" style="border-bottom: 1px solid #F0EDE7; padding-bottom: 1rem; margin-bottom: 1rem;">
+            <h3>${recipe.name}</h3>
+        </div>
+    `).join('');
+
+    list.querySelectorAll('.meal').forEach(el => {
+         el.addEventListener('click', () => {
+            renderRecipeDetail(el.dataset.recipeId);
+            showScreen('recipe-detail-screen', true);
+        });
+    });
+}
+
+
+function renderRecipeDetail(recipeId) {
+    const recipe = state.recipes[recipeId];
+    if (!recipe) return;
+    const content = document.getElementById('recipe-detail-content');
+    document.getElementById('recipe-detail-title').textContent = recipe.name;
     
-    const renderCookingScreen = (recipeId) => {
-        const recipe = activeRecipes.find(r => r.id === recipeId);
-        if (!recipe) return;
-        
-        document.getElementById('cooking-recipe-name').textContent = `Готовим: ${recipe.name}`;
-        const container = document.getElementById('cooking-steps-container');
-        container.innerHTML = '';
-        
-        recipe.steps.forEach((step, index) => {
-            const stepEl = document.createElement('div');
-            stepEl.className = 'cooking-step' + (index === 0 ? ' is-active' : '');
-            stepEl.innerHTML = `<p>${index + 1}. ${step.instruction}</p>`;
-            if (step.time) {
-                stepEl.innerHTML += `<div class="timer" id="timer-${index}">${String(step.time).padStart(2, '0')}:00</div>
-                <button class="btn btn-secondary start-timer-btn" data-time="${step.time}" data-timer-id="${index}">Запустить таймер</button>`;
-            }
-            container.appendChild(stepEl);
-        });
-        showScreen('cooking');
-    };
+    content.innerHTML = `
+        <img src="https://placeholder.co/600x400/D4A373/8B5E3C?text=${encodeURIComponent(recipe.name)}" alt="${recipe.name}">
+        <h3>Ингредиенты</h3>
+        <ul>
+            ${recipe.ingredients.map(ing => `<li>${ing}</li>`).join('')}
+        </ul>
+        <h3>Инструкции</h3>
+        <ol>
+            ${recipe.instructions.map(step => `<li>${step}</li>`).join('')}
+        </ol>
+    `;
+}
 
-    // --- LOGIC ---
-    const handleCreateMenu = async () => {
-        createMenuBtn.disabled = true;
-        createMenuBtn.textContent = 'Генерация...';
-        
-        if (state.settings.useGemini && state.settings.apiKey) {
-            loader.classList.add('is-active');
-            try {
-                await generatePlanWithGemini();
-            } catch (error) {
-                console.error("Gemini AI Error:", error);
-                alert("Ошибка при генерации с помощью Gemini AI. Используется локальная база рецептов.");
-                generatePlanLocally();
-            } finally {
-                loader.classList.remove('is-active');
-            }
+
+function renderShoppingList() {
+    const list = document.getElementById('shopping-list');
+     if (state.shoppingList.length === 0) {
+        list.innerHTML = `<p class="placeholder">Список покупок пуст. Сгенерируйте меню.</p>`;
+        return;
+    }
+    list.innerHTML = state.shoppingList.map((item, index) => `
+        <li class="shopping-item ${item.checked ? 'checked' : ''}" data-index="${index}">
+            <span class="checkbox">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </span>
+            <div class="item-details">
+                <span class="item-name">${item.name}</span>
+                <span class="item-amount">${item.amount}</span>
+            </div>
+        </li>
+    `).join('');
+}
+
+
+// --- Data & Logic ---
+
+function saveState() {
+    localStorage.setItem('familyMenuState', JSON.stringify(state));
+}
+
+function loadState() {
+    const savedState = localStorage.getItem('familyMenuState');
+    if (savedState) {
+        Object.assign(state, JSON.parse(savedState));
+    }
+}
+
+function updateSettingsUI() {
+    document.getElementById('days-value').textContent = state.settings.days;
+    document.getElementById('people-value').textContent = state.settings.people;
+    document.getElementById('use-ai-toggle').checked = state.settings.useAI;
+    document.getElementById('api-key-input').value = state.settings.apiKey;
+    document.getElementById('ai-settings').classList.toggle('hidden', !state.settings.useAI);
+}
+
+async function generatePlan() {
+    showPreloader();
+    let plan;
+    try {
+        if (state.settings.useAI && state.settings.apiKey) {
+            plan = await generateWithAI();
         } else {
-            generatePlanLocally();
+            if (state.settings.useAI && !state.settings.apiKey) {
+                 showToast('API ключ Gemini не указан.');
+            }
+            plan = generateWithLocalDB();
         }
 
-        createMenuBtn.disabled = false;
-        createMenuBtn.textContent = 'Создать меню';
+        state.menu = plan.menu;
+        state.recipes = {};
+        plan.recipes.forEach(r => state.recipes[r.id] = r);
+        state.shoppingList = plan.shoppingList.map(item => ({...item, checked: false }));
+        
         saveState();
         renderMenu();
+        renderAllRecipes();
         renderShoppingList();
-        showScreen('menu');
-    };
+        showScreen(state.lastActiveTab);
 
-    const generatePlanLocally = () => {
-        activeRecipes = [...LOCAL_RECIPES_DB];
-        const { days } = state.settings;
-        state.menu = {};
-        const lunchOptions = activeRecipes.filter(r => r.type === 'lunch');
-        const dinnerOptions = activeRecipes.filter(r => r.type === 'dinner');
-
-        for (let i = 0; i < days; i++) {
-            const date = new Date();
-            date.setDate(date.getDate() + i);
-            const dateString = date.toISOString().split('T')[0];
-            state.menu[dateString] = {
-                lunch: lunchOptions[i % lunchOptions.length].name,
-                dinner: dinnerOptions[i % dinnerOptions.length].name,
-            };
+    } catch (error) {
+        console.error("Error generating plan:", error);
+        showToast("Ошибка генерации. Попробуйте снова.");
+        // Fallback to local DB if AI fails
+        if(state.settings.useAI) {
+            plan = generateWithLocalDB();
+            state.menu = plan.menu;
+            state.recipes = {};
+            plan.recipes.forEach(r => state.recipes[r.id] = r);
+            state.shoppingList = plan.shoppingList.map(item => ({...item, checked: false }));
+            saveState();
+            renderMenu();
+            renderAllRecipes();
+            renderShoppingList();
         }
-        generateShoppingList();
-    };
+    } finally {
+        hidePreloader();
+    }
+}
 
-    const generatePlanWithGemini = async () => {
-        const ai = new GoogleGenAI({ apiKey: state.settings.apiKey });
-        const model = 'gemini-2.5-flash';
+// --- Gemini AI Integration ---
+async function generateWithAI() {
+    if (!state.settings.apiKey) {
+        throw new Error("API key is missing.");
+    }
+    const ai = new GoogleGenAI({ apiKey: state.settings.apiKey });
+
+    const prompt = `
+        Создай план питания на ${state.settings.days} дней для ${state.settings.people} человек.
+        Включи завтрак, обед и ужин на каждый день.
+        Блюда должны быть разнообразными, вкусными и относительно простыми в приготовлении.
+        Для каждого блюда предоставь уникальный recipeId.
         
-        const prompt = `Создай план питания (обед и ужин) на ${state.settings.days} дней для ${state.settings.people} человек. Учти предпочтения: ${state.settings.preferences.join(', ') || 'нет'}. Не повторяй блюда. Верни ответ СТРОГО в формате JSON. JSON должен содержать два ключа: "menu" и "recipes". "menu": объект, где ключ - дата "YYYY-MM-DD", а значение - объект { "lunch": "Название блюда", "dinner": "Название блюда" }. "recipes": массив объектов, где каждый объект - это рецепт с полями: "id" (уникальная строка, например "g1"), "name" (строка), "type" ("lunch" или "dinner"), "ingredients" (массив объектов { "name": "...", "amount": ..., "unit": "..." } где amount - на ОДНОГО человека), и "steps" (массив объектов { "instruction": "...", "time": ... } где time - опциональное число в минутах).`;
+        В ответе должно быть 3 ключа: 'menu', 'recipes', 'shoppingList'.
         
-        const response = await ai.models.generateContent({
-            model: model,
-            contents: prompt,
-            config: { responseMimeType: "application/json" }
-        });
+        'menu' - это массив объектов, где каждый объект представляет день и содержит поля 'day' (e.g., "День 1") и 'meals' (массив объектов с полями 'type', 'name', 'recipeId').
         
-        const data = JSON.parse(response.text);
-
-        if (data.menu && data.recipes) {
-            activeRecipes = data.recipes;
-            state.menu = data.menu;
-            generateShoppingList();
-        } else {
-            throw new Error("Invalid JSON structure from Gemini");
-        }
-    };
-
-    const generateShoppingList = () => {
-        const requiredIngredients = {};
-        if (!state.menu) return;
-
-        Object.values(state.menu).forEach(day => {
-            [day.lunch, day.dinner].forEach(mealName => {
-                const recipe = activeRecipes.find(r => r.name === mealName);
-                if (!recipe || !recipe.ingredients) return;
-                recipe.ingredients.forEach(ing => {
-                    const key = `${ing.name.toLowerCase()}-${ing.unit}`;
-                    if (!requiredIngredients[key]) {
-                        requiredIngredients[key] = { name: ing.name, unit: ing.unit, totalAmount: 0 };
-                    }
-                    requiredIngredients[key].totalAmount += ing.amount * state.settings.people;
-                });
-            });
-        });
-        state.shoppingList = Object.values(requiredIngredients).map(item => ({...item, purchased: false}));
-    };
+        'recipes' - это массив объектов рецептов. Каждый рецепт должен содержать: 'id' (уникальный), 'name', 'ingredients' (массив строк с количеством, e.g., "Куриное филе - 500г"), и 'instructions' (массив строк с шагами).
+        
+        'shoppingList' - это массив объектов продуктов для покупки. Каждый объект должен содержать 'name' и 'amount' (e.g., "Куриное филе", "1.5кг"). Сгруппируй одинаковые ингредиенты со всех рецептов.
+    `;
     
-    // --- TIMERS ---
-    let activeTimers = {};
-    const startTimer = (durationMinutes, timerId) => {
-        if (activeTimers[timerId]) clearInterval(activeTimers[timerId].interval);
-
-        let totalSeconds = durationMinutes * 60;
-        const timerEl = document.getElementById(`timer-${timerId}`);
-        
-        const update = () => {
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = totalSeconds % 60;
-            timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-            
-            if (totalSeconds <= 0) {
-                clearInterval(activeTimers[timerId].interval);
-                timerEl.textContent = 'Готово!';
-                alarmSound.play();
-                const btn = document.querySelector(`.start-timer-btn[data-timer-id="${timerId}"]`);
-                if(btn) btn.disabled = false;
+    const responseSchema = {
+        type: Type.OBJECT,
+        properties: {
+            menu: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        day: { type: Type.STRING },
+                        meals: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    type: { type: Type.STRING },
+                                    name: { type: Type.STRING },
+                                    recipeId: { type: Type.STRING }
+                                },
+                                required: ["type", "name", "recipeId"]
+                            }
+                        }
+                    },
+                    required: ["day", "meals"]
+                }
+            },
+            recipes: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        id: { type: Type.STRING },
+                        name: { type: Type.STRING },
+                        ingredients: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        instructions: { type: Type.ARRAY, items: { type: Type.STRING } }
+                    },
+                    required: ["id", "name", "ingredients", "instructions"]
+                }
+            },
+            shoppingList: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        name: { type: Type.STRING },
+                        amount: { type: Type.STRING }
+                    },
+                    required: ["name", "amount"]
+                }
             }
-            totalSeconds--;
-        };
-        
-        update();
-        const interval = setInterval(update, 1000);
-        activeTimers[timerId] = { interval };
+        },
+        required: ["menu", "recipes", "shoppingList"]
     };
 
-    // --- DATA SYNC ---
-    const exportData = () => {
-        const dataStr = JSON.stringify({
-            menu: state.menu,
-            shoppingList: state.shoppingList,
-            activeRecipes: activeRecipes,
-            settings: state.settings
-        }, null, 2);
-        const blob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `family-menu-${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        alert('Файл с планом питания скачан!');
+    try {
+        const genAIResponse = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: responseSchema,
+            },
+        });
+        const jsonText = genAIResponse.text.trim();
+        return JSON.parse(jsonText);
+    } catch (error) {
+        console.error("Gemini AI error:", error);
+        showToast("Ошибка Gemini AI. Используется локальная база.");
+        return generateWithLocalDB();
+    }
+}
+
+
+// --- Local Fallback ---
+function generateWithLocalDB() {
+    // This is a simplified local fallback.
+    const localRecipes = {
+        '1': { id: '1', name: 'Овсяная каша с фруктами', ingredients: [`Овсяные хлопья - ${50 * state.settings.people}г`, `Молоко - ${150 * state.settings.people}мл`, `Банан - ${state.settings.people} шт`], instructions: ['Сварить кашу на молоке.', 'Нарезать банан и добавить в кашу.'] },
+        '2': { id: '2', name: 'Куриный суп', ingredients: [`Курица - ${200 * state.settings.people}г`, `Картофель - ${150 * state.settings.people}г`, `Морковь - ${50 * state.settings.people}г`, 'Лук - 1 шт'], instructions: ['Сварить бульон.', 'Добавить овощи и варить до готовности.'] },
+        '3': { id: '3', name: 'Гречка с котлетами', ingredients: [`Гречка - ${80 * state.settings.people}г`, `Фарш - ${150 * state.settings.people}г`], instructions: ['Отварить гречку.', 'Сформировать и пожарить котлеты.'] },
+        '4': { id: '4', name: 'Яичница с беконом', ingredients: [`Яйца - ${2 * state.settings.people} шт`, `Бекон - ${50 * state.settings.people}г`], instructions: ['Пожарить бекон.', 'Разбить яйца на сковороду и жарить до готовности.'] },
     };
 
-    const importData = (file) => {
+    const menu = [];
+    for (let i = 1; i <= state.settings.days; i++) {
+        menu.push({
+            day: `День ${i}`,
+            meals: [
+                { type: 'Завтрак', name: 'Овсяная каша с фруктами', recipeId: '1' },
+                { type: 'Обед', name: 'Куриный суп', recipeId: '2' },
+                { type: 'Ужин', name: 'Гречка с котлетами', recipeId: '3' },
+            ]
+        });
+    }
+    
+    // Simple aggregation for shopping list
+    const shoppingList = [
+        {name: 'Овсяные хлопья', amount: `${50 * state.settings.people * state.settings.days}г`},
+        {name: 'Курица', amount: `${200 * state.settings.people * state.settings.days}г`},
+        {name: 'Гречка', amount: `${80 * state.settings.people * state.settings.days}г`}
+    ];
+
+    return { menu, recipes: Object.values(localRecipes), shoppingList };
+}
+
+
+// --- Event Listeners ---
+
+function setupEventListeners() {
+    navButtons.forEach(btn => {
+        btn.addEventListener('click', () => showScreen(btn.dataset.screen));
+    });
+
+    settingsBtn.addEventListener('click', () => showModal(settingsModal));
+    closeSettingsBtn.addEventListener('click', () => hideModal(settingsModal));
+    settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) hideModal(settingsModal);
+    });
+
+    document.getElementById('days-increment').addEventListener('click', () => {
+        if (state.settings.days < 14) state.settings.days++;
+        updateSettingsUI(); saveState();
+    });
+    document.getElementById('days-decrement').addEventListener('click', () => {
+        if (state.settings.days > 1) state.settings.days--;
+        updateSettingsUI(); saveState();
+    });
+    document.getElementById('people-increment').addEventListener('click', () => {
+        if (state.settings.people < 10) state.settings.people++;
+        updateSettingsUI(); saveState();
+    });
+    document.getElementById('people-decrement').addEventListener('click', () => {
+        if (state.settings.people > 1) state.settings.people--;
+        updateSettingsUI(); saveState();
+    });
+
+    const useAiToggle = document.getElementById('use-ai-toggle');
+    useAiToggle.addEventListener('change', () => {
+        state.settings.useAI = useAiToggle.checked;
+        updateSettingsUI(); saveState();
+    });
+
+    const apiKeyInput = document.getElementById('api-key-input');
+    apiKeyInput.addEventListener('change', () => {
+        state.settings.apiKey = apiKeyInput.value;
+        saveState();
+    });
+    
+    document.getElementById('generate-btn').addEventListener('click', generatePlan);
+
+    document.getElementById('back-to-menu-btn').addEventListener('click', () => showScreen(state.lastActiveTab));
+
+    document.getElementById('shopping-list').addEventListener('click', (e) => {
+        const itemEl = e.target.closest('.shopping-item');
+        if (itemEl) {
+            const index = parseInt(itemEl.dataset.index, 10);
+            state.shoppingList[index].checked = !state.shoppingList[index].checked;
+            saveState();
+            renderShoppingList();
+        }
+    });
+
+    // Import / Export
+    document.getElementById('export-btn').addEventListener('click', () => {
+        const dataStr = JSON.stringify(state, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        const exportFileDefaultName = 'family_menu_plan.json';
+        let linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+    });
+
+    const importFileInput = document.getElementById('import-file-input');
+    document.getElementById('import-btn').addEventListener('click', () => importFileInput.click());
+    importFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = (event) => {
+        reader.onload = function(event) {
             try {
-                const importedData = JSON.parse(event.target.result);
-                if (importedData.menu && importedData.shoppingList && importedData.activeRecipes) {
-                    state.menu = importedData.menu;
-                    state.shoppingList = importedData.shoppingList;
-                    state.settings = importedData.settings || state.settings;
-                    activeRecipes = importedData.activeRecipes;
-                    saveState();
-                    renderSettings();
-                    renderMenu();
-                    renderShoppingList();
-                    showScreen('menu');
-                    alert('План успешно импортирован!');
-                } else {
-                    alert('Ошибка: неверный формат файла.');
-                }
-            } catch (e) {
-                alert('Ошибка: не удалось прочитать файл.');
-                console.error("Import error:", e);
+                const importedState = JSON.parse(event.target.result);
+                Object.assign(state, importedState);
+                saveState();
+                updateSettingsUI();
+                renderMenu();
+                renderAllRecipes();
+                renderShoppingList();
+                showToast("План успешно импортирован!");
+                hideModal(settingsModal);
+            } catch (err) {
+                showToast("Ошибка импорта: неверный формат файла.");
             }
         };
         reader.readAsText(file);
-    };
-    
-    // --- EVENT LISTENERS ---
-    navButtons.forEach(button => {
-        button.addEventListener('click', () => showScreen(button.dataset.target));
+        e.target.value = ''; // Reset input
     });
+}
 
-    settingsForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        handleCreateMenu();
-    });
+// --- App Initialization ---
+function init() {
+    loadState();
+    updateSettingsUI();
+    renderMenu();
+    renderAllRecipes();
+    renderShoppingList();
+    showScreen(state.currentScreen || 'menu-screen');
+    setupEventListeners();
+}
 
-    const updateSettings = () => {
-        state.settings.people = parseInt(peopleCountInput.value);
-        state.settings.days = parseInt(dayCountInput.value);
-        state.settings.useGemini = geminiToggle.checked;
-        state.settings.apiKey = geminiApiKeyInput.value;
-        state.settings.preferences = [...document.querySelectorAll('#settings-form input[name="preference"]:checked')].map(cb => cb.value);
-        saveState();
-    };
-    
-    peopleCountInput.addEventListener('input', () => { peopleValueSpan.textContent = peopleCountInput.value; });
-    dayCountInput.addEventListener('input', () => { daysValueSpan.textContent = dayCountInput.value; });
-    settingsForm.addEventListener('change', updateSettings);
-
-    document.getElementById('menu-grid').addEventListener('click', (e) => {
-        const mealItem = e.target.closest('.meal-item');
-        if (mealItem && mealItem.dataset.recipeId) {
-            renderRecipe(mealItem.dataset.recipeId);
-        }
-    });
-    
-    document.body.addEventListener('click', (e) => {
-        if (e.target.classList.contains('back-btn')) {
-            const targetScreen = e.target.dataset.target;
-            if (targetScreen === 'recipe') {
-                renderRecipe(state.currentRecipeId);
-            } else {
-               showScreen(targetScreen);
-            }
-        }
-        if (e.target.id === 'start-cooking-btn') renderCookingScreen(state.currentRecipeId);
-        if (e.target.classList.contains('start-timer-btn')) {
-            const time = e.target.dataset.time;
-            const timerId = e.target.dataset.timerId;
-            startTimer(parseInt(time), timerId);
-            e.target.disabled = true;
-            e.target.textContent = "Таймер запущен";
-        }
-    });
-
-    document.getElementById('shopping-list-container').addEventListener('click', (e) => {
-        const listItem = e.target.closest('.list-item');
-        if (listItem) {
-            const index = parseInt(listItem.dataset.index);
-            if (state.shoppingList[index]) {
-                state.shoppingList[index].purchased = !state.shoppingList[index].purchased;
-                saveState();
-                renderShoppingList();
-            }
-        }
-    });
-    
-    document.getElementById('export-btn').addEventListener('click', exportData);
-    document.getElementById('import-file').addEventListener('change', (e) => importData(e.target.files[0]));
-
-    // --- INITIALIZATION ---
-    const init = () => {
-        loadState();
-        renderSettings();
-        if (state.menu) {
-            renderMenu();
-            renderShoppingList();
-            showScreen('menu');
-        } else {
-            showScreen('settings');
-        }
-    };
-
-    init();
-});
+document.addEventListener('DOMContentLoaded', init);
