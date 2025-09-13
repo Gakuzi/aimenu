@@ -1,83 +1,105 @@
 // --- Константы и Глобальное Состояние ---
 
-// Этот плейсхолдер заменяется GitHub Action при сборке
 const GEMINI_API_KEY = "__GEMINI_API_KEY__"; 
 const USER_API_KEY_STORAGE_KEY = 'userGeminiApiKey';
+const API_MODE_STORAGE_KEY = 'userApiKeyMode';
 
 const state = {
     settings: {
         days: 7,
         people: 3,
-        apiKeyMode: 'auto', // 'auto' | 'force_builtin'
     },
     menu: null,
     recipes: {},
     shoppingList: [],
     currentScreen: 'menu-screen',
     lastActiveTab: 'menu-screen',
-    aiStatus: 'checking', // 'checking', 'ready-user', 'ready-builtin', 'unavailable'
 };
+
+const aiState = {
+    status: 'checking', // 'checking', 'ready-user', 'ready-builtin', 'unavailable'
+    mode: 'auto', // 'auto', 'force_user', 'force_builtin'
+    userKey: null,
+    userKeyValid: null,
+    builtinKeyValid: null,
+    lastError: null,
+    activeKeySource: null, // 'user' | 'builtin' | null
+};
+
 
 // --- DOM Элементы ---
 const screens = document.querySelectorAll('.screen');
 const navButtons = document.querySelectorAll('.nav-btn');
+const preloader = document.getElementById('preloader');
+const toast = document.getElementById('toast');
+
+// Общие настройки
 const settingsBtn = document.getElementById('settings-btn');
 const closeSettingsBtn = document.getElementById('close-settings-btn');
 const settingsModal = document.getElementById('settings-modal');
-const preloader = document.getElementById('preloader');
-const toast = document.getElementById('toast');
-// Элементы управления API ключом
-const apiKeyInput = document.getElementById('api-key-input');
-const toggleApiKeyVisibilityBtn = document.getElementById('toggle-api-key-visibility');
-const checkApiKeyBtn = document.getElementById('check-api-key-btn');
-const clearApiKeyBtn = document.getElementById('clear-api-key-btn');
-const apiKeyStatus = document.getElementById('api-key-status');
-const apiModeRadios = document.querySelectorAll('input[name="api-mode"]');
+
+// Диагностика AI
+const headerAiStatusBtn = document.getElementById('header-ai-status');
+const aiDiagnosticsModal = document.getElementById('ai-diagnostics-modal');
+const closeAiDiagBtn = document.getElementById('close-ai-diag-btn');
+const aiDiagStatusIndicator = document.getElementById('ai-diag-status-indicator');
+const aiDiagApiKeyInput = document.getElementById('ai-diag-api-key-input');
+const aiDiagToggleVisibilityBtn = document.getElementById('ai-diag-toggle-visibility');
+const aiDiagTestBtn = document.getElementById('ai-diag-test-btn');
+const aiDiagClearKeyBtn = document.getElementById('ai-diag-clear-key-btn');
+const aiDiagSaveBtn = document.getElementById('ai-diag-save-btn');
+const aiDiagModeRadios = document.querySelectorAll('input[name="ai-diag-api-mode"]');
+const aiDiagLog = document.getElementById('ai-diag-log');
+const aiDiagErrorDetails = document.getElementById('ai-diag-error-details');
 
 
-// --- Управление API Ключами ---
+// --- Управление API ---
 
-/** Получает API ключ, сохраненный пользователем. */
-function getUserApiKey() {
-    return localStorage.getItem(USER_API_KEY_STORAGE_KEY);
+function loadAiConfig() {
+    aiState.userKey = localStorage.getItem(USER_API_KEY_STORAGE_KEY);
+    aiState.mode = localStorage.getItem(API_MODE_STORAGE_KEY) || 'auto';
+    aiDiagApiKeyInput.value = aiState.userKey || '';
+    const activeRadio = document.querySelector(`input[name="ai-diag-api-mode"][value="${aiState.mode}"]`);
+    if (activeRadio) activeRadio.checked = true;
 }
 
-/** Сохраняет пользовательский API ключ в localStorage. */
-function saveUserApiKey(key) {
-    localStorage.setItem(USER_API_KEY_STORAGE_KEY, key);
-}
-
-/** Удаляет пользовательский API ключ из localStorage. */
-function clearUserApiKey() {
-    localStorage.removeItem(USER_API_KEY_STORAGE_KEY);
+function saveAiConfig() {
+    localStorage.setItem(USER_API_KEY_STORAGE_KEY, aiDiagApiKeyInput.value.trim());
+    const selectedMode = document.querySelector('input[name="ai-diag-api-mode"]:checked');
+    localStorage.setItem(API_MODE_STORAGE_KEY, selectedMode ? selectedMode.value : 'auto');
+    loadAiConfig();
 }
 
 /**
- * Определяет активный API ключ на основе выбранного режима.
- * @returns {{key: string|null, source: 'user'|'builtin'|null}} Объект с ключом и его источником.
+ * Определяет, какой ключ использовать на основе текущего состояния и режима.
+ * @returns {{key: string|null, source: 'user'|'builtin'|null}}
  */
-function getActiveApiKeyInfo() {
-    const userKey = getUserApiKey();
+function determineActiveKey() {
     const builtinKeyExists = GEMINI_API_KEY && GEMINI_API_KEY !== "__GEMINI_API_KEY__";
 
-    if (state.settings.apiKeyMode === 'force_builtin') {
-        return {
-            key: builtinKeyExists ? GEMINI_API_KEY : null,
-            source: 'builtin'
-        };
+    switch (aiState.mode) {
+        case 'force_user':
+            return { key: aiState.userKey, source: 'user' };
+        case 'force_builtin':
+            return { key: builtinKeyExists ? GEMINI_API_KEY : null, source: 'builtin' };
+        case 'auto':
+        default:
+            if (aiState.userKey && aiState.userKeyValid) {
+                return { key: aiState.userKey, source: 'user' };
+            }
+            if (builtinKeyExists && aiState.builtinKeyValid) {
+                return { key: GEMINI_API_KEY, source: 'builtin' };
+            }
+            // Fallback for generation attempt if validation state is unknown
+            if (aiState.userKey) {
+                return { key: aiState.userKey, source: 'user' };
+            }
+            if (builtinKeyExists) {
+                return { key: GEMINI_API_KEY, source: 'builtin' };
+            }
+            return { key: null, source: null };
     }
-
-    // Режим 'auto'
-    if (userKey) {
-        return { key: userKey, source: 'user' };
-    }
-    if (builtinKeyExists) {
-        return { key: GEMINI_API_KEY, source: 'builtin' };
-    }
-
-    return { key: null, source: null };
 }
-
 
 // --- Логика Интерфейса (UI) ---
 
@@ -238,7 +260,6 @@ function loadState() {
 
         const savedState = JSON.parse(savedStateJSON);
         
-        // Deep merge for settings to avoid losing new properties on load
         Object.assign(state.settings, savedState.settings);
         
         Object.assign(state, {
@@ -261,12 +282,6 @@ function updateSettingsUI() {
     const peopleValue = document.getElementById('people-value');
     if (daysValue) daysValue.textContent = state.settings.days;
     if (peopleValue) peopleValue.textContent = state.settings.people;
-    
-    // Update API mode radio buttons
-    const activeRadio = document.querySelector(`input[name="api-mode"][value="${state.settings.apiKeyMode}"]`);
-    if (activeRadio) {
-        activeRadio.checked = true;
-    }
 }
 
 function processGeneratedPlan(plan) {
@@ -283,38 +298,66 @@ function processGeneratedPlan(plan) {
 }
 
 async function generatePlan() {
-    if (!state.aiStatus.startsWith('ready')) {
-        showToast("AI недоступен. Проверьте статус и ключ в настройках.", "warning");
-        return;
+    const { key, source } = determineActiveKey();
+
+    if (!key || aiState.status === 'unavailable') {
+         showToast("AI недоступен. Откройте диагностику для решения проблемы.", "warning");
+         showModal(aiDiagnosticsModal);
+         runDiagnostics();
+         return;
     }
 
     showPreloader();
     try {
-        const plan = await generateWithAI();
+        const plan = await generateWithAI(key);
         processGeneratedPlan(plan);
-        showToast("Меню сгенерировано с помощью Gemini!");
+        showToast(`Меню сгенерировано! (ключ: ${source === 'user' ? 'ваш' : 'встроенный'})`);
     } catch (error) {
         console.error("AI generation failed:", error);
-        showToast(`Ошибка генерации: ${error.message}`, 'warning', 4000);
+        aiState.lastError = error;
+        updateAIStatus(); // Обновляем статус, чтобы отразить ошибку
+        showToast(`Ошибка генерации. ${error.userMessage || 'Откройте диагностику.'}`, 'warning', 4000);
+        showModal(aiDiagnosticsModal);
+        runDiagnostics();
     } finally {
         hidePreloader();
     }
 }
 
 
-// --- Статус и Проверка AI ---
+// --- Статус и Диагностика AI ---
+function logToDiagnostics(message) {
+    if (aiDiagLog) {
+        aiDiagLog.textContent += message + '\n';
+        aiDiagLog.scrollTop = aiDiagLog.scrollHeight;
+    }
+}
 
-/** Обновляет UI индикаторов статуса AI. */
+function clearDiagnostics() {
+    if(aiDiagLog) aiDiagLog.textContent = '';
+    if(aiDiagErrorDetails) aiDiagErrorDetails.style.display = 'none';
+}
+
+function showDiagnosticsError(error) {
+    if (!aiDiagErrorDetails) return;
+    const { title, meaning, suggestion } = translateError(error);
+    document.getElementById('ai-diag-error-title').textContent = title;
+    document.getElementById('ai-diag-error-meaning').textContent = meaning;
+    document.getElementById('ai-diag-error-suggestion').textContent = suggestion;
+    aiDiagErrorDetails.style.display = 'block';
+}
+
 function updateAIStatusUI() {
-    const modalIndicator = document.getElementById('ai-status-indicator');
-    const headerIndicator = document.getElementById('header-ai-status');
-    if (!modalIndicator || !headerIndicator) return;
-
-    const { key, source } = getActiveApiKeyInfo();
+    const indicators = [aiDiagStatusIndicator, headerAiStatusBtn];
+    if (!indicators[0] || !indicators[1]) return;
+    
     let statusText = 'Проверка...';
     let statusTitle = 'Статус AI: Проверка...';
 
-    switch(state.aiStatus) {
+    const { key, source } = determineActiveKey();
+    aiState.activeKeySource = source;
+
+    switch(aiState.status) {
         case 'ready-user':
             statusText = 'Готово (ваш ключ)';
             statusTitle = `Статус AI: ${statusText}`;
@@ -324,40 +367,34 @@ function updateAIStatusUI() {
             statusTitle = `Статус AI: ${statusText}`;
             break;
         case 'unavailable':
-            if (source === 'user') {
-                statusText = 'Ваш ключ недействителен';
-                statusTitle = 'Проверьте ваш ключ или переключитесь на встроенный режим.';
-            } else if (source === 'builtin') {
-                statusText = 'Встроенный ключ не работает';
-                statusTitle = 'Встроенный ключ недействителен или не настроен. Попробуйте добавить свой.';
-            } else {
-                statusText = 'Ключ не настроен';
-                statusTitle = 'Добавьте свой API ключ в поле ниже.';
-            }
+            statusText = 'Ошибка';
+            statusTitle = 'AI недоступен. Нажмите для диагностики.';
             break;
     }
     
-    // Обновление индикатора в модальном окне
-    const textEl = modalIndicator.querySelector('.status-text');
-    modalIndicator.className = `ai-status-indicator ${state.aiStatus}`;
-    if(textEl) textEl.textContent = statusText;
-
-    // Обновление индикатора в шапке
-    headerIndicator.className = `header-status ${state.aiStatus}`;
-    headerIndicator.title = statusTitle;
+    indicators.forEach(ind => {
+        const textEl = ind.querySelector('.status-text');
+        ind.className = ind.id.includes('header') 
+            ? `header-status-btn ${aiState.status}` 
+            : `ai-status-indicator ${aiState.status}`;
+        if(textEl) textEl.textContent = statusText;
+        ind.title = statusTitle;
+    });
 }
 
 /**
- * Проверяет валидность предоставленного API ключа, делая тестовый запрос.
+ * Проверяет валидность предоставленного API ключа.
  * @param {string} key - API ключ для проверки.
- * @returns {Promise<boolean>} true, если ключ валиден, иначе false.
+ * @returns {Promise<boolean>} true, если ключ валиден.
+ * @throws {Error} Кастомная ошибка с деталями при неудаче.
  */
 async function testApiKey(key) {
-    if (!key || key.trim() === '') return false;
+    if (!key || key.trim() === '') {
+        throw new Error('API key is empty');
+    }
     
-    let GoogleGenAI;
     try {
-        ({ GoogleGenAI } = await import("https://esm.run/@google/generative-ai"));
+        const { GoogleGenAI } = await import("https://esm.run/@google/generative-ai");
         const ai = new GoogleGenAI({ apiKey: key });
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
@@ -366,52 +403,138 @@ async function testApiKey(key) {
         });
         return !!(response && response.text);
     } catch (error) {
-        console.error("API Key test failed:", error);
-        return false;
+        error.isApiKeyTestError = true;
+        throw error; // Пробрасываем ошибку дальше для обработки
     }
 }
 
-/** Проверяет статус доступности AI и обновляет UI. */
-async function checkAIStatus() {
-    state.aiStatus = 'checking';
-    updateAIStatusUI();
 
-    const { key, source } = getActiveApiKeyInfo();
-    if (!key) {
-        state.aiStatus = 'unavailable';
-        updateAIStatusUI();
-        console.warn("AI Status: Unavailable (No active API key).");
-        return;
+function translateError(error) {
+    let title = 'Неизвестная ошибка';
+    let meaning = 'Произошла непредвиденная ошибка при обращении к API Gemini.';
+    let suggestion = 'Проверьте консоль разработчика для получения дополнительной информации и попробуйте снова позже.';
+    
+    if (error.message.includes('API key is empty')) {
+        title = 'Пустой API ключ';
+        meaning = 'Ключ для этого режима не введен или не настроен.';
+        suggestion = 'Введите ваш ключ в поле выше или выберите другой режим подключения.';
+    } else if (error.message.includes('fetch')) {
+        title = 'Ошибка сети';
+        meaning = 'Не удалось подключиться к серверам Google. Возможно, у вас проблемы с интернетом или блокировщик рекламы/файрвол мешает соединению.';
+        suggestion = 'Проверьте ваше интернет-соединение и отключите блокировщики для этого сайта.';
+    } else if (error.message.includes('400')) {
+        title = 'Ошибка 400: Неверный запрос (Invalid API Key)';
+        meaning = 'Скорее всего, вы ввели недействительный API ключ. Он имеет неверный формат.';
+        suggestion = 'Пожалуйста, скопируйте и вставьте ваш ключ из Google AI Studio еще раз, убедившись, что в нем нет лишних символов.';
+    } else if (error.message.includes('429')) {
+        title = 'Ошибка 429: Исчерпана квота';
+        meaning = 'Ваш ключ превысил бесплатный лимит использования (количество запросов в минуту).';
+        suggestion = 'Подождите одну минуту и попробуйте снова. Если ошибка повторяется, возможно, стоит создать новый ключ.';
     }
     
-    const isValid = await testApiKey(key);
-    if (isValid) {
-        state.aiStatus = source === 'user' ? 'ready-user' : 'ready-builtin';
-    } else {
-        state.aiStatus = 'unavailable';
-    }
+    error.userMessage = title;
+    return { title, meaning, suggestion };
+}
+
+/** Основная функция обновления глобального статуса AI */
+async function updateAIStatus() {
+    aiState.status = 'checking';
     updateAIStatusUI();
-    console.log(`AI Status: ${state.aiStatus}. Mode: ${state.settings.apiKeyMode}. Key source: ${source}`);
+
+    const checkResults = await Promise.allSettled([
+        testApiKey(aiState.userKey),
+        testApiKey(GEMINI_API_KEY)
+    ]);
+
+    aiState.userKeyValid = checkResults[0].status === 'fulfilled';
+    aiState.builtinKeyValid = checkResults[1].status === 'fulfilled';
+    
+    const { key, source } = determineActiveKey();
+
+    if (!key) {
+        aiState.status = 'unavailable';
+    } else {
+        const keyIsValid = source === 'user' ? aiState.userKeyValid : aiState.builtinKeyValid;
+        aiState.status = keyIsValid ? `ready-${source}` : 'unavailable';
+    }
+    
+    updateAIStatusUI();
+    return aiState.status;
+}
+
+async function runDiagnostics() {
+    clearDiagnostics();
+    const buttons = [aiDiagTestBtn, aiDiagClearKeyBtn, aiDiagSaveBtn];
+    buttons.forEach(btn => btn.disabled = true);
+
+    const mode = document.querySelector('input[name="ai-diag-api-mode"]:checked').value;
+    logToDiagnostics(`--- Начало теста (режим: ${mode}) ---`);
+
+    try {
+        // Test user key
+        logToDiagnostics('1. Проверка вашего ключа...');
+        if (!aiState.userKey) {
+            logToDiagnostics('   - Ваш ключ не введен.');
+            aiState.userKeyValid = false;
+        } else {
+            try {
+                await testApiKey(aiState.userKey);
+                logToDiagnostics('   - ✅ Ваш ключ действителен.');
+                aiState.userKeyValid = true;
+            } catch (e) {
+                logToDiagnostics('   - ❌ Ваш ключ недействителен.');
+                aiState.lastError = e;
+                aiState.userKeyValid = false;
+            }
+        }
+
+        // Test builtin key
+        logToDiagnostics('2. Проверка встроенного ключа...');
+        const builtinKeyExists = GEMINI_API_KEY && GEMINI_API_KEY !== "__GEMINI_API_KEY__";
+        if (!builtinKeyExists) {
+            logToDiagnostics('   - Встроенный ключ не настроен в приложении.');
+            aiState.builtinKeyValid = false;
+        } else {
+            try {
+                await testApiKey(GEMINI_API_KEY);
+                logToDiagnostics('   - ✅ Встроенный ключ действителен.');
+                aiState.builtinKeyValid = true;
+            } catch (e) {
+                logToDiagnostics('   - ❌ Встроенный ключ не работает.');
+                if (!aiState.lastError) aiState.lastError = e; // Показываем ошибку, если другой не было
+                aiState.builtinKeyValid = false;
+            }
+        }
+        
+        // Final status determination
+        logToDiagnostics('3. Определение итогового статуса...');
+        const finalStatus = await updateAIStatus();
+        logToDiagnostics(`--- Тест завершен. Статус: ${finalStatus.toUpperCase()} ---`);
+        
+        if (finalStatus === 'unavailable' && aiState.lastError) {
+            showDiagnosticsError(aiState.lastError);
+        }
+
+    } catch (e) {
+        logToDiagnostics(`Критическая ошибка во время диагностики: ${e.message}`);
+        showDiagnosticsError(e);
+    } finally {
+        buttons.forEach(btn => btn.disabled = false);
+    }
 }
 
 
 // --- Интеграция с Gemini AI ---
 
-async function generateWithAI() {
-    const { key } = getActiveApiKeyInfo();
-    if (!key) {
-        throw new Error("API-ключ не настроен.");
-    }
-    
+async function generateWithAI(apiKey) {
     let GoogleGenAI, Type;
     try {
         ({ GoogleGenAI, Type } = await import("https://esm.run/@google/generative-ai"));
     } catch (e) {
-        console.error("Failed to load GoogleGenAI module:", e);
         throw new Error("Не удалось загрузить модуль AI. Проверьте сеть.");
     }
 
-    const ai = new GoogleGenAI({ apiKey: key });
+    const ai = new GoogleGenAI({ apiKey });
 
     const prompt = `
         Создай план питания на ${state.settings.days} дней для ${state.settings.people} человек.
@@ -451,8 +574,8 @@ async function generateWithAI() {
         const jsonText = genAIResponse.text.trim();
         return JSON.parse(jsonText);
     } catch(e) {
-        console.error("Error during Gemini API call:", e);
-        throw new Error("Ошибка ответа от AI. Попробуйте снова.");
+        aiState.lastError = e;
+        throw e;
     }
 }
 
@@ -463,88 +586,51 @@ function setupEventListeners() {
     navButtons.forEach(btn => {
         btn.addEventListener('click', () => showScreen(btn.dataset.screen));
     });
-
+    
+    // -- Основные настройки --
     settingsBtn?.addEventListener('click', () => showModal(settingsModal));
     closeSettingsBtn?.addEventListener('click', () => hideModal(settingsModal));
     settingsModal?.addEventListener('click', (e) => {
         if (e.target === settingsModal) hideModal(settingsModal);
     });
 
-    // Настройки: дни и количество человек
     document.getElementById('days-increment')?.addEventListener('click', () => { state.settings.days < 14 && state.settings.days++; updateSettingsUI(); saveState(); });
     document.getElementById('days-decrement')?.addEventListener('click', () => { state.settings.days > 1 && state.settings.days--; updateSettingsUI(); saveState(); });
     document.getElementById('people-increment')?.addEventListener('click', () => { state.settings.people < 10 && state.settings.people++; updateSettingsUI(); saveState(); });
     document.getElementById('people-decrement')?.addEventListener('click', () => { state.settings.people > 1 && state.settings.people--; updateSettingsUI(); saveState(); });
 
-    // Настройки: режим подключения
-    apiModeRadios.forEach(radio => {
-        radio.addEventListener('change', () => {
-            state.settings.apiKeyMode = radio.value;
-            saveState();
-            checkAIStatus(); // Немедленно перепроверяем статус
-        });
+    // -- Диагностика AI --
+    headerAiStatusBtn?.addEventListener('click', () => {
+        showModal(aiDiagnosticsModal);
+        runDiagnostics();
     });
-
-    // Настройки: управление видимостью API ключа
-    toggleApiKeyVisibilityBtn?.addEventListener('click', () => {
-        const openIcon = toggleApiKeyVisibilityBtn.querySelector('.eye-open');
-        const closedIcon = toggleApiKeyVisibilityBtn.querySelector('.eye-closed');
-        if (apiKeyInput.type === 'password') {
-            apiKeyInput.type = 'text';
+    closeAiDiagBtn?.addEventListener('click', () => hideModal(aiDiagnosticsModal));
+    aiDiagnosticsModal?.addEventListener('click', (e) => {
+        if (e.target === aiDiagnosticsModal) hideModal(aiDiagnosticsModal);
+    });
+    aiDiagTestBtn?.addEventListener('click', runDiagnostics);
+    aiDiagSaveBtn?.addEventListener('click', () => {
+        saveAiConfig();
+        hideModal(aiDiagnosticsModal);
+        updateAIStatus();
+    });
+    aiDiagClearKeyBtn?.addEventListener('click', () => {
+        aiDiagApiKeyInput.value = '';
+        saveAiConfig();
+        runDiagnostics();
+    });
+    aiDiagToggleVisibilityBtn?.addEventListener('click', () => {
+        const openIcon = aiDiagToggleVisibilityBtn.querySelector('.eye-open');
+        const closedIcon = aiDiagToggleVisibilityBtn.querySelector('.eye-closed');
+        if (aiDiagApiKeyInput.type === 'password') {
+            aiDiagApiKeyInput.type = 'text';
             openIcon.style.display = 'none';
             closedIcon.style.display = 'block';
         } else {
-            apiKeyInput.type = 'password';
+            aiDiagApiKeyInput.type = 'password';
             openIcon.style.display = 'block';
             closedIcon.style.display = 'none';
         }
-    });
-
-    // Настройки: проверка и сохранение ключа
-    checkApiKeyBtn?.addEventListener('click', async () => {
-        const key = apiKeyInput.value.trim();
-        if (!key) {
-            apiKeyStatus.textContent = 'Пожалуйста, введите ключ.';
-            apiKeyStatus.className = 'api-status-message error';
-            return;
-        }
-
-        apiKeyStatus.textContent = 'Проверка...';
-        apiKeyStatus.className = 'api-status-message loading';
-        checkApiKeyBtn.disabled = true;
-        clearApiKeyBtn.disabled = true;
-        apiKeyInput.disabled = true;
-
-        const isValid = await testApiKey(key);
-        
-        if (isValid) {
-            saveUserApiKey(key);
-            apiKeyStatus.textContent = 'Ключ действителен и сохранен!';
-            apiKeyStatus.className = 'api-status-message success';
-            // Если режим был 'force_builtin', переключаем на 'auto', чтобы сразу использовать новый ключ
-            if (state.settings.apiKeyMode === 'force_builtin') {
-                state.settings.apiKeyMode = 'auto';
-                saveState();
-                updateSettingsUI();
-            }
-            await checkAIStatus(); // Обновляем глобальный статус
-        } else {
-            apiKeyStatus.textContent = 'Ошибка: неверный ключ или проблема с сетью.';
-            apiKeyStatus.className = 'api-status-message error';
-        }
-        
-        checkApiKeyBtn.disabled = false;
-        clearApiKeyBtn.disabled = false;
-        apiKeyInput.disabled = false;
-    });
-
-    // Настройки: очистка ключа
-    clearApiKeyBtn?.addEventListener('click', async () => {
-        clearUserApiKey();
-        apiKeyInput.value = '';
-        apiKeyStatus.textContent = 'Ваш ключ удален. Используется доступный режим.';
-        apiKeyStatus.className = 'api-status-message';
-        await checkAIStatus(); // Перепроверяем статус с оставшимися опциями
     });
 
     // Кнопки генерации
@@ -579,13 +665,11 @@ function setupEventListeners() {
         const reader = new FileReader();
         reader.onload = function(event) {
             try {
-                const importedState = JSON.parse(event.target.result);
-                // Сбрасываем и аккуратно загружаем
-                Object.assign(state, { menu: null, recipes: {}, shoppingList: [] });
-                Object.assign(state.settings, importedState.settings);
-                state.menu = importedState.menu || null;
-                state.recipes = importedState.recipes || {};
-                state.shoppingList = importedState.shoppingList || [];
+                const importedData = JSON.parse(event.target.result);
+                Object.assign(state.settings, importedData.settings);
+                state.menu = importedData.menu || null;
+                state.recipes = importedData.recipes || {};
+                state.shoppingList = importedData.shoppingList || [];
                 
                 saveState();
                 updateSettingsUI();
@@ -594,7 +678,6 @@ function setupEventListeners() {
                 renderShoppingList();
                 showToast("План успешно импортирован!");
                 hideModal(settingsModal);
-                checkAIStatus(); // Перепроверяем статус после импорта
             } catch (err) {
                 showToast("Ошибка импорта: неверный формат файла.", 'warning');
             }
@@ -605,7 +688,13 @@ function setupEventListeners() {
     
     document.getElementById('export-btn')?.addEventListener('click', () => {
         try {
-            const dataStr = JSON.stringify(state, null, 2);
+            const exportState = {
+                settings: state.settings,
+                menu: state.menu,
+                recipes: state.recipes,
+                shoppingList: state.shoppingList
+            };
+            const dataStr = JSON.stringify(exportState, null, 2);
             const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
             const exportFileDefaultName = 'family_menu_plan.json';
             const linkElement = document.createElement('a');
@@ -622,20 +711,16 @@ function setupEventListeners() {
 
 function init() {
     loadState();
+    loadAiConfig();
     updateSettingsUI();
     
-    const userKey = getUserApiKey();
-    if (apiKeyInput && userKey) {
-        apiKeyInput.value = userKey;
-    }
-
     renderMenu();
     renderAllRecipes();
     renderShoppingList();
-    showScreen(state.lastActiveTab || 'menu-screen'); // Используем lastActiveTab для восстановления
+    showScreen(state.lastActiveTab || 'menu-screen');
     setupEventListeners();
 
-    checkAIStatus(); // Первичная проверка при запуске
+    updateAIStatus(); // Первичная проверка при запуске
 }
 
 document.addEventListener('DOMContentLoaded', () => {

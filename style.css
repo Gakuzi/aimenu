@@ -1,6 +1,7 @@
 :root {
     --bg-main: #F9F7F4;
     --bg-card: #FFFFFF;
+    --bg-code: #f0ede7;
     --text-primary: #333;
     --text-secondary: #7D7D7D;
     --accent-main: #8B5E3C;
@@ -12,6 +13,7 @@
     --strong-shadow: 0 8px 24px rgba(139, 94, 60, 0.1);
     --font-main: 'Lato', system-ui, -apple-system, sans-serif;
     --font-headings: 'Nunito', sans-serif;
+    --font-code: 'Menlo', 'Consolas', monospace;
     --border-radius: 20px;
     --nav-height: 80px;
 }
@@ -93,22 +95,36 @@ html, body {
     gap: 12px;
 }
 
-.header-status {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
+/* Header AI Status Button */
+.header-status-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    padding: 0;
+    background-color: transparent;
+    border: 2px solid transparent;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+.header-status-btn .status-dot {
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     transition: background-color 0.3s ease;
 }
-.header-status.ready-user { background-color: var(--accent-success); animation: none; }
-.header-status.ready-builtin { background-color: var(--accent-info); animation: none; }
-.header-status.checking {
+.header-status-btn.ready-user .status-dot { background-color: var(--accent-success); }
+.header-status-btn.ready-builtin .status-dot { background-color: var(--accent-info); }
+.header-status-btn.checking .status-dot {
     background-color: var(--accent-secondary);
     animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
-.header-status.unavailable {
+.header-status-btn.unavailable .status-dot {
     background-color: var(--accent-warning);
-    animation: none;
+}
+.header-status-btn:active {
+    background-color: var(--bg-code);
 }
 
 
@@ -126,7 +142,7 @@ html, body {
 
 
 /* Typography */
-h1, h2, h3 { font-family: var(--font-headings); }
+h1, h2, h3, h4, h5 { font-family: var(--font-headings); }
 p { line-height: 1.6em; }
 
 /* Buttons */
@@ -335,7 +351,7 @@ button:disabled {
     color: var(--text-secondary);
 }
 
-/* Settings Modal */
+/* Modal Styles (Generic) */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -360,11 +376,14 @@ button:disabled {
     background-color: var(--bg-main);
     width: 100%;
     max-width: 500px;
+    max-height: 90vh;
     padding: 20px 24px 40px;
     border-radius: 24px 24px 0 0;
     box-shadow: var(--strong-shadow);
     transform: translateY(100%);
     transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    display: flex;
+    flex-direction: column;
 }
 .modal-overlay.visible .modal-content {
     transform: translateY(0);
@@ -375,6 +394,7 @@ button:disabled {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 24px;
+    flex-shrink: 0;
 }
 .modal-header h2 {
     font-size: 20pt;
@@ -391,7 +411,7 @@ button:disabled {
     font-size: 16pt;
 }
 
-/* AI Status Indicator */
+/* AI Status Indicator (in Modal) */
 .ai-status-indicator {
     display: flex;
     align-items: center;
@@ -454,7 +474,11 @@ button:disabled {
     text-align: center;
 }
 
-/* API Key Section in Settings */
+/* AI Diagnostics Modal */
+#ai-diagnostics-modal .modal-content {
+    overflow-y: auto;
+}
+
 .api-key-section {
     padding-top: 16px;
     margin-top: 16px;
@@ -484,7 +508,7 @@ button:disabled {
     margin-bottom: 16px;
 }
 
-#api-key-input {
+.api-key-input-wrapper input {
     width: 100%;
     padding: 16px 50px 16px 16px;
     border: 1px solid #EAE4DD;
@@ -494,11 +518,11 @@ button:disabled {
     color: var(--text-primary);
     font-family: var(--font-main);
 }
-#api-key-input::placeholder {
+.api-key-input-wrapper input::placeholder {
     color: #b0a89f;
 }
 
-#toggle-api-key-visibility {
+.api-key-input-wrapper button {
     position: absolute;
     right: 4px;
     top: 50%;
@@ -512,41 +536,23 @@ button:disabled {
     display: flex;
     gap: 12px;
 }
-#clear-api-key-btn {
+.api-key-actions .secondary-action-btn {
     flex-grow: 0;
     flex-shrink: 0;
     background-color: #f0ede7;
     color: var(--text-secondary);
 }
-#check-api-key-btn {
+.api-key-actions .main-action-btn {
     flex-grow: 1;
     padding: 16px;
     font-size: 15pt;
 }
 
-.api-status-message {
-    margin-top: 12px;
-    min-height: 1.5em;
-    font-size: 13pt;
-    font-weight: bold;
-    text-align: center;
-    transition: color 0.3s ease;
-}
-.api-status-message.success {
-    color: var(--accent-success);
-}
-.api-status-message.error {
-    color: var(--accent-warning);
-}
-.api-status-message.loading {
-    color: var(--text-secondary);
-}
-
 /* API Mode Selector */
 .api-mode-selector {
     display: flex;
-    gap: 8px;
-    background-color: #EAE4DD;
+    gap: 4px;
+    background-color: var(--bg-code);
     padding: 4px;
     border-radius: 12px;
 }
@@ -566,9 +572,9 @@ button:disabled {
 .api-mode-selector span {
     display: block;
     text-align: center;
-    padding: 8px 12px;
+    padding: 8px 6px;
     border-radius: 8px;
-    font-size: 14pt;
+    font-size: 13pt;
     font-weight: 700;
     color: var(--text-secondary);
     transition: background-color 0.2s ease, color 0.2s ease;
@@ -581,7 +587,53 @@ button:disabled {
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
+/* Diagnostics Area */
+.diagnostics-area {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #F0EDE7;
+}
+.diagnostics-area h4 {
+    margin: 0 0 12px;
+    font-size: 14pt;
+    color: var(--text-primary);
+}
+#ai-diag-log {
+    background-color: var(--bg-code);
+    border-radius: 8px;
+    padding: 12px;
+    font-family: var(--font-code);
+    font-size: 12pt;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #EAE4DD;
+}
+.error-details {
+    margin-top: 16px;
+    padding: 16px;
+    border-radius: 12px;
+    background-color: #e07a5f20;
+    border: 1px solid var(--accent-warning);
+}
+.error-details h5 {
+    margin: 0 0 4px;
+    color: var(--accent-warning);
+    font-size: 12pt;
+}
+.error-details p {
+    margin: 0 0 12px;
+    font-size: 13pt;
+    color: var(--text-primary);
+}
+.error-details p:last-child {
+    margin-bottom: 0;
+}
 
+
+/* General Modal Styles */
 .modal-actions {
     display: flex;
     gap: 16px;
