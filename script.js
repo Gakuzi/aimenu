@@ -40,6 +40,9 @@ const settingsModal = document.getElementById('settings-modal');
 
 // Диагностика AI
 const headerAiStatusBtn = document.getElementById('header-ai-status');
+if (!headerAiStatusBtn) {
+    console.error("CRITICAL: Header AI status button ('header-ai-status') not found in DOM!");
+}
 const aiDiagnosticsModal = document.getElementById('ai-diagnostics-modal');
 const closeAiDiagBtn = document.getElementById('close-ai-diag-btn');
 const aiDiagStatusIndicator = document.getElementById('ai-diag-status-indicator');
@@ -348,14 +351,15 @@ function showDiagnosticsError(error) {
 }
 
 function updateAIStatusUI() {
-    const indicators = [aiDiagStatusIndicator, headerAiStatusBtn];
-    if (!indicators[0] || !indicators[1]) return;
-    
+    if (!headerAiStatusBtn || !aiDiagStatusIndicator) {
+        console.error("One or more AI status UI elements are missing.");
+        return;
+    }
+    const indicators = [headerAiStatusBtn, aiDiagStatusIndicator];
+    const statusClasses = ['checking', 'ready-user', 'ready-builtin', 'unavailable'];
+
     let statusText = 'Проверка...';
     let statusTitle = 'Статус AI: Проверка...';
-
-    const { key, source } = determineActiveKey();
-    aiState.activeKeySource = source;
 
     switch(aiState.status) {
         case 'ready-user':
@@ -373,12 +377,16 @@ function updateAIStatusUI() {
     }
     
     indicators.forEach(ind => {
-        const textEl = ind.querySelector('.status-text');
-        ind.className = ind.id.includes('header') 
-            ? `header-status-btn ${aiState.status}` 
-            : `ai-status-indicator ${aiState.status}`;
-        if(textEl) textEl.textContent = statusText;
+        // Robust class management
+        statusClasses.forEach(cls => ind.classList.remove(cls));
+        ind.classList.add(aiState.status);
+        
         ind.title = statusTitle;
+
+        const textEl = ind.querySelector('.status-text');
+        if (textEl) {
+            textEl.textContent = statusText;
+        }
     });
 }
 
@@ -450,6 +458,8 @@ async function updateAIStatus() {
     aiState.builtinKeyValid = checkResults[1].status === 'fulfilled';
     
     const { key, source } = determineActiveKey();
+    aiState.activeKeySource = source;
+
 
     if (!key) {
         aiState.status = 'unavailable';
