@@ -6,6 +6,7 @@
     --accent-main: #8B5E3C;
     --accent-secondary: #D4A373;
     --accent-success: #5E7A6E;
+    --accent-info: #48a1a1;
     --accent-warning: #E07A5F;
     --soft-shadow: 0 4px 16px rgba(139, 94, 60, 0.05);
     --strong-shadow: 0 8px 24px rgba(139, 94, 60, 0.1);
@@ -99,10 +100,8 @@ html, body {
     border-radius: 50%;
     transition: background-color 0.3s ease;
 }
-.header-status.ready {
-    background-color: var(--accent-success);
-    animation: none;
-}
+.header-status.ready-user { background-color: var(--accent-success); animation: none; }
+.header-status.ready-builtin { background-color: var(--accent-info); animation: none; }
 .header-status.checking {
     background-color: var(--accent-secondary);
     animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -406,12 +405,11 @@ button:disabled {
     border-radius: 50%;
     transition: background-color 0.3s ease;
 }
-.ai-status-indicator.ready .status-dot {
-    background-color: var(--accent-success);
-}
-.ai-status-indicator.ready .status-text {
-    color: var(--accent-success);
-}
+.ai-status-indicator.ready-user .status-dot { background-color: var(--accent-success); }
+.ai-status-indicator.ready-user .status-text { color: var(--accent-success); }
+.ai-status-indicator.ready-builtin .status-dot { background-color: var(--accent-info); }
+.ai-status-indicator.ready-builtin .status-text { color: var(--accent-info); }
+
 .ai-status-indicator.checking .status-dot {
     background-color: var(--accent-secondary);
     animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -458,7 +456,7 @@ button:disabled {
 
 /* API Key Section in Settings */
 .api-key-section {
-    padding-top: 24px;
+    padding-top: 16px;
     margin-top: 16px;
     border-top: 1px solid #F0EDE7;
 }
@@ -472,7 +470,7 @@ button:disabled {
 .api-key-section .description {
     font-size: 13pt;
     color: var(--text-secondary);
-    margin: 0 0 16px;
+    margin: 16px 0;
     line-height: 1.5;
 }
 .api-key-section .description a {
@@ -542,6 +540,45 @@ button:disabled {
 }
 .api-status-message.loading {
     color: var(--text-secondary);
+}
+
+/* API Mode Selector */
+.api-mode-selector {
+    display: flex;
+    gap: 8px;
+    background-color: #EAE4DD;
+    padding: 4px;
+    border-radius: 12px;
+}
+
+.api-mode-selector label {
+    flex: 1;
+    position: relative;
+}
+
+.api-mode-selector input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.api-mode-selector span {
+    display: block;
+    text-align: center;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14pt;
+    font-weight: 700;
+    color: var(--text-secondary);
+    transition: background-color 0.2s ease, color 0.2s ease;
+    cursor: pointer;
+}
+
+.api-mode-selector input:checked + span {
+    background-color: var(--bg-card);
+    color: var(--accent-main);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 
