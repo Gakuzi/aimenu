@@ -5,6 +5,7 @@ const state = {
     settings: {
         days: 7,
         people: 3,
+        apiKey: '',
     },
     menu: null,
     recipes: {},
@@ -167,30 +168,38 @@ function saveState() {
 }
 
 function loadState() {
-    const savedState = localStorage.getItem('familyMenuState');
-    if (savedState) {
+    const savedStateJSON = localStorage.getItem('familyMenuState');
+    if (savedStateJSON) {
         try {
-            const parsedState = JSON.parse(savedState);
-            // Safely merge properties
-            if (parsedState.settings) {
-                Object.assign(state.settings, parsedState.settings);
+            const savedState = JSON.parse(savedStateJSON);
+            
+            // Robustly merge settings
+            if (savedState.settings && typeof savedState.settings === 'object') {
+                const { settings } = savedState;
+                state.settings.days = (typeof settings.days === 'number' && settings.days > 0) ? settings.days : 7;
+                state.settings.people = (typeof settings.people === 'number' && settings.people > 0) ? settings.people : 3;
+                state.settings.apiKey = typeof settings.apiKey === 'string' ? settings.apiKey : '';
             }
-            state.menu = parsedState.menu || null;
-            state.recipes = parsedState.recipes || {};
-            state.shoppingList = parsedState.shoppingList || [];
-            state.currentScreen = parsedState.currentScreen || 'menu-screen';
-            state.lastActiveTab = parsedState.lastActiveTab || 'menu-screen';
+
+            // Robustly merge other state properties
+            state.menu = Array.isArray(savedState.menu) ? savedState.menu : null;
+            state.recipes = (savedState.recipes && typeof savedState.recipes === 'object' && !Array.isArray(savedState.recipes)) ? savedState.recipes : {};
+            state.shoppingList = Array.isArray(savedState.shoppingList) ? savedState.shoppingList.map(item => ({...item, checked: !!item.checked})) : [];
+            state.currentScreen = typeof savedState.currentScreen === 'string' ? savedState.currentScreen : 'menu-screen';
+            state.lastActiveTab = typeof savedState.lastActiveTab === 'string' ? savedState.lastActiveTab : 'menu-screen';
+
         } catch (error) {
-            console.error("Failed to parse saved state, starting fresh.", error);
-            // Clear corrupted state to prevent future errors
+            console.error("Failed to parse state, resetting.", error);
             localStorage.removeItem('familyMenuState');
         }
     }
 }
 
+
 function updateSettingsUI() {
     document.getElementById('days-value').textContent = state.settings.days;
     document.getElementById('people-value').textContent = state.settings.people;
+    document.getElementById('api-key-input').value = state.settings.apiKey;
 }
 
 function processGeneratedPlan(plan) {
@@ -207,14 +216,20 @@ function processGeneratedPlan(plan) {
 }
 
 async function generatePlan() {
+    if (!state.settings.apiKey) {
+        showToast("Введите Gemini API ключ в настройках", 'warning', 4000);
+        showModal(settingsModal);
+        return;
+    }
+
     showPreloader();
     try {
-        // Always try AI first
         const plan = await generateWithAI();
         processGeneratedPlan(plan);
+        showToast("Меню сгенерировано с помощью Gemini!");
     } catch (error) {
-        console.warn("AI generation failed, falling back to local DB:", error);
-        showToast("Gemini недоступен. Используется локальная база.", 'warning', 4000);
+        console.error("AI generation failed, falling back to local DB:", error);
+        showToast("Ошибка Gemini. Используется локальная база.", 'warning', 4000);
         const plan = generateWithLocalDB();
         processGeneratedPlan(plan);
     } finally {
@@ -224,10 +239,12 @@ async function generatePlan() {
 
 // --- Gemini AI Integration ---
 async function generateWithAI() {
-    // The API key is expected to be in the environment (e.g., set as a secret).
-    // The GoogleGenAI constructor will throw an error if the key is missing or invalid,
-    // which will be caught by generatePlan().
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = state.settings.apiKey;
+    if (!apiKey) {
+        throw new Error("API Key is not provided.");
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
 
     const prompt = `
         Создай план питания на ${state.settings.days} дней для ${state.settings.people} человек.
@@ -331,6 +348,12 @@ function setupEventListeners() {
         updateSettingsUI(); saveState();
     });
 
+    document.getElementById('api-key-input').addEventListener('change', (e) => {
+        state.settings.apiKey = e.target.value.trim();
+        saveState();
+        showToast("API ключ сохранен.");
+    });
+
     document.getElementById('generate-btn').addEventListener('click', generatePlan);
 
     document.getElementById('back-to-menu-btn').addEventListener('click', () => showScreen(state.lastActiveTab));
@@ -367,7 +390,7 @@ function setupEventListeners() {
                 const importedState = JSON.parse(event.target.result);
                 // Reset state before importing to avoid merging issues
                 Object.assign(state, {
-                    settings: { days: 7, people: 3 },
+                    settings: { days: 7, people: 3, apiKey: '' },
                     menu: null, recipes: {}, shoppingList: [],
                     ...importedState
                 });
@@ -389,13 +412,22 @@ function setupEventListeners() {
 
 // --- App Initialization ---
 function init() {
-    loadState();
-    updateSettingsUI();
-    renderMenu();
-    renderAllRecipes();
-    renderShoppingList();
-    showScreen(state.currentScreen || 'menu-screen');
-    setupEventListeners();
+    try {
+        loadState();
+        updateSettingsUI();
+        renderMenu();
+        renderAllRecipes();
+        renderShoppingList();
+        showScreen(state.currentScreen || 'menu-screen');
+        setupEventListeners();
+    } catch (error) {
+        console.error("A critical error occurred during app initialization:", error);
+        // Display a user-friendly error message on the screen
+        document.body.innerHTML = `<div style="padding: 20px; text-align: center; font-family: sans-serif;">
+            <h2>Произошла критическая ошибка</h2>
+            <p>Пожалуйста, попробуйте очистить данные сайта и перезагрузить страницу.</p>
+        </div>`;
+    }
 }
 
 document.addEventListener('DOMContentLoaded', init);
