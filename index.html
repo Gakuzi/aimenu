@@ -2,14 +2,14 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Меню на неделю</title>
     
     <!-- PWA for iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Меню">
-    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBmaWxsPSIjOEI1RTNDIiBkPSJNNzguOCw1My4yYy0xMS41LDAtMjEuMyw2LjEtMjYuNCwxNS41Yy0wLjktNC4yLTMuNi0xNC4xLTkuOS0xOS44Yy04LjItNy40LTE3LjUtOS0yMS4yLTguNmMtMC43LDAuMS0xLjMsMC43LTEuMywxLjRjMCwwLjYsMC40LDEuMSwxLDEuM2MyLjYsMC45LDguMSwyLjMsMTQuNyw4LjJjNy40LDYuNywxMC4xLDE4LjUsMTAuNCwxOS44YzAuMSwwLjQsMC4yLDAuOCwwLjQsMS4yYzAuMywwLjgsMC44LDEuNSwxLjQsMi4xYzUuMSw1LjEsMTIuMSw4LjIsMTkuOCw4LjJjMTUuNSwwLDI4LTEyLjUsMjgtMjhDNzguOCw1My4yLDc4LjgsNTMuMiw3OC44LDUzLjJ6Ii8+PHBhdGggZmlsbD0iI0Q0QTM3MyIgZD0iTTc4LjgsMC4xQzYzLjIsMC4xLDUwLjgsMTIuNiw1MC44LDI4LjJjMCwzLjUsMC42LDYuOCwxLjgsOS45QzU2LDQwLjUsNTguMyw0Myw2MSw0NS40YzAuNiwwLjUsMS40LDAuNSwxLjksMGMxLjItMS4yLDE3LjYtMTcuNSwxNy42LTE3LjVjMy44LTMuOCwzLjgtMTAsMC0xMy44bC03LjgtNy44Yy0xLjgtMS44LTQuMy0yLjgtNi45LTIuOEM2NC4xLDQuNyw2Mi41LDUuNiw2MS4zLDYuOGwtMy4zLDMuM2MtMS4yLTEuMi0yLjItMi42LTMtNC4xQzU2LjgsMi4zLDU4LjUsMC4xLDU5LjcsMC4xSDc4Ljh6Ii8+PHBhdGggZmlsbD0iI0Y5RjdGNCIgZmlsbC1vcGFjaXR5PSIwLjciIGQ0iTTUxLjMyMC44Yy0wLjgtMS43LTEuMy0zLjUtMS4zLTUuNGMwLTIuMywwLjctNC41LDItNi40Yy0xLjMtMC42LTIuNy0xLTQuMS0xLjNjLTIuMi0wLjUtNC41LTAuOC02LjgtMC44aC0xLjRjLTIuOSwwLTUuNiwwLjYtOC4xLDEuOGMtMC41LDAuMi0xLDAuNS0xLjUsMC45YzIuMywyLjMsMy44LDUuNSwzLjgsOS4yYzAsMy4yLTEuMSw2LjItMyw4LjVjMC42LDAuNCwxLjIsMC44LDEuOCwxLjNjMi4zLDEuOCw0LjMsNCw2LDYuNWMwLjUsMC44LDEuMSwxLjUsMS44LDIuMmMwLjEtMC4xLDAuMi0wLjMsMC4zLTAuNGMwLjktMS43LDEuNC0zLjYsMS40LTUuNkM1Mi42LDI0LjQsNTIuMSwyMi41LDUxLjMsMjAuOHoiLz48L3N2Zz4=">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBmaWxsPSIjOEI1RTNDIiBkPSJNNzguOCw1My4yYy0xMS41LDAtMjEuMyw2LjEtMjYuNCwxNS41Yy0wLjktNC4yLTMuNi0xNC4xLTkuOS0xOS44Yy04LjItNy40LTE3LjUtOS0yMS4yLTguNmMtMC43LDAuMS0xLjMsMC43LTEuMywxLjRjMCwwLjYsMC40LDEuMSwxLDEuM2MyLjYsMC45LDguMSwyLjMsMTQuNyw4LjJjNy40LDYuNywxMC4xLDE4LjUsMTAuNCwxOS44YzAuMSwwLjQsMC4yLDAuOCwwLjQsMS4yYzAuMywwLjgsMC44LDEuNSwxLjQsMi4xYzUuMSw1LjEsMTIuMSw4LjIsMTkuOCw4LjJjMTUuNSwwLDI4LTEyLjUsMjgtMjhDNzguOCw1My4yLDc4LjgsNTMuMiw3OC44LDUzLjJ6Ii8+PHBhdGggZmlsbD0iI0Q0QTM3MyIgZD0iTTc4LjgsMC4xQzYzLjIsMC4xLDUwLjgsMTIuNiw1MC44LDI4LjJjMCwzLjUsMC42LDYuOCwxLjgsOS45QzU2LDQwLjUsNTguMyw0Myw2MSw0NS40YzAuNiwwLjUsMS40LDAuNSwxLjksMGMxLjItMS4yLDE3LjYtMTcuNSwxNy42LTE3LjVjMy44LTMuOCwzLjgtMTAsMC0xMy44bC03LjgtNy44Yy0xLjgtMS44LTQuMy0yLjgtNi45LTIuOEM2NC4xLDQuNyw2Mi41LDUuNiw2MS4zLDYuOGwtMy4zLDMuM2MtMS4yLTEuMi0yLjItMi42LTMtNC4xQzU2LjgsMi4zLDU4LjUsMC4xLDU5LjcsMC4xSDc4Ljh6Ii8+PHBhdGggZmlsbD0iI0Y5RjdGNCIgZmlsbC1vcGFjaXR5PSIwLjciIGQ0iTTUxLjMyMC44Yy0wLjgtMS43LTEuMy0zLjUtMS4zLTUuNGMwLTIuMywwLjctNC41LDItNi40Yy0xLjMtMC42LTIuNy0xLTQuMS0xLjNjLTIuMi0wLjUtNC41LTAuOC02LjgtMC44aC0xLjRjLTIuOSwwLTUuNiwwLjYtOC4xLDEuOGMtMC41LDAuMi0xLDAuNS0xLjUsMC45YzIuMywyLjMsMy44LDUuNSwzLjgsOS4yYzAsMy4yLTEuMSw2LjItMyw4LjVjMC42LDAuNCwxLjIsMC44LDEuOCwxLjNjMi4zLDEuOCw0LjMsNCw2LDYuNWMwLjUsMC44LDEuMSwxLjUsMS44LDIuMmMwLjEtMC4xLDAuMi0wLjMsMC4zLTAuNGMwLjktMS43LDEuNC0zLjYsMS40LTUuNkM12LjYsMjQuNCw1Mi4xLDIyLjUsNTEuMywyMC44eiIvPjwvc3ZnPg==">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,8 +20,17 @@
 <body>
 
     <div id="app-container">
+        
+        <div id="loader" class="loader-overlay">
+            <div class="loader-content">
+                <div class="spinner"></div>
+                <p>Gemini создаёт ваше меню...</p>
+                <span>Это может занять до 30 секунд</span>
+            </div>
+        </div>
+
         <!-- Экран настроек -->
-        <main id="settings-screen" class="screen" data-screen="settings">
+        <main id="settings-screen" class="screen is-active" data-screen="settings">
             <header class="screen-header">
                 <h1>Настройки плана</h1>
                 <p>Укажите ваши предпочтения для создания идеального меню.</p>
@@ -73,14 +82,14 @@
                     <p class="form-hint">Сохраните или загрузите ваш план питания для переноса между устройствами.</p>
                     <div class="button-group">
                         <button type="button" id="export-btn" class="btn btn-secondary">Экспорт</button>
-                        <button type="button" id="import-btn" class="btn btn-secondary">Импорт</button>
+                        <label class="btn btn-secondary">Импорт<input type="file" id="import-file" style="display: none;"></label>
                     </div>
                 </div>
             </form>
         </main>
 
         <!-- Экран меню -->
-        <main id="menu-screen" class="screen hidden" data-screen="menu">
+        <main id="menu-screen" class="screen" data-screen="menu">
             <header class="screen-header">
                 <h1>Меню на неделю</h1>
                 <p>Ваш персональный план питания. Нажмите на блюдо для рецепта.</p>
@@ -91,7 +100,7 @@
         </main>
 
         <!-- Экран рецепта -->
-        <main id="recipe-screen" class="screen hidden" data-screen="recipe">
+        <main id="recipe-screen" class="screen" data-screen="recipe">
             <header class="screen-header with-back-button">
                  <button class="back-btn" data-target="menu" aria-label="Назад к меню">&larr;</button>
                 <h1 id="recipe-name">Название блюда</h1>
@@ -107,7 +116,7 @@
         </main>
         
         <!-- Экран приготовления -->
-        <main id="cooking-screen" class="screen hidden" data-screen="cooking">
+        <main id="cooking-screen" class="screen" data-screen="cooking">
             <header class="screen-header with-back-button">
                  <button class="back-btn" data-target="recipe" aria-label="Назад к рецепту">&larr;</button>
                 <h1 id="cooking-recipe-name">Готовим: ...</h1>
@@ -118,7 +127,7 @@
         </main>
 
         <!-- Экран списка покупок -->
-        <main id="shopping-list-screen" class="screen hidden" data-screen="shopping">
+        <main id="shopping-list-screen" class="screen" data-screen="shopping">
             <header class="screen-header">
                 <h1>Список покупок</h1>
                 <p>Отмечайте купленные продукты.</p>
@@ -140,7 +149,11 @@
 
     <!-- Нижняя навигация -->
     <nav class="bottom-nav">
-        <button class="nav-btn active" data-target="menu" aria-label="Меню">
+        <button class="nav-btn is-active" data-target="settings" aria-label="Настройки">
+            <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
+            <span>Настройки</span>
+        </button>
+        <button class="nav-btn" data-target="menu" aria-label="Меню">
             <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
             <span>Меню</span>
         </button>
@@ -148,13 +161,8 @@
              <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
             <span>Покупки</span>
         </button>
-        <button class="nav-btn" data-target="settings" aria-label="Настройки">
-            <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
-            <span>Настройки</span>
-        </button>
     </nav>
     
-    <script src="https://sdk.vercel.ai/latest/genai.js"></script>
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>

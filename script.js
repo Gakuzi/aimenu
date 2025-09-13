@@ -1,3 +1,5 @@
+import { GoogleGenAI } from "https://esm.run/@google/genai";
+
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- DATABASE (Fallback) ---
@@ -29,27 +31,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const alarmSound = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YU9vT18=');
 
     const loadState = () => {
-        const savedState = localStorage.getItem('familyMenuState');
-        if (savedState) {
-            const loaded = JSON.parse(savedState);
-            state = { ...state, ...loaded };
-            if (loaded.activeRecipes) {
-                activeRecipes = loaded.activeRecipes;
+        try {
+            const savedState = localStorage.getItem('familyMenuState');
+            if (savedState) {
+                const loaded = JSON.parse(savedState);
+                // Merge carefully to avoid breaking app with old data structures
+                if (loaded.settings) state.settings = { ...state.settings, ...loaded.settings };
+                state.menu = loaded.menu || null;
+                state.shoppingList = loaded.shoppingList || null;
+                activeRecipes = loaded.activeRecipes || [...LOCAL_RECIPES_DB];
             }
+        } catch (e) {
+            console.error("Failed to load state from localStorage:", e);
+            localStorage.removeItem('familyMenuState');
         }
     };
 
     const saveState = () => {
-        const stateToSave = { ...state, activeRecipes };
-        localStorage.setItem('familyMenuState', JSON.stringify(stateToSave));
+        try {
+            const stateToSave = {
+                settings: state.settings,
+                menu: state.menu,
+                shoppingList: state.shoppingList,
+                activeRecipes: activeRecipes
+            };
+            localStorage.setItem('familyMenuState', JSON.stringify(stateToSave));
+        } catch (e) {
+            console.error("Failed to save state to localStorage:", e);
+        }
     };
 
     // --- UI SELECTORS ---
-    const screens = document.querySelectorAll('.screen');
+    const loader = document.getElementById('loader');
     const navButtons = document.querySelectorAll('.nav-btn');
     const settingsForm = document.getElementById('settings-form');
     const createMenuBtn = document.getElementById('create-menu-btn');
-    // ... other selectors
+    
     const peopleCountInput = document.getElementById('people-count');
     const dayCountInput = document.getElementById('day-count');
     const peopleValueSpan = document.getElementById('people-value');
@@ -59,29 +76,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- NAVIGATION ---
     const showScreen = (screenId) => {
-        let currentActive = document.querySelector('.screen.active');
-        if (currentActive && currentActive.id !== `${screenId}-screen`) {
-            currentActive.classList.remove('active');
-            currentActive.classList.add('exiting');
-            
-            // Wait for animation to finish before hiding
-            setTimeout(() => {
-                currentActive.classList.add('hidden');
-                currentActive.classList.remove('exiting');
-            }, 300);
+        const currentActive = document.querySelector('.screen.is-active');
+        const targetScreen = document.getElementById(`${screenId}-screen`);
+
+        if (!targetScreen || (currentActive && currentActive.id === targetScreen.id)) return;
+
+        if (currentActive) {
+            currentActive.classList.add('is-exiting');
+            currentActive.classList.remove('is-active');
         }
         
-        const targetScreen = document.getElementById(`${screenId}-screen`);
-        if (targetScreen) {
-            targetScreen.classList.remove('hidden');
-            // Timeout to allow display property to apply before transition
-            setTimeout(() => {
-                targetScreen.classList.add('active');
-            }, 10);
-        }
+        targetScreen.classList.remove('is-exiting');
+        targetScreen.classList.add('is-entering');
+        
+        requestAnimationFrame(() => {
+            targetScreen.classList.add('is-active');
+            targetScreen.classList.remove('is-entering');
+        });
 
         navButtons.forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.target === screenId);
+            btn.classList.toggle('is-active', btn.dataset.target === screenId);
         });
     };
 
@@ -101,7 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderMenu = () => {
         const grid = document.getElementById('menu-grid');
         if (!state.menu) {
-            grid.innerHTML = '<p class="card">Меню еще не создано. Перейдите в настройки, чтобы сгенерировать план питания.</p>';
+            grid.innerHTML = '<div class="card"><p>Меню еще не создано. Перейдите в настройки, чтобы сгенерировать план питания.</p></div>';
+            showScreen('settings');
             return;
         }
         grid.innerHTML = '';
@@ -110,16 +125,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const dayData = state.menu[dateStr];
             const date = new Date(dateStr);
             const dayCard = document.createElement('div');
-            dayCard.className = 'card';
+            dayCard.className = 'card day-card';
             
             const lunchRecipe = activeRecipes.find(r => r.name === dayData.lunch);
             const dinnerRecipe = activeRecipes.find(r => r.name === dayData.dinner);
             
-            dayCard.innerHTML = `
-                <h2>${weekdays[date.getDay()]}, ${date.toLocaleDateString('ru-RU')}</h2>
-                ${lunchRecipe ? `<div class="meal-item" data-recipe-id="${lunchRecipe.id}"><span>Обед</span><p>${lunchRecipe.name}</p></div>` : ''}
-                ${dinnerRecipe ? `<div class="meal-item" data-recipe-id="${dinnerRecipe.id}"><span>Ужин</span><p>${dinnerRecipe.name}</p></div>` : ''}
-            `;
+            let content = `<h2>${weekdays[date.getDay()]}, ${date.toLocaleDateString('ru-RU')}</h2>`;
+            if (lunchRecipe) content += `<div class="meal-item" data-recipe-id="${lunchRecipe.id}"><span>Обед</span><p>${lunchRecipe.name}</p></div>`;
+            if (dinnerRecipe) content += `<div class="meal-item" data-recipe-id="${dinnerRecipe.id}"><span>Ужин</span><p>${dinnerRecipe.name}</p></div>`;
+            
+            dayCard.innerHTML = content;
             grid.appendChild(dayCard);
         });
     };
@@ -131,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!recipe) return;
 
         document.getElementById('recipe-name').textContent = recipe.name;
-        document.getElementById('recipe-image').src = `https://placeholder.co/600x300/${'D4A373'}/${'F9F7F4'}?text=${encodeURIComponent(recipe.name)}`;
+        document.getElementById('recipe-image').src = `https://placeholder.co/600x400/${'D4A373'.substring(1)}/${'F9F7F4'.substring(1)}?text=${encodeURIComponent(recipe.name)}`;
         
         const ingredientsList = document.getElementById('recipe-ingredients');
         ingredientsList.innerHTML = recipe.ingredients.map(ing => `<li>${ing.name} - ${ing.amount * state.settings.people} ${ing.unit}</li>`).join('');
@@ -145,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderShoppingList = () => {
         const container = document.getElementById('shopping-list-container');
         if (!state.shoppingList || state.shoppingList.length === 0) {
-            container.innerHTML = '<p class="card">Список покупок пуст. Сначала сгенерируйте меню.</p>';
+            container.innerHTML = '<div class="card"><p>Список покупок пуст. Сначала сгенерируйте меню.</p></div>';
             updateProgress(0, 0);
             return;
         }
@@ -184,11 +199,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         recipe.steps.forEach((step, index) => {
             const stepEl = document.createElement('div');
-            stepEl.className = 'cooking-step' + (index === 0 ? ' active' : '');
+            stepEl.className = 'cooking-step' + (index === 0 ? ' is-active' : '');
             stepEl.innerHTML = `<p>${index + 1}. ${step.instruction}</p>`;
             if (step.time) {
-                stepEl.innerHTML += `<div class="timer" id="timer-${index}">00:00</div>
-                <button class="btn start-timer-btn" data-time="${step.time}" data-timer-id="${index}">Запустить таймер</button>`;
+                stepEl.innerHTML += `<div class="timer" id="timer-${index}">${String(step.time).padStart(2, '0')}:00</div>
+                <button class="btn btn-secondary start-timer-btn" data-time="${step.time}" data-timer-id="${index}">Запустить таймер</button>`;
             }
             container.appendChild(stepEl);
         });
@@ -201,12 +216,15 @@ document.addEventListener('DOMContentLoaded', () => {
         createMenuBtn.textContent = 'Генерация...';
         
         if (state.settings.useGemini && state.settings.apiKey) {
+            loader.classList.add('is-active');
             try {
                 await generatePlanWithGemini();
             } catch (error) {
                 console.error("Gemini AI Error:", error);
                 alert("Ошибка при генерации с помощью Gemini AI. Используется локальная база рецептов.");
                 generatePlanLocally();
+            } finally {
+                loader.classList.remove('is-active');
             }
         } else {
             generatePlanLocally();
@@ -240,24 +258,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const generatePlanWithGemini = async () => {
-        const { GoogleGenAI, Type } = genai;
         const ai = new GoogleGenAI({ apiKey: state.settings.apiKey });
+        const model = 'gemini-2.5-flash';
         
-        const prompt = `
-            Создай план питания (обед и ужин) на ${state.settings.days} дней для ${state.settings.people} человек.
-            Учти предпочтения: ${state.settings.preferences.join(', ') || 'нет'}.
-            Не повторяй блюда.
-            
-            Верни ответ СТРОГО в формате JSON. JSON должен содержать два ключа: "menu" и "recipes".
-            - "menu": объект, где ключ - дата "YYYY-MM-DD", а значение - объект { "lunch": "Название блюда", "dinner": "Название блюда" }.
-            - "recipes": массив объектов, где каждый объект - это рецепт с полями: "id" (уникальная строка, например "g1"), "name" (строка), "type" ("lunch" или "dinner"), "ingredients" (массив объектов { "name": "...", "amount": ..., "unit": "..." } где amount - на ОДНОГО человека), и "steps" (массив объектов { "instruction": "...", "time": ... } где time - опциональное число в минутах).
-            
-            Пример структуры рецепта:
-            { "id": "g1", "name": "Курица с овощами", "type": "dinner", "ingredients": [{"name": "Куриное филе", "amount": 150, "unit": "г"}], "steps": [{"instruction": "Нарежьте курицу", "time": 5}] }
-        `;
+        const prompt = `Создай план питания (обед и ужин) на ${state.settings.days} дней для ${state.settings.people} человек. Учти предпочтения: ${state.settings.preferences.join(', ') || 'нет'}. Не повторяй блюда. Верни ответ СТРОГО в формате JSON. JSON должен содержать два ключа: "menu" и "recipes". "menu": объект, где ключ - дата "YYYY-MM-DD", а значение - объект { "lunch": "Название блюда", "dinner": "Название блюда" }. "recipes": массив объектов, где каждый объект - это рецепт с полями: "id" (уникальная строка, например "g1"), "name" (строка), "type" ("lunch" или "dinner"), "ingredients" (массив объектов { "name": "...", "amount": ..., "unit": "..." } где amount - на ОДНОГО человека), и "steps" (массив объектов { "instruction": "...", "time": ... } где time - опциональное число в минутах).`;
         
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: model,
             contents: prompt,
             config: { responseMimeType: "application/json" }
         });
@@ -278,13 +285,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!state.menu) return;
 
         Object.values(state.menu).forEach(day => {
-            const lunch = activeRecipes.find(r => r.name === day.lunch);
-            const dinner = activeRecipes.find(r => r.name === day.dinner);
-
-            [lunch, dinner].forEach(recipe => {
+            [day.lunch, day.dinner].forEach(mealName => {
+                const recipe = activeRecipes.find(r => r.name === mealName);
                 if (!recipe || !recipe.ingredients) return;
                 recipe.ingredients.forEach(ing => {
-                    const key = `${ing.name}-${ing.unit}`;
+                    const key = `${ing.name.toLowerCase()}-${ing.unit}`;
                     if (!requiredIngredients[key]) {
                         requiredIngredients[key] = { name: ing.name, unit: ing.unit, totalAmount: 0 };
                     }
@@ -312,6 +317,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearInterval(activeTimers[timerId].interval);
                 timerEl.textContent = 'Готово!';
                 alarmSound.play();
+                const btn = document.querySelector(`.start-timer-btn[data-timer-id="${timerId}"]`);
+                if(btn) btn.disabled = false;
             }
             totalSeconds--;
         };
@@ -328,20 +335,23 @@ document.addEventListener('DOMContentLoaded', () => {
             shoppingList: state.shoppingList,
             activeRecipes: activeRecipes,
             settings: state.settings
-        });
-        navigator.clipboard.writeText(dataStr).then(() => {
-            alert('Данные плана скопированы в буфер обмена!');
-        }).catch(err => {
-            console.error('Could not copy text: ', err);
-            prompt("Не удалось скопировать автоматически. Скопируйте вручную:", dataStr);
-        });
+        }, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `family-menu-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        alert('Файл с планом питания скачан!');
     };
 
-    const importData = () => {
-        const dataStr = prompt("Вставьте данные вашего плана для импорта:");
-        if (dataStr) {
+    const importData = (file) => {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
             try {
-                const importedData = JSON.parse(dataStr);
+                const importedData = JSON.parse(event.target.result);
                 if (importedData.menu && importedData.shoppingList && importedData.activeRecipes) {
                     state.menu = importedData.menu;
                     state.shoppingList = importedData.shoppingList;
@@ -354,13 +364,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     showScreen('menu');
                     alert('План успешно импортирован!');
                 } else {
-                    alert('Ошибка: неверный формат данных.');
+                    alert('Ошибка: неверный формат файла.');
                 }
             } catch (e) {
-                alert('Ошибка: не удалось прочитать данные.');
+                alert('Ошибка: не удалось прочитать файл.');
                 console.error("Import error:", e);
             }
-        }
+        };
+        reader.readAsText(file);
     };
     
     // --- EVENT LISTENERS ---
@@ -381,8 +392,10 @@ document.addEventListener('DOMContentLoaded', () => {
         state.settings.preferences = [...document.querySelectorAll('#settings-form input[name="preference"]:checked')].map(cb => cb.value);
         saveState();
     };
-
-    settingsForm.addEventListener('input', updateSettings);
+    
+    peopleCountInput.addEventListener('input', () => { peopleValueSpan.textContent = peopleCountInput.value; });
+    dayCountInput.addEventListener('input', () => { daysValueSpan.textContent = dayCountInput.value; });
+    settingsForm.addEventListener('change', updateSettings);
 
     document.getElementById('menu-grid').addEventListener('click', (e) => {
         const mealItem = e.target.closest('.meal-item');
@@ -423,7 +436,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     document.getElementById('export-btn').addEventListener('click', exportData);
-    document.getElementById('import-btn').addEventListener('click', importData);
+    document.getElementById('import-file').addEventListener('change', (e) => importData(e.target.files[0]));
 
     // --- INITIALIZATION ---
     const init = () => {
