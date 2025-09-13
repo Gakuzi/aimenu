@@ -289,6 +289,20 @@ button:disabled {
     color: var(--accent-secondary);
     font-weight: 700;
 }
+.timer-btn {
+    display: inline-block;
+    background-color: var(--accent-secondary);
+    color: var(--accent-main);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 12pt;
+    font-weight: bold;
+    margin-left: 8px;
+}
+.timer-btn.active {
+    background-color: var(--accent-success);
+    color: white;
+}
 
 /* Shopping List */
 #shopping-list {
@@ -309,10 +323,16 @@ button:disabled {
 .shopping-item.checked .checkbox {
     background-color: var(--accent-success);
     border-color: var(--accent-success);
+    animation: pulse 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 .shopping-item.checked .checkbox svg {
     opacity: 1;
     transform: scale(1);
+}
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
 }
 
 .checkbox {
@@ -448,18 +468,6 @@ button:disabled {
     text-align: center;
 }
 
-.modal-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-top: 24px;
-    padding-top: 24px;
-    border-top: 1px solid #F0EDE7;
-}
-.modal-actions button {
-    flex-grow: 1;
-}
-
 .modal-action-bar {
     padding: 24px 0 0;
     background: none;
@@ -473,44 +481,69 @@ button:disabled {
     line-height: 1.5;
 }
 
-/* AI Diagnostics Modal */
-#ai-diag-log {
-    background-color: var(--bg-card);
-    border: 1px solid #EAE4DD;
-    border-radius: 12px;
-    padding: 16px;
-    margin-top: 16px;
-    min-height: 100px;
-    max-height: 200px;
+/* Debug Console */
+.debug-console {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.9);
+    color: #E0E0E0;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    max-height: 30vh;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    z-index: 9999;
+    display: none; /* Initially hidden */
+    flex-direction: column;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
+}
+.debug-console.visible {
+    display: flex;
+}
+#debug-log-output {
+    padding: 12px;
     overflow-y: auto;
-    font-size: 12pt;
-    line-height: 1.6;
+    flex-grow: 1;
+    line-height: 1.5;
 }
-#ai-diag-log p {
-    margin: 0 0 8px;
-    padding: 0;
-}
-#ai-diag-log .log-step { color: var(--text-primary); }
-#ai-diag-log .log-success { color: var(--accent-success); font-weight: bold; }
-#ai-diag-log .log-error { color: var(--accent-warning); font-weight: bold; }
-#ai-diag-log .log-solution { color: var(--accent-main); font-weight: bold; }
-
-.error-box {
-    background-color: #fdebe7;
-    border: 1px solid var(--accent-warning);
-    border-radius: 12px;
-    padding: 16px;
-    margin-top: 16px;
-    font-size: 13pt;
-    display: none;
-}
-.error-box strong {
-    color: var(--accent-warning);
+#debug-log-output span {
     display: block;
-    margin-bottom: 8px;
+    white-space: pre-wrap;
+    word-break: break-all;
 }
-.error-box p { margin: 4px 0; }
-.error-box a { color: var(--accent-main); font-weight: bold; }
+.debug-input-container {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-top: 1px solid #444;
+    background: #111;
+}
+.debug-input-container span {
+    color: #0F0;
+    margin-right: 8px;
+}
+#debug-command-input {
+    flex-grow: 1;
+    background: transparent;
+    border: none;
+    color: #E0E0E0;
+    font-family: inherit;
+    font-size: 12px;
+    outline: none;
+}
+
+/* Log Colors */
+.log-GEN { color: #87CEFA; } /* LightSkyBlue */
+.log-REC { color: #FFD700; } /* Gold */
+.log-SHOP { color: #98FB98; } /* PaleGreen */
+.log-TMR { color: #FFB6C1; } /* LightPink */
+.log-STOR { color: #DDA0DD; } /* Plum */
+.log-ERR { color: #FF6347; font-weight: bold; } /* Tomato */
+.log-WARN { color: #FFA500; } /* Orange */
+.log-DBG { color: #00FFFF; } /* Aqua */
+.log-CMD { color: #FFFFFF; font-style: italic; } /* White */
 
 
 /* Preloader */
@@ -583,15 +616,20 @@ button:disabled {
 
 /* Print Styles */
 @media print {
-    body {
-        background: none;
+    body, html {
+        background: #fff !important;
+        color: #000 !important;
         font-size: 12pt;
-        color: #000;
     }
-    #app-container, .modal-overlay, .preloader-overlay, .toast {
-        display: none;
+    #app-container, .modal-overlay, #preloader, #toast, #debug-console, #bottom-nav, .action-bar, header {
+        display: none !important;
     }
     .print-area {
         display: block !important;
+        position: static !important;
+        width: 100%;
+        height: auto;
+        overflow: visible !important;
+        padding: 0;
     }
 }

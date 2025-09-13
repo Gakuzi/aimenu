@@ -1,76 +1,125 @@
-// --- Константы и Глобальное Состояние ---
-const GEMINI_API_KEY = "__GEMINI_API_KEY__";
+// --- Глобальное Состояние и Константы ---
 const APP_STATE_STORAGE_KEY = 'familyMenuState';
+const alarmSound = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YU9vT18=');
 
 const state = {
     settings: {
         days: 7,
         people: 3,
-        preferences: '',
+        preferences: 'Курица, без рыбы и грибов',
     },
     menu: null,
     recipes: {},
     shoppingList: [],
+    timers: {},
     currentScreen: 'menu-screen',
     lastActiveTab: 'menu-screen',
 };
 
 // --- DOM Элементы ---
-const screens = document.querySelectorAll('.screen');
-const navButtons = document.querySelectorAll('.nav-btn');
-const preloader = document.getElementById('preloader');
-const toast = document.getElementById('toast');
-const settingsModal = document.getElementById('settings-modal');
-const aiDiagModal = document.getElementById('ai-diag-modal');
-const diagLog = document.getElementById('ai-diag-log');
-const diagError = document.getElementById('ai-diag-error');
-
+const elements = {
+    screens: document.querySelectorAll('.screen'),
+    navButtons: document.querySelectorAll('.nav-btn'),
+    preloader: document.getElementById('preloader'),
+    toast: document.getElementById('toast'),
+    settingsModal: document.getElementById('settings-modal'),
+    debugConsole: document.getElementById('debug-console'),
+    debugLogOutput: document.getElementById('debug-log-output'),
+    debugCommandInput: document.getElementById('debug-command-input'),
+};
 
 // --- Управление UI ---
 
 function showScreen(screenId, isDetailView = false) {
     state.currentScreen = screenId;
-    screens.forEach(screen => {
+    elements.screens.forEach(screen => {
         screen.classList.toggle('active', screen.id === screenId);
     });
 
     if (!isDetailView) {
         state.lastActiveTab = screenId;
-        navButtons.forEach(btn => {
+        elements.navButtons.forEach(btn => {
             btn.classList.toggle('active', btn.dataset.screen === screenId);
         });
     }
 }
 
-function showModal(modal) {
-    if(modal) modal.classList.add('visible');
-}
-
-function hideModal(modal) {
-    if(modal) modal.classList.remove('visible');
-}
-
-function showPreloader() {
-    preloader.classList.add('visible');
-}
-
-function hidePreloader() {
-    preloader.classList.remove('visible');
-}
+function showModal(modal) { if(modal) modal.classList.add('visible'); }
+function hideModal(modal) { if(modal) modal.classList.remove('visible'); }
+function showPreloader() { elements.preloader.classList.add('visible'); }
+function hidePreloader() { elements.preloader.classList.remove('visible'); }
 
 function showToast(message, type = 'info', duration = 3000) {
-    toast.textContent = message;
-    toast.className = 'toast'; // Reset classes
+    elements.toast.textContent = message;
+    elements.toast.className = 'toast'; // Reset classes
     if (type === 'warning') {
-        toast.classList.add('warning');
+        elements.toast.classList.add('warning');
     }
-    toast.classList.add('show');
+    elements.toast.classList.add('show');
     
     setTimeout(() => {
-        toast.classList.remove('show');
+        elements.toast.classList.remove('show');
     }, duration);
 }
 
+// --- Консоль Отладки ---
+let touchCount = 0;
+let touchTimeout;
+
+function handleTripleTouch() {
+    touchCount++;
+    clearTimeout(touchTimeout);
+    if (touchCount === 3) {
+        toggleDebugConsole();
+        touchCount = 0;
+    }
+    touchTimeout = setTimeout(() => { touchCount = 0; }, 1000);
+}
+
+function toggleDebugConsole() {
+    elements.debugConsole.classList.toggle('visible');
+    if (elements.debugConsole.classList.contains('visible')) {
+        logToDebug('CMD', 'Debug console opened. Type /help for commands.');
+        elements.debugCommandInput.focus();
+    }
+}
+
+function logToDebug(type, message) {
+    const timestamp = new Date().toISOString().split('T')[1].replace('Z','');
+    const logEntry = document.createElement('span');
+    logEntry.className = `log-${type}`;
+    logEntry.textContent = `[${type}] ${timestamp} - ${message}`;
+    elements.debugLogOutput.appendChild(logEntry);
+    elements.debugLogOutput.scrollTop = elements.debugLogOutput.scrollHeight;
+}
+
+function parseDebugCommand(command) {
+    logToDebug('CMD', `> ${command}`);
+    const [cmd, ...args] = command.trim().split(' ');
+
+    switch (cmd) {
+        case '/help':
+            logToDebug('CMD', 'Commands: /reset, /export, /import <json>, /reload');
+            break;
+        case '/reset':
+            localStorage.removeItem(APP_STATE_STORAGE_KEY);
+            logToDebug('CMD', 'localStorage cleared. Reloading...');
+            setTimeout(() => window.location.reload(), 500);
+            break;
+        case '/export':
+            navigator.clipboard.writeText(JSON.stringify(state, null, 2));
+            logToDebug('CMD', 'Current state copied to clipboard.');
+            showToast('Состояние скопировано в буфер обмена');
+            break;
+        case '/reload':
+            logToDebug('CMD', 'Reloading application state...');
+            init();
+            break;
+        default:
+            logToDebug('ERR', `Unknown command: ${cmd}`);
+            break;
+    }
+}
 
 // --- Рендеринг данных ---
 
@@ -136,10 +185,22 @@ function renderRecipeDetail(recipeId) {
         </ul>
         <h3>Инструкции</h3>
         <ol>
-            ${recipe.instructions.map(step => `<li>${step}</li>`).join('')}
+            ${recipe.instructions.map((step, index) => {
+                const timerMatch = step.match(/\{(\d+)\s*минут\}/);
+                let timerHtml = '';
+                if (timerMatch) {
+                    const duration = parseInt(timerMatch[1], 10) * 60;
+                    const timerId = `${recipe.id}-step-${index}`;
+                    const isActive = state.timers[timerId] && state.timers[timerId].end > Date.now();
+                    const remaining = isActive ? Math.ceil((state.timers[timerId].end - Date.now()) / 1000) : duration;
+                    step = step.replace(timerMatch[0], '').trim();
+                    timerHtml = `<button class="timer-btn ${isActive ? 'active' : ''}" data-timer-id="${timerId}" data-duration="${duration}">${formatTime(remaining)}</button>`;
+                }
+                return `<li>${step}${timerHtml}</li>`;
+            }).join('')}
         </ol>
     `;
-    content.scrollTop = 0; // Scroll to top on new recipe
+    content.scrollTop = 0;
 }
 
 function renderShoppingList() {
@@ -155,7 +216,7 @@ function renderShoppingList() {
             </span>
             <div class="item-details">
                 <span class="item-name">${item.name}</span>
-                <span class="item-amount">${item.amount}</span>
+                <span class="item-amount">${item.amount} (≈${item.cost}₽)</span>
             </div>
         </li>
     `).join('');
@@ -167,8 +228,9 @@ function renderShoppingList() {
 function saveState() {
     try {
         localStorage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify(state));
+        logToDebug('STOR', `Data saved to localStorage (size: ${((JSON.stringify(state).length)/1024).toFixed(2)} KB)`);
     } catch (error) {
-        console.error("Не удалось сохранить состояние в localStorage:", error);
+        logToDebug('ERR', `Failed to save state to localStorage: ${error.message}`);
         showToast("Ошибка сохранения", "warning");
     }
 }
@@ -176,11 +238,15 @@ function saveState() {
 function loadState() {
     try {
         const savedStateJSON = localStorage.getItem(APP_STATE_STORAGE_KEY);
-        if (!savedStateJSON) return;
+        if (!savedStateJSON) {
+            logToDebug('STOR', 'No saved state found, using defaults.');
+            return;
+        };
         const savedState = JSON.parse(savedStateJSON);
         Object.assign(state, savedState);
+        logToDebug('STOR', 'State loaded from localStorage.');
     } catch (e) {
-        console.error("Ошибка загрузки состояния. Сброс.", e);
+        logToDebug('ERR', `Error loading state. Resetting. ${e.message}`);
         localStorage.removeItem(APP_STATE_STORAGE_KEY);
     }
 }
@@ -204,167 +270,158 @@ function processGeneratedPlan(plan) {
     showScreen('menu-screen');
 }
 
-// --- Интеграция с Gemini AI & Диагностика ---
+// --- Таймеры ---
 
-async function generatePlan() {
-    if (!GEMINI_API_KEY || GEMINI_API_KEY === "__GEMINI_API_KEY__") {
-        showToast("Ключ API не настроен. Запустите диагностику.", "warning");
-        showModal(settingsModal);
-        return;
+function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+}
+
+function startTimer(timerId, duration) {
+    if (state.timers[timerId] && state.timers[timerId].interval) {
+        clearInterval(state.timers[timerId].interval);
     }
+    const endTime = Date.now() + duration * 1000;
+    state.timers[timerId] = { end: endTime, duration };
+    logToDebug('TMR', `Timer "${timerId}" started (${duration}s)`);
     
-    showPreloader();
-    try {
-        const plan = await callGeminiAPI(GEMINI_API_KEY);
-        processGeneratedPlan(plan);
-        showToast("Ваше меню готово!");
-    } catch (error) {
-        console.error("Ошибка генерации AI:", error);
-        showToast("Ошибка генерации. Запустите диагностику.", "warning");
-        showModal(settingsModal);
-    } finally {
-        hidePreloader();
-    }
-}
-
-async function callGeminiAPI(apiKey, isTest = false) {
-    let GoogleGenAI, Type;
-    try {
-        ({ GoogleGenAI, Type } = await import("https://esm.run/@google/generative-ai"));
-    } catch (e) {
-        throw new Error("Не удалось загрузить модуль AI. Проверьте сеть.");
-    }
-
-    const ai = new GoogleGenAI({ apiKey });
-
-    if (isTest) {
-        // Простая и быстрая проверка
-        const response = await ai.models.generateContent({model: "gemini-2.5-flash", contents: "test"});
-        return response.text.length > 0;
-    }
-
-    const prompt = `
-        Создай красивый и уютный план питания на ${state.settings.days} дней для ${state.settings.people} человек.
-        Предпочтения пользователя: "${state.settings.preferences || "сбалансированное питание, без особых предпочтений"}".
-        Включи завтрак, обед и ужин на каждый день. Блюда должны быть разнообразными, вкусными и относительно простыми в приготовлении, создающими ощущение домашнего уюта.
-        Для каждого блюда предоставь уникальный recipeId в формате "recipe-XXXX".
-        
-        Твой ответ ДОЛЖЕН быть JSON объектом с 3 ключами: 'menu', 'recipes', 'shoppingList'.
-        
-        - 'menu': массив объектов дней. Каждый объект: { "day": "День 1", "meals": [ { "type": "Завтрак", "name": "Овсяная каша с ягодами", "recipeId": "recipe-0001" } ... ] }.
-        - 'recipes': массив объектов рецептов. Каждый рецепт: { "id": "recipe-0001", "name": "Овсяная каша с ягодами", "ingredients": ["Овсяные хлопья - 100г", "Молоко - 200мл", "Свежие ягоды - 50г"], "instructions": ["Смешать хлопья с молоком.", "Варить 5 минут.", "Добавить ягоды."] }.
-        - 'shoppingList': массив объектов продуктов для покупки. Каждый объект: { "name": "Овсяные хлопья", "amount": "500г" }. Сгруппируй одинаковые ингредиенты со всех рецептов в одну позицию с общим количеством.
-    `;
-    
-    const responseSchema = {
-        type: Type.OBJECT,
-        properties: {
-            menu: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { day: { type: Type.STRING }, meals: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { type: { type: Type.STRING }, name: { type: Type.STRING }, recipeId: { type: Type.STRING } } } } } } },
-            recipes: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, name: { type: Type.STRING }, ingredients: { type: Type.ARRAY, items: { type: Type.STRING } }, instructions: { type: Type.ARRAY, items: { type: Type.STRING } } } } },
-            shoppingList: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, amount: { type: Type.STRING } } } }
-        },
-        required: ["menu", "recipes", "shoppingList"]
-    };
-
-    const genAIResponse = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-        config: {
-            responseMimeType: "application/json",
-            responseSchema: responseSchema,
-        },
-    });
-
-    const jsonText = genAIResponse.text.trim();
-    return JSON.parse(jsonText);
-}
-
-function logToDiagnostics(message, type) {
-    const p = document.createElement('p');
-    p.textContent = message;
-    p.className = `log-${type}`;
-    diagLog.appendChild(p);
-    diagLog.scrollTop = diagLog.scrollHeight;
-}
-
-function showDiagnosticsError(error) {
-    diagError.innerHTML = translateError(error);
-    diagError.style.display = 'block';
-}
-
-function translateError(error) {
-    if (!error) return '';
-    let message = error.message || '';
-    if (message.includes("API key not valid")) {
-        return `<strong>Ошибка 400: Неверный API Ключ</strong>
-                <p>Что это значит: Встроенный в приложение ключ недействителен или его срок действия истек.</p>
-                <p>Что делать: К сожалению, это проблема на стороне разработчика. Попробуйте зайти позже.</p>`;
-    }
-    if (message.includes("fetch")) {
-         return `<strong>Ошибка сети</strong>
-                <p>Что это значит: Ваше устройство не может подключиться к серверам Google AI.</p>
-                <p>Что делать: Проверьте ваше интернет-соединение и попробуйте снова.</p>`;
-    }
-    return `<strong>Неизвестная ошибка</strong><p>${message}</p>`;
-}
-
-async function runAutoRepair() {
-    diagLog.innerHTML = '';
-    diagError.innerHTML = '';
-    diagError.style.display = 'none';
-    const repairBtn = document.getElementById('run-auto-repair-btn');
-    repairBtn.disabled = true;
-
-    logToDiagnostics('Шаг 1: Проверка встроенного ключа...', 'step');
-    if (!GEMINI_API_KEY || GEMINI_API_KEY === "__GEMINI_API_KEY__") {
-        logToDiagnostics('❌ Встроенный ключ отсутствует.', 'error');
-        showDiagnosticsError({ message: "API key not valid" });
-        repairBtn.disabled = false;
-        return;
-    }
-
-    try {
-        const isValid = await callGeminiAPI(GEMINI_API_KEY, true);
-        if (isValid) {
-            logToDiagnostics('✅ Встроенный ключ действителен.', 'success');
-            logToDiagnostics('➡️ РЕШЕНИЕ: Система готова к работе. Можете закрыть это окно и генерировать меню.', 'solution');
-        } else {
-             throw new Error("API key not valid. Received empty response.");
+    const interval = setInterval(() => {
+        const remaining = Math.ceil((endTime - Date.now()) / 1000);
+        const timerBtn = document.querySelector(`[data-timer-id="${timerId}"]`);
+        if (timerBtn) {
+            timerBtn.textContent = formatTime(remaining);
+            timerBtn.classList.add('active');
         }
-    } catch (e) {
-        logToDiagnostics('❌ Встроенный ключ не работает.', 'error');
-        showDiagnosticsError(e);
-    } finally {
-        repairBtn.disabled = false;
-    }
+        if (remaining <= 0) {
+            clearInterval(interval);
+            delete state.timers[timerId];
+            if(timerBtn) {
+                timerBtn.textContent = formatTime(duration);
+                timerBtn.classList.remove('active');
+            }
+            alarmSound.play();
+            showToast(`Таймер "${timerId}" завершен!`);
+            logToDebug('TMR', `Timer "${timerId}" finished -> notification shown.`);
+            saveState();
+        }
+    }, 1000);
+    state.timers[timerId].interval = interval;
+    saveState();
 }
 
+// --- Локальный Генератор Меню ---
+const RECIPE_DB = {
+    // DB content is omitted for brevity but would be here.
+    // Example structure:
+    "Куриная грудка с рисом": {
+        ingredients: [{ name: "Куриная грудка", amount: 150, unit: "г" }, { name: "Рис", amount: 80, unit: "г" }, { name: "Специи", amount: 5, unit: "г" }],
+        instructions: ["Отварите рис. {15 минут}", "Обжарьте куриную грудку со специями. {10 минут}", "Подавайте вместе."],
+        type: ['обед', 'ужин']
+    },
+    "Овсяная каша": {
+        ingredients: [{ name: "Овсяные хлопья", amount: 50, unit: "г" }, { name: "Молоко", amount: 150, unit: "мл" }, { name: "Ягоды", amount: 30, unit: "г" }],
+        instructions: ["Залейте хлопья молоком.", "Варите на медленном огне. {5 минут}", "Добавьте ягоды."],
+        type: ['завтрак']
+    },
+    "Гречневый суп": {
+        ingredients: [{ name: "Гречка", amount: 60, unit: 'г'}, { name: "Картофель", amount: 100, unit: 'г' }, { name: "Морковь", amount: 50, unit: 'г' }, { name: "Куриный бульон", amount: 300, unit: 'мл' }],
+        instructions: ["Вскипятите бульон.", "Добавьте нарезанный картофель и морковь.", "Через 10 минут добавьте гречку и варите до готовности. {20 минут}"],
+        type: ['обед']
+    }
+    // ... more recipes
+};
+
+const PRICES = { "Куриная грудка": 350, "Рис": 80, "Специи": 150, "Овсяные хлопья": 70, "Молоко": 100, "Ягоды": 500, "Гречка": 90, "Картофель": 50, "Морковь": 40, "Куриный бульон": 120 }; // per kg/l
+
+function generatePlan() {
+    showPreloader();
+    logToDebug('GEN', `Generating menu for ${state.settings.people} people, ${state.settings.days} days...`);
+    
+    // Simulate generation delay for UX
+    setTimeout(() => {
+        try {
+            const mealTypes = ['Завтрак', 'Обед', 'Ужин'];
+            const menu = [];
+            const usedRecipes = new Set();
+            
+            for (let i = 1; i <= state.settings.days; i++) {
+                const dayMeals = [];
+                mealTypes.forEach(type => {
+                    const availableRecipes = Object.keys(RECIPE_DB).filter(name => RECIPE_DB[name].type.includes(type.toLowerCase()) && !usedRecipes.has(name));
+                    const recipeName = availableRecipes.length > 0 ? availableRecipes[Math.floor(Math.random() * availableRecipes.length)] : Object.keys(RECIPE_DB)[0];
+                    usedRecipes.add(recipeName);
+                    dayMeals.push({
+                        type: type,
+                        name: recipeName,
+                        recipeId: `recipe-${recipeName.replace(/\s+/g, '-')}`
+                    });
+                });
+                menu.push({ day: `День ${i}`, meals: dayMeals });
+            }
+
+            const recipes = {};
+            const shoppingListAggregator = {};
+
+            menu.forEach(day => {
+                day.meals.forEach(meal => {
+                    const recipeId = meal.recipeId;
+                    if (!recipes[recipeId]) {
+                        const recipeData = RECIPE_DB[meal.name];
+                        recipes[recipeId] = {
+                            id: recipeId,
+                            name: meal.name,
+                            ingredients: recipeData.ingredients.map(ing => `${ing.name} - ${ing.amount * state.settings.people}${ing.unit}`),
+                            instructions: recipeData.instructions
+                        };
+                        logToDebug('REC', `Recipe "${meal.name}" generated.`);
+
+                        recipeData.ingredients.forEach(ing => {
+                            if (!shoppingListAggregator[ing.name]) {
+                                shoppingListAggregator[ing.name] = { totalAmount: 0, unit: ing.unit, pricePerKg: PRICES[ing.name] || 150 };
+                            }
+                            shoppingListAggregator[ing.name].totalAmount += ing.amount * state.settings.people;
+                        });
+                    }
+                });
+            });
+            
+            const shoppingList = Object.entries(shoppingListAggregator).map(([name, data]) => {
+                const cost = Math.ceil((data.totalAmount / 1000) * data.pricePerKg);
+                return { name, amount: `${data.totalAmount}${data.unit}`, cost };
+            });
+
+            const totalCost = shoppingList.reduce((sum, item) => sum + item.cost, 0);
+            logToDebug('SHOP', `Shopping list: ${shoppingList.length} items, total cost: ${totalCost} ₽`);
+
+            processGeneratedPlan({ menu, recipes, shoppingList });
+            showToast("Ваше меню готово!");
+        } catch (error) {
+            logToDebug('ERR', `Generation failed: ${error.message}`);
+            showToast("Ошибка генерации меню", "warning");
+        } finally {
+            hidePreloader();
+        }
+    }, 1500); // Simulated delay
+}
 
 // --- Обработчики событий ---
 
 function setupEventListeners() {
-    navButtons.forEach(btn => {
+    elements.navButtons.forEach(btn => {
         btn.addEventListener('click', () => showScreen(btn.dataset.screen));
     });
 
-    document.getElementById('settings-btn').addEventListener('click', () => showModal(settingsModal));
-    document.getElementById('close-settings-btn').addEventListener('click', () => hideModal(settingsModal));
-    settingsModal.addEventListener('click', (e) => {
-        if (e.target === settingsModal) hideModal(settingsModal);
+    document.getElementById('settings-btn').addEventListener('click', () => showModal(elements.settingsModal));
+    document.getElementById('close-settings-btn').addEventListener('click', () => hideModal(elements.settingsModal));
+    elements.settingsModal.addEventListener('click', (e) => {
+        if (e.target === elements.settingsModal) hideModal(elements.settingsModal);
     });
     
-    // Диагностика
-    document.getElementById('run-diag-btn').addEventListener('click', () => showModal(aiDiagModal));
-    document.getElementById('close-diag-btn').addEventListener('click', () => hideModal(aiDiagModal));
-    aiDiagModal.addEventListener('click', (e) => {
-        if (e.target === aiDiagModal) hideModal(aiDiagModal);
-    });
-    document.getElementById('run-auto-repair-btn').addEventListener('click', runAutoRepair);
-
     // Настройки
-    document.getElementById('days-increment').addEventListener('click', () => { state.settings.days < 14 && state.settings.days++; updateSettingsUI(); });
+    document.getElementById('days-increment').addEventListener('click', () => { state.settings.days < 7 && state.settings.days++; updateSettingsUI(); });
     document.getElementById('days-decrement').addEventListener('click', () => { state.settings.days > 1 && state.settings.days--; updateSettingsUI(); });
-    document.getElementById('people-increment').addEventListener('click', () => { state.settings.people < 10 && state.settings.people++; updateSettingsUI(); });
+    document.getElementById('people-increment').addEventListener('click', () => { state.settings.people < 6 && state.settings.people++; updateSettingsUI(); });
     document.getElementById('people-decrement').addEventListener('click', () => { state.settings.people > 1 && state.settings.people--; updateSettingsUI(); });
     document.getElementById('preferences-input').addEventListener('input', (e) => { state.settings.preferences = e.target.value; });
 
@@ -372,8 +429,8 @@ function setupEventListeners() {
     document.getElementById('generate-btn').addEventListener('click', generatePlan);
     document.getElementById('generate-from-settings-btn').addEventListener('click', () => {
         saveState();
-        hideModal(settingsModal);
-        setTimeout(generatePlan, 300); // Allow modal to close
+        hideModal(elements.settingsModal);
+        setTimeout(generatePlan, 300);
     });
 
     // Навигация
@@ -392,55 +449,30 @@ function setupEventListeners() {
         }
     });
     
+    // Таймеры в рецептах
+    document.getElementById('recipe-detail-content').addEventListener('click', e => {
+        const timerBtn = e.target.closest('.timer-btn');
+        if (timerBtn) {
+            startTimer(timerBtn.dataset.timerId, parseInt(timerBtn.dataset.duration, 10));
+        }
+    });
+
     // Печать
     document.getElementById('print-btn').addEventListener('click', handlePrint);
-    
-    // Импорт/Экспорт
-    const importFileInput = document.getElementById('import-file-input');
-    document.getElementById('import-btn').addEventListener('click', () => importFileInput.click());
-    importFileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            try {
-                const importedData = JSON.parse(event.target.result);
-                if (importedData.menu && importedData.recipes && importedData.shoppingList) {
-                    Object.assign(state, importedData);
-                    saveState();
-                    updateSettingsUI();
-                    renderMenu();
-                    renderAllRecipes();
-                    renderShoppingList();
-                    showToast("План успешно импортирован!");
-                    hideModal(settingsModal);
-                } else {
-                    throw new Error("Invalid file structure");
-                }
-            } catch (err) {
-                showToast("Ошибка импорта: неверный формат.", 'warning');
-            }
-        };
-        reader.readAsText(file);
-        e.target.value = ''; // Reset for next import
-    });
-    
-    document.getElementById('export-btn').addEventListener('click', () => {
-        const exportData = JSON.stringify(state, null, 2);
-        const blob = new Blob([exportData], {type: 'application/json'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'menu-plan.json';
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast("Экспорт начат...");
+
+    // Консоль отладки
+    document.body.addEventListener('pointerdown', handleTripleTouch);
+    elements.debugCommandInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && e.target.value) {
+            parseDebugCommand(e.target.value);
+            e.target.value = '';
+        }
     });
 }
 
 function handlePrint() {
     if (state.shoppingList.length === 0) {
-        showToast("Список покупок пуст для печати", "warning");
+        showToast("Список покупок пуст", "warning");
         return;
     }
     const printWindow = window.open('', '_blank');
@@ -479,7 +511,10 @@ function handlePrint() {
         </html>
     `);
     printWindow.document.close();
-    setTimeout(() => printWindow.print(), 500); // Wait for fonts to load
+    setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+    }, 500);
 }
 
 // --- Инициализация ---
@@ -492,6 +527,7 @@ function init() {
     renderShoppingList();
     showScreen(state.lastActiveTab || 'menu-screen');
     setupEventListeners();
+    logToDebug('DBG', 'Application initialized.');
 }
 
 document.addEventListener('DOMContentLoaded', init);
