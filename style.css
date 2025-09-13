@@ -421,6 +421,11 @@ button:active {
     flex-grow: 1;
 }
 
+.modal-action-bar {
+    padding: 24px 0 0;
+    background: none;
+}
+
 .pwa-prompt {
     font-size: 13pt;
     color: var(--text-secondary);

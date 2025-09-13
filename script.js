@@ -417,6 +417,12 @@ function setupEventListeners() {
 
     document.getElementById('generate-btn')?.addEventListener('click', generatePlan);
 
+    document.getElementById('generate-from-settings-btn')?.addEventListener('click', () => {
+        hideModal(settingsModal);
+        // Delay to allow modal animation to finish before heavy work
+        setTimeout(generatePlan, 300);
+    });
+
     document.getElementById('back-to-menu-btn')?.addEventListener('click', () => showScreen(state.lastActiveTab));
 
     document.getElementById('shopping-list')?.addEventListener('click', (e) => {
