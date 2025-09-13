@@ -3,130 +3,517 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Меню на неделю</title>
+    <title>Семейное Меню</title>
 
     <!-- PWA-like behavior for iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Меню">
+    <meta name="apple-mobile-web-app-title" content="Семейное Меню">
     <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDE4MCAxODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgICA8cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjRjlGN0Y0Ii8+CiAgICA8cGF0aCBkPSJNNjIgNzRDMzggNzQgMzUgOTggMzUgMTEwQzM1IDEyMiAzOCAxNDYgNjIgMTQ2Qzg2IDE0NiA4OSAxMjIgODkgMTEwQzg5IDk4IDg2IDc0IDYyIDc0WiIgc3Ryb2tlPSIjOEI1RTNDIiBzdHJva2Utd2lkdGg9IjgiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPHBhdGggZD0iTTEyMCAxMzVMMTIwIDc1QzEyMCA2NSAxMTAgNjAgMTA1IDY1Qzk1IDc1IDEwMCA5NSAxMDggOTVDMTE2IDk1IDEyNSA4NSAxMTggODBDMTExIDc1IDEwMiA4NSAxMDIgOTVMMTAyIDEzNSIgc3Ryb2tlPSIjOEI1RTNDIiBzdHJva2Utd2lkdGg9IjgiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPHBhdGggZD0iTTU1IDYwQzYwIDUwIDcwIDUwIDc1IDYwIiBzdHJva2U9IiNENEEzNzMiIHN0cm9rZS13aWR0aPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICAgIDxwYXRoIGQ9Ik03MCA0MEM3NSAzMCA4NSAzMCA5MCA0MCIgc3Ryb2tlPSIjRDRBMzczIiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4=">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Lato:wght@400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- DESIGN SYSTEM & BASE STYLES --- */
+        :root {
+            --bg-main: #F9F7F4;
+            --bg-card: #FFFFFF;
+            --text-primary: #333;
+            --text-secondary: #7D7D7D;
+            --accent-main: #8B5E3C; /* Тёплый кофе */
+            --accent-secondary: #D4A373; /* Бежевый */
+            --accent-success: #5E7A6E; /* Мятный */
+            --accent-warning: #E07A5F; /* Тёплый оранжевый */
+            --soft-shadow: 0 6px 20px rgba(139, 94, 60, 0.04);
+            --strong-shadow: 0 8px 24px rgba(139, 94, 60, 0.1);
+            --font-headings: 'Nunito', sans-serif;
+            --font-text: 'Lato', sans-serif;
+            --border-radius: 20px;
+            --nav-height: 80px;
+            --safe-area-inset-bottom: env(safe-area-inset-bottom, 20px);
+            --transition-curve: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: var(--font-text);
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCIgdmlld0JveD0iMCAwIDUwIDUwIj4KICA8ZmlsdGVyIGlkPSJub2lzZSI+CiAgICA8ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giIHR5cGU9ImZyYWN0YWxOb2lzZSIvPgogIDwvZmlsdGVyPgogIDxyZWN0IHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCIgZmlsbD0iI0Y5RjdGNCIvPgogIDxyZWN0IHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4wMiIvPgo8L3N2Zz4=');
+        }
+
+        #app-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- SCREENS & LAYOUT --- */
+        main {
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-main);
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(1.05);
+            transition: opacity 0.4s var(--transition-curve), visibility 0.4s, transform 0.4s var(--transition-curve);
+            z-index: 1;
+        }
+        .screen.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+            z-index: 2;
+        }
+        .screen-content {
+            padding: 24px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        .screen-header {
+            font-family: var(--font-headings);
+            font-size: 24pt;
+            font-weight: 700;
+            color: var(--accent-main);
+            text-align: center;
+            padding: 24px 24px 16px;
+        }
+        
+        /* --- COMPONENTS --- */
+        .card {
+            background-color: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: var(--soft-shadow);
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48ZmlsdGVyIGlkPSJ0ZXh0dXJlIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iMC45IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIj48L2ZlVHVyYnVsZW5jZT48ZmVColorMatrixIHR5cGU9InNhdHVyYXRlIiB2YWx1ZXM9IjAiPjwvZmVColorMatrixPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCN0ZXh0dXJlKSIgb3BhY2l0eT0iMC4wMTUiPjwvcmVjdD48L3N2Zz4=');
+        }
+        
+        .main-button {
+            width: 100%;
+            height: 60px;
+            padding: 0 24px;
+            border: none;
+            border-radius: var(--border-radius);
+            background: linear-gradient(135deg, var(--accent-main) 0%, var(--accent-secondary) 100%);
+            color: white;
+            font-family: var(--font-headings);
+            font-size: 18pt;
+            font-weight: 700;
+            box-shadow: var(--strong-shadow);
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .main-button:active {
+            transform: scale(0.95);
+            box-shadow: var(--soft-shadow);
+        }
+        .main-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 16px;
+            border: 1px solid #EAE4DD;
+            border-radius: 16px;
+            background-color: var(--bg-card);
+            font-family: var(--font-text);
+            font-size: 16pt;
+            color: var(--text-primary);
+        }
+        
+        /* --- API KEY SCREEN --- */
+        #api-key-screen .screen-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        #api-key-screen .logo {
+            font-family: var(--font-headings);
+            font-weight: 300;
+            font-size: 28pt;
+            color: var(--accent-main);
+        }
+        #api-key-screen p {
+            color: var(--text-secondary);
+            max-width: 300px;
+            line-height: 1.6;
+        }
+        #api-key-screen .input-field {
+            margin: 24px 0;
+            text-align: center;
+        }
+        
+        /* --- SETTINGS SCREEN --- */
+        .setting-card {
+            margin-bottom: 24px;
+        }
+        .setting-card h3 {
+            font-family: var(--font-headings);
+            font-weight: 600;
+            font-size: 18pt;
+            margin: 0 0 16px;
+            color: var(--text-primary);
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .slider-container input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #EAE4DD;
+            border-radius: 4px;
+            outline: none;
+        }
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: var(--accent-main);
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .slider-value {
+            font-family: var(--font-headings);
+            font-weight: 700;
+            font-size: 18pt;
+            color: var(--accent-main);
+        }
+        .radio-group, .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .radio-group label, .checkbox-group label {
+            padding: 10px 18px;
+            border: 1px solid #EAE4DD;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .radio-group input, .checkbox-group input {
+            display: none;
+        }
+        .radio-group input:checked + label, .checkbox-group input:checked + label {
+            background-color: var(--accent-success);
+            border-color: var(--accent-success);
+            color: white;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        /* --- LOADER --- */
+        .loader-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(249, 247, 244, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s;
+        }
+        .loader-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .loader-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid var(--accent-secondary);
+            border-top-color: var(--accent-main);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .loader-overlay p {
+            margin-top: 24px;
+            font-family: var(--font-headings);
+            font-size: 16pt;
+            color: var(--accent-main);
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* --- NOTIFICATION TOAST --- */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translate(-50%, -100px);
+            padding: 14px 24px;
+            border-radius: var(--border-radius);
+            background-color: var(--accent-main);
+            color: white;
+            font-weight: 700;
+            box-shadow: var(--strong-shadow);
+            z-index: 1100;
+            opacity: 0;
+            transition: all 0.5s var(--transition-curve);
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+        .toast.error {
+            background-color: var(--accent-warning);
+        }
+
+        /* --- BOTTOM NAVIGATION --- */
+        #bottom-nav {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: calc(var(--nav-height) + var(--safe-area-inset-bottom));
+            padding-bottom: var(--safe-area-inset-bottom);
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-top: 1px solid rgba(139, 94, 60, 0.1);
+            display: none; /* Hidden by default */
+            justify-content: space-around;
+            z-index: 100;
+        }
+        #bottom-nav.visible {
+            display: flex;
+        }
+        .nav-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            color: var(--accent-secondary);
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        .nav-btn svg {
+            width: 24px; height: 24px;
+            stroke-width: 2px;
+            fill: none;
+            stroke: currentColor;
+            transition: transform 0.2s var(--transition-curve);
+        }
+        .nav-btn span {
+            font-size: 10pt;
+            margin-top: 4px;
+            font-family: var(--font-headings);
+            font-weight: 600;
+        }
+        .nav-btn.active {
+            color: var(--accent-main);
+        }
+        .nav-btn.active svg {
+            transform: scale(1.1);
+        }
+
+        /* --- DEBUG CONSOLE --- */
+        .debug-console {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.9);
+            color: #E0E0E0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            height: 30vh;
+            border-top: 1px solid var(--accent-secondary);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
+            transform: translateY(100%);
+            transition: transform 0.4s var(--transition-curve);
+        }
+        .debug-console.visible {
+            transform: translateY(0);
+        }
+        #debug-log-output {
+            padding: 12px;
+            overflow-y: auto;
+            flex-grow: 1;
+            line-height: 1.5;
+        }
+        #debug-log-output span {
+            display: block;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .debug-input-container {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-top: 1px solid #444;
+            background: #111;
+        }
+        #debug-command-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            color: #E0E0E0;
+            font-family: inherit;
+            font-size: 12px;
+            outline: none;
+        }
+        /* Log Colors */
+        .log-INFO { color: #87CEFA; }
+        .log-SUCCESS { color: #98FB98; }
+        .log-ERROR { color: #FF6347; font-weight: bold; }
+        .log-WARN { color: #FFA500; }
+        .log-CMD { color: #FFFFFF; font-style: italic; }
+
+    </style>
 </head>
 <body>
+
     <div id="app-container">
-        <!-- Main content area for screens -->
-        <main id="main-content">
-            <!-- Menu Screen -->
-            <section id="menu-screen" class="screen active">
-                <header class="screen-header">
-                    <h1>Меню на неделю</h1>
-                    <button id="settings-btn" class="icon-btn" aria-label="Открыть настройки">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                    </button>
-                </header>
-                <div id="menu-content" class="content-area"></div>
-                <div class="action-bar">
-                    <button id="generate-btn" class="main-action-btn">Сгенерировать меню</button>
-                </div>
-            </section>
-            
-            <!-- All Recipes Screen -->
-            <section id="recipes-screen" class="screen">
-                <header class="screen-header">
-                    <h1>Все рецепты</h1>
-                </header>
-                <div id="recipes-list" class="content-area"></div>
-            </section>
-            
-            <!-- Shopping List Screen -->
-            <section id="shopping-screen" class="screen">
-                <header class="screen-header">
-                     <h1>Список покупок</h1>
-                </header>
-                <div id="shopping-list-content" class="content-area">
-                    <div id="shopping-progress-container"></div>
-                    <ul id="shopping-list"></ul>
-                </div>
-                <div class="action-bar">
-                    <button id="print-btn" class="secondary-action-btn">Версия для печати</button>
+        <main>
+            <!-- API Key Screen -->
+            <section id="api-key-screen" class="screen active">
+                <div class="screen-content">
+                    <h1 class="logo">СЕМЕЙНОЕ МЕНЮ</h1>
+                    <p>Привет! Давайте создадим ваше идеальное меню вместе с ИИ.</p>
+                    <input type="password" id="api-key-input" class="input-field" placeholder="Введите ваш API-ключ Google Gemini">
+                    <button id="connect-gemini-btn" class="main-button">Подключить Gemini</button>
+                    <p style="font-size: 12px; margin-top: 24px;">Получите ключ на <a href="https://makersuite.google.com/app/apikey" target="_blank">makersuite.google.com</a></p>
                 </div>
             </section>
 
-            <!-- Recipe Detail Screen -->
-            <section id="recipe-detail-screen" class="screen">
-                 <header class="screen-header">
-                    <button id="back-to-menu-btn" class="icon-btn back-btn" aria-label="Назад">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                    </button>
-                    <h1 id="recipe-detail-title">Рецепт</h1>
-                </header>
-                <div id="recipe-detail-content" class="content-area"></div>
+            <!-- Settings Screen -->
+            <section id="settings-screen" class="screen">
+                <h1 class="screen-header">Создайте своё меню</h1>
+                <div class="screen-content">
+                    <div class="card setting-card">
+                        <h3>Параметры</h3>
+                        <div class="slider-container" style="margin-bottom: 24px;">
+                            <span>👨‍👩‍👧‍👦</span>
+                            <input type="range" id="people-slider" min="1" max="6" value="3">
+                            <span id="people-value" class="slider-value">3 чел.</span>
+                        </div>
+                        <div class="slider-container">
+                            <span>🗓️</span>
+                            <input type="range" id="days-slider" min="1" max="7" value="7" step="1">
+                             <span id="days-value" class="slider-value">7 дн.</span>
+                        </div>
+                    </div>
+
+                    <div class="card setting-card">
+                        <h3>Основной белок</h3>
+                        <div class="radio-group">
+                            <input type="radio" name="protein" id="protein-chicken" value="Курица" checked>
+                            <label for="protein-chicken">🐔 Курица</label>
+                            <input type="radio" name="protein" id="protein-beef" value="Говядина">
+                            <label for="protein-beef">🥩 Говядина</label>
+                            <input type="radio" name="protein" id="protein-pork" value="Свинина">
+                            <label for="protein-pork">🐖 Свинина</label>
+                            <input type="radio" name="protein" id="protein-veg" value="Вегетарианский">
+                            <label for="protein-veg">🌱 Вегетарианский</label>
+                        </div>
+                    </div>
+                    
+                    <div class="card setting-card">
+                        <h3>Ограничения</h3>
+                         <div class="checkbox-group">
+                             <input type="checkbox" id="restriction-fish" value="без рыбы" checked>
+                             <label for="restriction-fish">Без рыбы</label>
+                             <input type="checkbox" id="restriction-mushrooms" value="без грибов" checked>
+                             <label for="restriction-mushrooms">Без грибов</label>
+                             <input type="checkbox" id="restriction-dairy" value="без молочных продуктов">
+                             <label for="restriction-dairy">Без молочных</label>
+                             <input type="checkbox" id="restriction-sugar" value="без сахара">
+                             <label for="restriction-sugar">Без сахара</label>
+                         </div>
+                    </div>
+
+                     <div class="card setting-card">
+                        <h3>Аллергии</h3>
+                        <input type="text" id="allergies-input" class="input-field" placeholder="Например: орехи, соя, лактоза">
+                    </div>
+                </div>
+                 <div style="padding: 24px; padding-top: 0;">
+                    <button id="generate-btn" class="main-button">Сгенерировать меню с Gemini</button>
+                </div>
             </section>
+            
+            <!-- Other screens will be populated by JS -->
+            <section id="menu-screen" class="screen"></section>
+            <section id="recipes-screen" class="screen"></section>
+            <section id="shopping-screen" class="screen"></section>
+            <section id="budget-screen" class="screen"></section>
+            <section id="recipe-detail-screen" class="screen"></section>
+
         </main>
-        
-        <!-- Bottom Navigation -->
+
         <nav id="bottom-nav">
-            <button class="nav-btn active" data-screen="menu-screen" aria-label="Меню">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+            <button class="nav-btn active" data-screen="menu-screen">
+                <svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
                 <span>Меню</span>
             </button>
-            <button class="nav-btn" data-screen="recipes-screen" aria-label="Рецепты">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+            <button class="nav-btn" data-screen="recipes-screen">
+                <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
                 <span>Рецепты</span>
             </button>
-            <button class="nav-btn" data-screen="shopping-screen" aria-label="Покупки">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+            <button class="nav-btn" data-screen="shopping-screen">
+                 <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
                 <span>Покупки</span>
+            </button>
+             <button class="nav-btn" data-screen="budget-screen">
+                <svg viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8.11 2.79"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+                <span>Бюджет</span>
             </button>
         </nav>
     </div>
 
-    <!-- Settings Modal -->
-    <div id="settings-modal" class="modal-overlay">
-        <div class="modal-content">
-            <header class="modal-header">
-                <h2>Настройки</h2>
-                <button id="close-settings-btn" class="icon-btn" aria-label="Закрыть настройки">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
-            </header>
-
-            <div class="setting-item">
-                <label for="days-input">Длительность (дней)</label>
-                <div class="stepper">
-                    <button id="days-decrement">-</button>
-                    <span id="days-value">7</span>
-                    <button id="days-increment">+</button>
-                </div>
-            </div>
-
-            <div class="setting-item">
-                <label for="people-input">Количество человек</label>
-                <div class="stepper">
-                    <button id="people-decrement">-</button>
-                    <span id="people-value">3</span>
-                    <button id="people-increment">+</button>
-                </div>
-            </div>
-
-            <div class="setting-item-column">
-                <label>Предпочтения</label>
-                <textarea id="preferences-input" placeholder="Например: без свинины, больше овощей..."></textarea>
-            </div>
-            
-            <div class="action-bar modal-action-bar">
-                 <button id="generate-from-settings-btn" class="main-action-btn">Применить и сгенерировать</button>
-            </div>
-
-            <p class="pwa-prompt">Чтобы использовать как приложение:<br>Нажмите «Поделиться» → «Добавить на главный экран».</p>
-        </div>
+    <!-- Overlays -->
+    <div id="loader" class="loader-overlay">
+        <div class="loader-spinner"></div>
+        <p>Магия Gemini в действии...</p>
     </div>
+
+    <div id="toast" class="toast"></div>
     
-    <!-- Debug Console -->
     <div id="debug-console" class="debug-console">
         <div id="debug-log-output"></div>
         <div class="debug-input-container">
@@ -135,17 +522,362 @@
         </div>
     </div>
 
-    <!-- Preloader -->
-    <div id="preloader" class="preloader-overlay">
-        <div class="preloader-content">
-            <div class="spinner"></div>
-            <p>Планируем ваше меню...</p>
-        </div>
-    </div>
+    <script>
+    // --- APPLICATION LOGIC ---
+    document.addEventListener('DOMContentLoaded', () => {
+        
+        // --- STATE & CONSTANTS ---
+        const APP_STATE_KEY = 'familyMenuState_v2';
+        const API_KEY_KEY = 'geminiApiKey';
+        const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=';
+        const alarmSound = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YU9vT18=');
 
-    <!-- Toast Notification -->
-    <div id="toast" class="toast"></div>
+        let state = {
+            settings: null,
+            menu: null,
+            recipes: null,
+            shoppingList: null,
+            budget: null,
+            currentScreen: 'api-key-screen',
+        };
 
-    <script src="script.js"></script>
+        // --- DOM ELEMENTS ---
+        const dom = {
+            loader: document.getElementById('loader'),
+            toast: document.getElementById('toast'),
+            bottomNav: document.getElementById('bottom-nav'),
+            screens: {
+                apiKey: document.getElementById('api-key-screen'),
+                settings: document.getElementById('settings-screen'),
+            },
+            inputs: {
+                apiKey: document.getElementById('api-key-input'),
+                people: document.getElementById('people-slider'),
+                days: document.getElementById('days-slider'),
+                allergies: document.getElementById('allergies-input'),
+            },
+            buttons: {
+                connectGemini: document.getElementById('connect-gemini-btn'),
+                generate: document.getElementById('generate-btn'),
+                nav: document.querySelectorAll('.nav-btn'),
+            },
+            values: {
+                people: document.getElementById('people-value'),
+                days: document.getElementById('days-value'),
+            },
+            debug: {
+                console: document.getElementById('debug-console'),
+                logOutput: document.getElementById('debug-log-output'),
+                commandInput: document.getElementById('debug-command-input'),
+            }
+        };
+
+        // --- UI & UX FUNCTIONS ---
+        const ui = {
+            showScreen(screenId) {
+                state.currentScreen = screenId;
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.getElementById(screenId).classList.add('active');
+                
+                const isAppScreen = ['menu-screen', 'recipes-screen', 'shopping-screen', 'budget-screen'].includes(screenId);
+                dom.bottomNav.classList.toggle('visible', isAppScreen);
+
+                if (isAppScreen) {
+                    dom.buttons.nav.forEach(btn => {
+                        btn.classList.toggle('active', btn.dataset.screen === screenId);
+                    });
+                }
+            },
+            showLoader(text = 'Магия Gemini в действии...') {
+                dom.loader.querySelector('p').textContent = text;
+                dom.loader.classList.add('visible');
+            },
+            hideLoader() {
+                dom.loader.classList.remove('visible');
+            },
+            showToast(message, type = 'info', duration = 3000) {
+                dom.toast.textContent = message;
+                dom.toast.className = 'toast';
+                if (type === 'error') dom.toast.classList.add('error');
+                dom.toast.classList.add('show');
+                setTimeout(() => dom.toast.classList.remove('show'), duration);
+            },
+            updateSettingsValues() {
+                dom.values.people.textContent = `${dom.inputs.people.value} чел.`;
+                dom.values.days.textContent = `${dom.inputs.days.value} дн.`;
+            }
+        };
+
+        // --- STATE MANAGEMENT ---
+        const store = {
+            save() {
+                try {
+                    localStorage.setItem(APP_STATE_KEY, JSON.stringify(state));
+                    debug.log('INFO', `State saved. Size: ${((JSON.stringify(state).length)/1024).toFixed(2)} KB`);
+                } catch (e) {
+                    debug.log('ERROR', `Failed to save state: ${e.message}`);
+                    ui.showToast('Ошибка сохранения данных', 'error');
+                }
+            },
+            load() {
+                const savedState = localStorage.getItem(APP_STATE_KEY);
+                if (savedState) {
+                    state = JSON.parse(savedState);
+                    debug.log('INFO', 'State loaded from localStorage.');
+                }
+            }
+        };
+
+        // --- DEBUG CONSOLE ---
+        const debug = {
+            log(type, message) {
+                const timestamp = new Date().toISOString().split('T')[1].replace('Z','');
+                const logEntry = document.createElement('span');
+                logEntry.className = `log-${type}`;
+                logEntry.textContent = `[${timestamp}] ${message}`;
+                dom.debug.logOutput.appendChild(logEntry);
+                dom.debug.logOutput.scrollTop = dom.debug.logOutput.scrollHeight;
+            },
+            toggle() {
+                dom.debug.console.classList.toggle('visible');
+                if (dom.debug.console.classList.contains('visible')) {
+                    dom.debug.commandInput.focus();
+                }
+            },
+            init() {
+                let pressTimer;
+                let pressCount = 0;
+                
+                document.body.addEventListener('pointerdown', () => {
+                    pressTimer = setTimeout(() => {
+                        pressCount++;
+                        if (pressCount === 3) {
+                            debug.toggle();
+                            pressCount = 0;
+                        }
+                    }, 500);
+                });
+                document.body.addEventListener('pointerup', () => {
+                    clearTimeout(pressTimer);
+                });
+
+                dom.debug.commandInput.addEventListener('keydown', e => {
+                    if (e.key === 'Enter' && e.target.value) {
+                        debug.parseCommand(e.target.value);
+                        e.target.value = '';
+                    }
+                });
+            },
+            parseCommand(command) {
+              const [cmd, ...args] = command.trim().split(' ');
+              debug.log('CMD', `> ${command}`);
+              switch(cmd) {
+                case '/help':
+                    debug.log('CMD', 'Commands: /reset, /export, /import, /logs');
+                    break;
+                case '/reset':
+                    localStorage.removeItem(API_KEY_KEY);
+                    localStorage.removeItem(APP_STATE_KEY);
+                    window.location.reload();
+                    break;
+                case '/export':
+                    navigator.clipboard.writeText(JSON.stringify(state, null, 2));
+                    ui.showToast('Состояние скопировано в буфер обмена');
+                    break;
+                default:
+                    debug.log('ERROR', `Unknown command: ${cmd}`);
+              }
+            }
+        };
+
+        // --- GEMINI API HANDLER ---
+        const gemini = {
+            apiKey: localStorage.getItem(API_KEY_KEY),
+            
+            async testApiKey(key) {
+                const prompt = { contents: [{ parts: [{ text: "Ответь одним словом: OK" }] }] };
+                try {
+                    const response = await fetch(GEMINI_API_URL + key, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(prompt),
+                    });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const data = await response.json();
+                    const text = data.candidates[0].content.parts[0].text;
+                    return text.trim().toLowerCase() === 'ok';
+                } catch (e) {
+                    debug.log('ERROR', `API Key test failed: ${e.message}`);
+                    return false;
+                }
+            },
+
+            async generate(prompt, retries = 2) {
+                debug.log('INFO', `Sending prompt to Gemini...`);
+                try {
+                    const response = await fetch(GEMINI_API_URL + this.apiKey, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+                    });
+
+                    if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+                    
+                    const data = await response.json();
+                    if (!data.candidates || !data.candidates[0].content.parts[0].text) {
+                        throw new Error('Invalid response structure from Gemini.');
+                    }
+                    
+                    const rawText = data.candidates[0].content.parts[0].text;
+                    const jsonText = rawText.match(/```json\n([\s\S]*?)\n```/)?.[1] || rawText;
+                    
+                    return JSON.parse(jsonText);
+
+                } catch (e) {
+                    debug.log('ERROR', `Gemini generation failed: ${e.message}`);
+                    if (retries > 0) {
+                        debug.log('WARN', `Retrying... (${retries} attempts left)`);
+                        const fixPrompt = `Исправь ошибку в этих данных. Ошибка: ${e.message}. Верни исправленные данные в формате JSON.`;
+                        return await this.generate(fixPrompt, retries - 1);
+                    } else {
+                        throw new Error(`Failed to generate content after multiple retries. ${e.message}`);
+                    }
+                }
+            }
+        };
+
+        // --- APP LOGIC ---
+        const app = {
+            async generatePlan() {
+                ui.showLoader('Собираем ваши предпочтения...');
+                
+                const settings = {
+                    people: dom.inputs.people.value,
+                    days: dom.inputs.days.value,
+                    protein: document.querySelector('input[name="protein"]:checked').value,
+                    restrictions: Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value).join(', ') || 'нет',
+                    allergies: dom.inputs.allergies.value || 'нет',
+                };
+                state.settings = settings;
+
+                try {
+                    // Step 1: Generate Menu
+                    ui.showLoader('Генерируем меню...');
+                    const menuPrompt = `Создай детальное меню на ${settings.days} дней для ${settings.people} человек с основным белком: ${settings.protein}. Ограничения: ${settings.restrictions}. Аллергии: ${settings.allergies}. Формат: только JSON без лишнего текста. {"menu": [{"day": "День 1", "breakfast": "...", "lunch": "...", "dinner": "..."}]}`;
+                    const menuResponse = await gemini.generate(menuPrompt);
+                    state.menu = menuResponse.menu;
+                    debug.log('SUCCESS', 'Menu generated.');
+
+                    // Step 2: Generate Recipes
+                    ui.showLoader('Подбираем рецепты...');
+                    state.recipes = {};
+                    const allDishes = [...new Set(state.menu.flatMap(day => [day.lunch, day.dinner]))];
+                    for (const dish of allDishes) {
+                        const recipePrompt = `Создай подробный рецепт для блюда: "${dish}". Ингредиенты должны быть доступны в России. Ограничения: ${settings.restrictions}. Добавь 5–7 шагов приготовления с временем в секундах, где нужно ждать. Формат: только JSON без лишнего текста. {"recipe": {"name": "${dish}", "ingredients": [...], "steps": [{"title": "...", "description": "...", "time": 0}]}}`;
+                        const recipeResponse = await gemini.generate(recipePrompt);
+                        state.recipes[dish] = recipeResponse.recipe;
+                        debug.log('SUCCESS', `Recipe for "${dish}" generated.`);
+                    }
+
+                    // Step 3: Generate Shopping List
+                    ui.showLoader('Составляем список покупок...');
+                    const shoppingPrompt = `На основе всех рецептов: ${Object.keys(state.recipes).join(', ')} создай единый список покупок для ${settings.people} человек на ${settings.days} дней. Рассчитай точное количество каждого продукта. Используй средние цены РФ 2025. Сгруппируй по категориям. Формат: только JSON. {"shoppingList": [{"category": "...", "item": "...", "quantity": "...", "price": 0}], "totalCost": 0}`;
+                    const shoppingResponse = await gemini.generate(shoppingPrompt);
+                    state.shoppingList = shoppingResponse.shoppingList;
+                    debug.log('SUCCESS', 'Shopping list generated.');
+
+                    // Step 4: Generate Budget
+                    ui.showLoader('Считаем бюджет...');
+                    const budgetPrompt = `На основе списка покупок стоимостью ${shoppingResponse.totalCost} ₽ создай бюджет. Добавь категории: Продукты, Бытовая химия, Прочее. Бюджет семьи — 10000 ₽. Формат: только JSON. {"budget": {"total": 10000, "spent": ${shoppingResponse.totalCost}, "remaining": ..., "categories": [...]}}`;
+                    const budgetResponse = await gemini.generate(budgetPrompt);
+                    state.budget = budgetResponse.budget;
+                    debug.log('SUCCESS', 'Budget calculated.');
+                    
+                    store.save();
+                    this.renderAll();
+                    ui.showScreen('menu-screen');
+                    ui.showToast('Ваше идеальное меню готово!');
+
+                } catch (error) {
+                    ui.showToast(`Ошибка генерации: ${error.message}`, 'error');
+                    debug.log('ERROR', `Generation failed catastrophically: ${error.message}`);
+                } finally {
+                    ui.hideLoader();
+                }
+            },
+            
+            renderAll() {
+                // Placeholder for render functions which would populate the respective screens
+                // Example for menu screen:
+                const menuScreen = document.getElementById('menu-screen');
+                if (state.menu) {
+                    menuScreen.innerHTML = `<h1 class="screen-header">Ваше Меню</h1><div class="screen-content">${state.menu.map(day => `<div class="card"><h3>${day.day}</h3><p><b>Обед:</b> ${day.lunch}</p><p><b>Ужин:</b> ${day.dinner}</p></div>`).join('')}</div>`;
+                }
+                const recipesScreen = document.getElementById('recipes-screen');
+                if (state.recipes) {
+                    recipesScreen.innerHTML = `<h1 class="screen-header">Рецепты</h1><div class="screen-content">${Object.values(state.recipes).map(recipe => `<div class="card"><h3>${recipe.name}</h3></div>`).join('')}</div>`;
+                }
+                const shoppingScreen = document.getElementById('shopping-screen');
+                 if (state.shoppingList) {
+                    shoppingScreen.innerHTML = `<h1 class="screen-header">Покупки</h1><div class="screen-content">${state.shoppingList.map(item => `<div class="card"><p>${item.item} - ${item.quantity} (${item.price}₽)</p></div>`).join('')}</div>`;
+                }
+                const budgetScreen = document.getElementById('budget-screen');
+                if (state.budget) {
+                    budgetScreen.innerHTML = `<h1 class="screen-header">Бюджет</h1><div class="screen-content"><div class="card"><h3>Потрачено: ${state.budget.spent}₽</h3><p>Осталось: ${state.budget.remaining}₽</p></div></div>`;
+                }
+            },
+
+            init() {
+                debug.init();
+                store.load();
+
+                if (gemini.apiKey) {
+                    debug.log('INFO', 'API key found in localStorage.');
+                    if (state.menu) {
+                        this.renderAll();
+                        ui.showScreen(state.currentScreen || 'menu-screen');
+                    } else {
+                        ui.showScreen('settings-screen');
+                    }
+                } else {
+                    debug.log('INFO', 'No API key found. Showing setup screen.');
+                    ui.showScreen('api-key-screen');
+                }
+
+                // --- EVENT LISTENERS ---
+                dom.buttons.connectGemini.addEventListener('click', async () => {
+                    const key = dom.inputs.apiKey.value.trim();
+                    if (!key) {
+                        ui.showToast('Пожалуйста, введите ключ', 'error');
+                        return;
+                    }
+                    ui.showLoader('Проверяем ключ...');
+                    const isValid = await gemini.testApiKey(key);
+                    ui.hideLoader();
+                    if (isValid) {
+                        gemini.apiKey = key;
+                        localStorage.setItem(API_KEY_KEY, key);
+                        ui.showToast('Ключ успешно подключен!');
+                        ui.showScreen('settings-screen');
+                    } else {
+                        ui.showToast('Неверный ключ или нет доступа к Gemini', 'error');
+                    }
+                });
+                
+                dom.inputs.people.addEventListener('input', ui.updateSettingsValues);
+                dom.inputs.days.addEventListener('input', ui.updateSettingsValues);
+                
+                dom.buttons.generate.addEventListener('click', () => this.generatePlan());
+
+                dom.buttons.nav.forEach(btn => {
+                    btn.addEventListener('click', () => ui.showScreen(btn.dataset.screen));
+                });
+            }
+        };
+
+        // --- START THE APP ---
+        app.init();
+    });
+    </script>
 </body>
 </html>
