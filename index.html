@@ -2,42 +2,39 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Меню на неделю</title>
 
     <!-- PWA-like behavior for iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Меню на неделю">
-    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDE4MCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiByeD0iNDAiIGZpbGw9IiNGOUY3RjQiLz4KPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGUPSJldmVub2RkIiBkPSJNNzguOTk5OCA0OEg2OFYxMzJINzguOTk5OFY5OS40MDQ4SDg1LjQxODJDOTEuMzE2NSA5OS40MDQ4IDk2LjA5ODYgOTcuODM4MyA5OS43NjQ5IDk0LjY2NTRDMTAzLjQzMSA5MS40OTI1IDEwNS4yNjQgODcuMjQ4NyAxMDUuMjY0IDgxLjkzNDNDMTA1LjI2NCA3Ni42MTk5IDEwMy40MzEgNzIuMzc2MSAxMDAuMDQzIDY5LjAwODNDOTYuNjU1MSA2NS42NDA1IDkxLjg1NDYgNjQuMDAwMSA4NS42Mzk2IDY0LjAwMDFINzguOTk5OFY0OFpNNzguOTk5OCA1NC42MDAxVjg4LjgwNDhIODUuMjMyOEM4OC43ODQyIDg4LjgwNDggOTEuNTA1NyA4Ny43NjI5IDkzLjYwNzEgODUuNjc5MUM5NS43MDgzIDgzLjU5NTMgOTYuNzU5MSA4MC42NTg5IDk2Ljc5OTEgNzYuODY3M0M5Ni43NTkxIDcyLjg5NzcgOTUuNzA5OCA2OS45Mjk3IDkzLjYxMDYgNjcuOTY0M0M5MS41MTI1َیOTUuOTk4OCg4OC43ODgzIDY1LjAwMDEgODUuMjMyOCA2NS4wMDAxSDc4Ljk5OThWNTQuNjAwMVoiIGZpbGw9IiM4QjVFM0MiLz4KPHBhdGggZD0iTTEyMC4xMTMgMTExLjAwOUwxMDEuMTI1IDgyLjM0NjJDMTAzLjkzOCA3OS40MTI3IDEwNi4xMTMgNzUuNDgzOCAxMDYuMTEzIDcwLjk5OTJDMTA2LjExMyA2NC4zNjYxIDEwMy4yODEgNTkuMDc3MiA5OC41ODYzIDU0LjQ1NDFDOTMuODkxNiA1MS44MzEgODcuODg2NyA1MSA4MC45OTk4IDUySDc4VjQ4SDgwLjk5OThDODguMzQ4NCA0OCA5NC42MzkyIDQ5Ljg4MjIgMTAwLjExMyA1NS40NTQxQzEwNS41ODcgNjEuMDI2IDEwOC4xMTMgNjcuNjIzOCAxMDguMTEzIDc1LjYyMzhDMTA4LjExMyA3OS40ODM4IDEwNi45MTggODMuMzk3MyAxMDQuNjE5IDg2Ljk4NTdMMTE5Ljk5OSAxMTIuNDkzTDEyMy45OTkgMTEwLjQ5M0wxMDguNjE5IDg1LjAwNDRDMTExLjYxMyA4Ny45OTk2IDExMi4wODEgOTEuMjE3NCAxMTIuOTE3IDk0LjY2NTRDMTEzLjc1NCA5OC4xMTExIDExNC4xNzMgMTAxLjcwOSAxMTQuMTczIDEwNS40NDhWMTMySDExOS4xNzNWMTkwNS40NDhDMTE5LjE3MyAxMDIuNzYxIDExOC44ODcgMTAwLjE0MSAxMTguMzE0IDk3LjU4ODlDMTE3Ljc0MSA5NS40NDQzIDExNi44NjggOTMuMzc0MSAxMTUuNjk4IDkxLjM3ODRMMTI0LjExMyAxMTIuMDA5VjExMS4wMDlaIiBmaWxsPSIjOEI1RTNDIi8+Cjwvc3ZnPg==">
+    <meta name="apple-mobile-web-app-title" content="Меню">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDE4MCAxODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgICA8cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjRjlGN0Y0Ii8+CiAgICA8cGF0aCBkPSJNNjIgNzRDMzggNzQgMzUgOTggMzUgMTEwQzM1IDEyMiAzOCAxNDYgNjIgMTQ2Qzg2IDE0NiA4OSAxMjIgODkgMTEwQzg5IDk4IDg2IDc0IDYyIDc0WiIgc3Ryb2tlPSIjOEI1RTNDIiBzdHJva2Utd2lkdGg9IjgiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPHBhdGggZD0iTTEyMCAxMzVMMTIwIDc1QzEyMCA2NSAxMTAgNjAgMTA1IDY1Qzk1IDc1IDEwMCA5NSAxMDggOTVDMTE2IDk1IDEyNSA4NSAxMTggODBDMTExIDc1IDEwMiA4NSAxMDIgOTVMMTAyIDEzNSIgc3Ryb2tlPSIjOEI1RTNDIiBzdHJva2Utd2lkdGg9IjgiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPHBhdGggZD0iTTU1IDYwQzYwIDUwIDcwIDUwIDc1IDYwIiBzdHJva2U9IiNENEEzNzMiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgICA8cGF0aCBkPSJNNzAgNDBDNzUgMzAgODUgMzAgOTAgNDAiIHN0cm9rZT0iI0Q0QTM3MyIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Lato:wght@400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Lato:wght@400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="app-container">
-        <!-- Screens -->
+        <!-- Main content area for screens -->
         <main id="main-content">
+            <!-- Menu Screen -->
             <section id="menu-screen" class="screen active">
                 <header class="screen-header">
-                    <h1>
-                        Меню на неделю
-                        <button id="header-ai-status" class="header-status-btn checking" title="Проверка статуса AI...">
-                            <span class="status-dot"></span>
-                        </button>
-                    </h1>
+                    <h1>Меню на неделю</h1>
                     <button id="settings-btn" class="icon-btn" aria-label="Открыть настройки">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                     </button>
                 </header>
                 <div id="menu-content" class="content-area"></div>
-                 <div class="action-bar">
+                <div class="action-bar">
                     <button id="generate-btn" class="main-action-btn">Сгенерировать меню</button>
                 </div>
             </section>
             
+            <!-- All Recipes Screen -->
             <section id="recipes-screen" class="screen">
                 <header class="screen-header">
                     <h1>Все рецепты</h1>
@@ -45,6 +42,7 @@
                 <div id="recipes-list" class="content-area"></div>
             </section>
             
+            <!-- Shopping List Screen -->
             <section id="shopping-screen" class="screen">
                 <header class="screen-header">
                      <h1>Список покупок</h1>
@@ -58,16 +56,16 @@
                 </div>
             </section>
 
+            <!-- Recipe Detail Screen -->
             <section id="recipe-detail-screen" class="screen">
                  <header class="screen-header">
-                    <button id="back-to-menu-btn" class="back-btn" aria-label="Назад к меню">
+                    <button id="back-to-menu-btn" class="icon-btn back-btn" aria-label="Назад">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
                     </button>
                     <h1 id="recipe-detail-title">Рецепт</h1>
                 </header>
                 <div id="recipe-detail-content" class="content-area"></div>
             </section>
-
         </main>
         
         <!-- Bottom Navigation -->
@@ -115,6 +113,11 @@
                 </div>
             </div>
 
+            <div class="setting-item-column">
+                <label>Предпочтения</label>
+                <textarea id="preferences-input" placeholder="Например: без свинины, больше овощей, простые рецепты..."></textarea>
+            </div>
+            
             <div class="modal-actions">
                 <button id="import-btn" class="secondary-action-btn">Импорт</button>
                 <input type="file" id="import-file-input" style="display: none;" accept=".json">
@@ -129,78 +132,6 @@
         </div>
     </div>
     
-    <!-- AI Diagnostics Modal -->
-    <div id="ai-diagnostics-modal" class="modal-overlay">
-        <div class="modal-content">
-            <header class="modal-header">
-                <h2>Центр управления AI</h2>
-                <button id="close-ai-diag-btn" class="icon-btn" aria-label="Закрыть">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
-            </header>
-            
-            <div class="setting-item">
-                <label>Текущий статус</label>
-                <div id="ai-diag-status-indicator" class="ai-status-indicator checking">
-                    <span class="status-dot"></span>
-                    <span class="status-text">Проверка...</span>
-                </div>
-            </div>
-
-            <div class="api-key-section">
-                <h3>Подключение к Gemini</h3>
-                
-                <div class="setting-item">
-                    <label>Режим подключения</label>
-                    <div class="api-mode-selector">
-                        <label title="Приоритет у вашего ключа. Если он не работает, используется встроенный.">
-                            <input type="radio" name="ai-diag-api-mode" value="auto" checked>
-                            <span>Авто</span>
-                        </label>
-                        <label title="Использовать только ваш API ключ.">
-                            <input type="radio" name="ai-diag-api-mode" value="force_user">
-                            <span>Ваш ключ</span>
-                        </label>
-                        <label title="Использовать только встроенный в приложение ключ.">
-                            <input type="radio" name="ai-diag-api-mode" value="force_builtin">
-                            <span>Встроенный</span>
-                        </label>
-                    </div>
-                </div>
-
-                <p class="description">Получите свой ключ в <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.</p>
-                <div class="api-key-input-wrapper">
-                    <input type="password" id="ai-diag-api-key-input" placeholder="Введите ваш API ключ...">
-                    <button id="ai-diag-toggle-visibility" class="icon-btn" aria-label="Показать/скрыть ключ">
-                        <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                        <svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                    </button>
-                </div>
-                 <div class="api-key-actions">
-                    <button id="ai-diag-clear-key-btn" class="secondary-action-btn">Очистить</button>
-                    <button id="ai-diag-autorun-btn" class="main-action-btn">Запустить авто-исправление</button>
-                </div>
-            </div>
-
-            <div class="diagnostics-area">
-                <h4>Журнал диагностики:</h4>
-                <div id="ai-diag-log"></div>
-                <div id="ai-diag-error-details" class="error-details" style="display: none;">
-                    <h5>Что случилось:</h5>
-                    <p id="ai-diag-error-title"></p>
-                    <h5>Что это значит:</h5>
-                    <p id="ai-diag-error-meaning"></p>
-                    <h5>Что делать:</h5>
-                    <p id="ai-diag-error-suggestion"></p>
-                </div>
-            </div>
-            
-            <div class="action-bar modal-action-bar">
-                 <button id="ai-diag-save-btn" class="main-action-btn">Сохранить и закрыть</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Preloader -->
     <div id="preloader" class="preloader-overlay">
         <div class="preloader-content">

@@ -1,13 +1,13 @@
 // --- Константы и Глобальное Состояние ---
-
-const GEMINI_API_KEY = "__GEMINI_API_KEY__"; 
-const USER_API_KEY_STORAGE_KEY = 'userGeminiApiKey';
-const API_MODE_STORAGE_KEY = 'userApiKeyMode';
+const GEMINI_API_KEY = "__GEMINI_API_KEY__"; // Сюда будет встроен ключ
+const USER_API_KEY_STORAGE_KEY = 'userGeminiApiKey'; // Для будущих расширений, если понадобится
+const APP_STATE_STORAGE_KEY = 'familyMenuState';
 
 const state = {
     settings: {
         days: 7,
         people: 3,
+        preferences: '',
     },
     menu: null,
     recipes: {},
@@ -16,95 +16,14 @@ const state = {
     lastActiveTab: 'menu-screen',
 };
 
-const aiState = {
-    status: 'checking', // 'checking', 'ready-user', 'ready-builtin', 'unavailable'
-    mode: 'auto', // 'auto', 'force_user', 'force_builtin'
-    userKey: null,
-    userKeyValid: null,
-    builtinKeyValid: null,
-    lastError: null,
-    activeKeySource: null, // 'user' | 'builtin' | null
-};
-
-
 // --- DOM Элементы ---
 const screens = document.querySelectorAll('.screen');
 const navButtons = document.querySelectorAll('.nav-btn');
 const preloader = document.getElementById('preloader');
 const toast = document.getElementById('toast');
-
-// Общие настройки
-const settingsBtn = document.getElementById('settings-btn');
-const closeSettingsBtn = document.getElementById('close-settings-btn');
 const settingsModal = document.getElementById('settings-modal');
 
-// Диагностика AI
-const headerAiStatusBtn = document.getElementById('header-ai-status');
-if (!headerAiStatusBtn) {
-    console.error("CRITICAL: Header AI status button ('header-ai-status') not found in DOM!");
-}
-const aiDiagnosticsModal = document.getElementById('ai-diagnostics-modal');
-const closeAiDiagBtn = document.getElementById('close-ai-diag-btn');
-const aiDiagStatusIndicator = document.getElementById('ai-diag-status-indicator');
-const aiDiagApiKeyInput = document.getElementById('ai-diag-api-key-input');
-const aiDiagToggleVisibilityBtn = document.getElementById('ai-diag-toggle-visibility');
-const aiDiagAutorunBtn = document.getElementById('ai-diag-autorun-btn');
-const aiDiagClearKeyBtn = document.getElementById('ai-diag-clear-key-btn');
-const aiDiagSaveBtn = document.getElementById('ai-diag-save-btn');
-const aiDiagModeRadios = document.querySelectorAll('input[name="ai-diag-api-mode"]');
-const aiDiagLog = document.getElementById('ai-diag-log');
-const aiDiagErrorDetails = document.getElementById('ai-diag-error-details');
-
-
-// --- Управление API ---
-
-function loadAiConfig() {
-    aiState.userKey = localStorage.getItem(USER_API_KEY_STORAGE_KEY);
-    aiState.mode = localStorage.getItem(API_MODE_STORAGE_KEY) || 'auto';
-    aiDiagApiKeyInput.value = aiState.userKey || '';
-    const activeRadio = document.querySelector(`input[name="ai-diag-api-mode"][value="${aiState.mode}"]`);
-    if (activeRadio) activeRadio.checked = true;
-}
-
-function saveAiConfig() {
-    localStorage.setItem(USER_API_KEY_STORAGE_KEY, aiDiagApiKeyInput.value.trim());
-    const selectedMode = document.querySelector('input[name="ai-diag-api-mode"]:checked');
-    localStorage.setItem(API_MODE_STORAGE_KEY, selectedMode ? selectedMode.value : 'auto');
-    loadAiConfig();
-}
-
-/**
- * Определяет, какой ключ использовать на основе текущего состояния и режима.
- * @returns {{key: string|null, source: 'user'|'builtin'|null}}
- */
-function determineActiveKey() {
-    const builtinKeyExists = GEMINI_API_KEY && GEMINI_API_KEY !== "__GEMINI_API_KEY__";
-
-    switch (aiState.mode) {
-        case 'force_user':
-            return { key: aiState.userKey, source: 'user' };
-        case 'force_builtin':
-            return { key: builtinKeyExists ? GEMINI_API_KEY : null, source: 'builtin' };
-        case 'auto':
-        default:
-            if (aiState.userKey && aiState.userKeyValid) {
-                return { key: aiState.userKey, source: 'user' };
-            }
-            if (builtinKeyExists && aiState.builtinKeyValid) {
-                return { key: GEMINI_API_KEY, source: 'builtin' };
-            }
-            // Fallback for generation attempt if validation state is unknown
-            if (aiState.userKey) {
-                return { key: aiState.userKey, source: 'user' };
-            }
-            if (builtinKeyExists) {
-                return { key: GEMINI_API_KEY, source: 'builtin' };
-            }
-            return { key: null, source: null };
-    }
-}
-
-// --- Логика Интерфейса (UI) ---
+// --- Управление UI ---
 
 function showScreen(screenId, isDetailView = false) {
     state.currentScreen = screenId;
@@ -129,34 +48,33 @@ function hideModal(modal) {
 }
 
 function showPreloader() {
-    if(preloader) preloader.classList.add('visible');
+    preloader.classList.add('visible');
 }
 
 function hidePreloader() {
-    if(preloader) preloader.classList.remove('visible');
+    preloader.classList.remove('visible');
 }
 
 function showToast(message, type = 'info', duration = 3000) {
-    if (!toast) return;
     toast.textContent = message;
-    toast.className = 'toast';
-    toast.classList.add('show');
+    toast.className = 'toast'; // Reset classes
     if (type === 'warning') {
         toast.classList.add('warning');
     }
+    toast.classList.add('show');
+    
     setTimeout(() => {
         toast.classList.remove('show');
     }, duration);
 }
 
 
-// --- Отрисовка (Рендеринг) ---
+// --- Рендеринг данных ---
 
 function renderMenu() {
     const content = document.getElementById('menu-content');
-    if (!content) return;
     if (!state.menu || state.menu.length === 0) {
-        content.innerHTML = `<p class="placeholder">Нажмите "Сгенерировать меню", чтобы начать планирование.</p>`;
+        content.innerHTML = `<p class="placeholder">Нажмите "Сгенерировать меню", чтобы начать ваше кулинарное путешествие.</p>`;
         return;
     }
     content.innerHTML = state.menu.map(day => `
@@ -171,7 +89,7 @@ function renderMenu() {
         </div>
     `).join('');
 
-    document.querySelectorAll('.meal').forEach(el => {
+    content.querySelectorAll('.meal').forEach(el => {
         el.addEventListener('click', () => {
             renderRecipeDetail(el.dataset.recipeId);
             showScreen('recipe-detail-screen', true);
@@ -181,13 +99,12 @@ function renderMenu() {
 
 function renderAllRecipes() {
     const list = document.getElementById('recipes-list');
-    if (!list) return;
      if (!state.recipes || Object.keys(state.recipes).length === 0) {
-        list.innerHTML = `<p class="placeholder">Здесь появятся рецепты после генерации меню.</p>`;
+        list.innerHTML = `<p class="placeholder">Здесь появятся все рецепты после генерации вашего первого меню.</p>`;
         return;
     }
     list.innerHTML = Object.values(state.recipes).map(recipe => `
-         <div class="meal" data-recipe-id="${recipe.id}" style="border-bottom: 1px solid #F0EDE7; padding-bottom: 1rem; margin-bottom: 1rem;">
+         <div class="meal" data-recipe-id="${recipe.id}" style="padding: 16px 8px; border-bottom: 1px solid #F0EDE7;">
             <h3>${recipe.name}</h3>
         </div>
     `).join('');
@@ -200,13 +117,11 @@ function renderAllRecipes() {
     });
 }
 
-
 function renderRecipeDetail(recipeId) {
     const recipe = state.recipes[recipeId];
     if (!recipe) return;
     const content = document.getElementById('recipe-detail-content');
     const title = document.getElementById('recipe-detail-title');
-    if (!content || !title) return;
     
     title.textContent = recipe.name;
     
@@ -221,14 +136,13 @@ function renderRecipeDetail(recipeId) {
             ${recipe.instructions.map(step => `<li>${step}</li>`).join('')}
         </ol>
     `;
+    content.scrollTop = 0; // Scroll to top on new recipe
 }
-
 
 function renderShoppingList() {
     const list = document.getElementById('shopping-list');
-    if (!list) return;
-     if (state.shoppingList.length === 0) {
-        list.innerHTML = `<p class="placeholder">Список покупок пуст. Сгенерируйте меню.</p>`;
+    if (state.shoppingList.length === 0) {
+        list.innerHTML = `<p class="placeholder">Список покупок пуст. Сгенерируйте меню, и он появится здесь.</p>`;
         return;
     }
     list.innerHTML = state.shoppingList.map((item, index) => `
@@ -245,46 +159,33 @@ function renderShoppingList() {
 }
 
 
-// --- Сохранение и Загрузка Состояния ---
+// --- Управление состоянием ---
 
 function saveState() {
     try {
-        localStorage.setItem('familyMenuState', JSON.stringify(state));
+        localStorage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify(state));
     } catch (error) {
-        console.error("Could not save state to localStorage:", error);
-        showToast("Не удалось сохранить состояние", "warning");
+        console.error("Не удалось сохранить состояние в localStorage:", error);
+        showToast("Ошибка сохранения", "warning");
     }
 }
 
 function loadState() {
     try {
-        const savedStateJSON = localStorage.getItem('familyMenuState');
+        const savedStateJSON = localStorage.getItem(APP_STATE_STORAGE_KEY);
         if (!savedStateJSON) return;
-
         const savedState = JSON.parse(savedStateJSON);
-        
-        Object.assign(state.settings, savedState.settings);
-        
-        Object.assign(state, {
-            menu: savedState.menu || null,
-            recipes: savedState.recipes || {},
-            shoppingList: savedState.shoppingList || [],
-            currentScreen: savedState.currentScreen || 'menu-screen',
-            lastActiveTab: savedState.lastActiveTab || 'menu-screen',
-        });
-
+        Object.assign(state, savedState);
     } catch (e) {
-        console.error("Error loading state from localStorage. Resetting.", e);
-        localStorage.removeItem('familyMenuState');
+        console.error("Ошибка загрузки состояния. Сброс.", e);
+        localStorage.removeItem(APP_STATE_STORAGE_KEY);
     }
 }
 
-
 function updateSettingsUI() {
-    const daysValue = document.getElementById('days-value');
-    const peopleValue = document.getElementById('people-value');
-    if (daysValue) daysValue.textContent = state.settings.days;
-    if (peopleValue) peopleValue.textContent = state.settings.people;
+    document.getElementById('days-value').textContent = state.settings.days;
+    document.getElementById('people-value').textContent = state.settings.people;
+    document.getElementById('preferences-input').value = state.settings.preferences;
 }
 
 function processGeneratedPlan(plan) {
@@ -300,258 +201,28 @@ function processGeneratedPlan(plan) {
     showScreen('menu-screen');
 }
 
+// --- Интеграция с Gemini AI ---
+
 async function generatePlan() {
-    const { key, source } = determineActiveKey();
-
-    if (!key || aiState.status === 'unavailable') {
-         showToast("AI недоступен. Откройте диагностику для решения проблемы.", "warning");
-         showModal(aiDiagnosticsModal);
-         runAutoRepair();
-         return;
+    if (!GEMINI_API_KEY || GEMINI_API_KEY === "__GEMINI_API_KEY__") {
+        showToast("Ключ API не настроен в приложении.", "warning");
+        return;
     }
-
+    
     showPreloader();
     try {
-        const plan = await generateWithAI(key);
+        const plan = await callGeminiAPI(GEMINI_API_KEY);
         processGeneratedPlan(plan);
-        showToast(`Меню сгенерировано! (ключ: ${source === 'user' ? 'ваш' : 'встроенный'})`);
+        showToast("Ваше меню готово!");
     } catch (error) {
-        console.error("AI generation failed:", error);
-        aiState.lastError = error;
-        updateAIStatus(); // Обновляем статус, чтобы отразить ошибку
-        showToast(`Ошибка генерации. ${error.userMessage || 'Откройте диагностику.'}`, 'warning', 4000);
-        showModal(aiDiagnosticsModal);
-        runAutoRepair();
+        console.error("Ошибка генерации AI:", error);
+        showToast("Ошибка генерации. Попробуйте снова.", "warning");
     } finally {
         hidePreloader();
     }
 }
 
-
-// --- Статус и Диагностика AI ---
-function logToDiagnostics(message, type = 'info') {
-    if (aiDiagLog) {
-        const p = document.createElement('p');
-        p.className = `log-${type}`;
-        p.textContent = message;
-        aiDiagLog.appendChild(p);
-        aiDiagLog.scrollTop = aiDiagLog.scrollHeight;
-    }
-}
-
-function clearDiagnostics() {
-    if(aiDiagLog) aiDiagLog.innerHTML = '';
-    if(aiDiagErrorDetails) aiDiagErrorDetails.style.display = 'none';
-}
-
-function showDiagnosticsError(error) {
-    if (!aiDiagErrorDetails) return;
-    const { title, meaning, suggestion } = translateError(error);
-    document.getElementById('ai-diag-error-title').textContent = title;
-    document.getElementById('ai-diag-error-meaning').textContent = meaning;
-    document.getElementById('ai-diag-error-suggestion').innerHTML = suggestion;
-    aiDiagErrorDetails.style.display = 'block';
-}
-
-function updateAIStatusUI() {
-    const indicators = [headerAiStatusBtn, aiDiagStatusIndicator];
-    const statusClasses = ['checking', 'ready-user', 'ready-builtin', 'unavailable'];
-
-    let statusText = 'Проверка...';
-    let statusTitle = 'Статус AI: Проверка...';
-
-    switch(aiState.status) {
-        case 'ready-user':
-            statusText = 'Готово (ваш ключ)';
-            statusTitle = `Статус AI: ${statusText}`;
-            break;
-        case 'ready-builtin':
-            statusText = 'Готово (встроенный)';
-            statusTitle = `Статус AI: ${statusText}`;
-            break;
-        case 'unavailable':
-            statusText = 'Ошибка';
-            statusTitle = 'AI недоступен. Нажмите для диагностики.';
-            break;
-    }
-    
-    indicators.forEach(ind => {
-        if (!ind) return; // Failsafe
-        
-        statusClasses.forEach(cls => ind.classList.remove(cls));
-        ind.classList.add(aiState.status);
-        
-        ind.title = statusTitle;
-
-        const textEl = ind.querySelector('.status-text');
-        if (textEl) {
-            textEl.textContent = statusText;
-        }
-    });
-}
-
-/**
- * Проверяет валидность предоставленного API ключа.
- * @param {string} key - API ключ для проверки.
- * @returns {Promise<boolean>} true, если ключ валиден.
- * @throws {Error} Кастомная ошибка с деталями при неудаче.
- */
-async function testApiKey(key) {
-    if (!key || key.trim() === '') {
-        throw new Error('API key is empty');
-    }
-    
-    try {
-        const { GoogleGenAI } = await import("https://esm.run/@google/generative-ai");
-        const ai = new GoogleGenAI({ apiKey: key });
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: "hi",
-            config: { thinkingConfig: { thinkingBudget: 0 } }
-        });
-        return !!(response && response.text);
-    } catch (error) {
-        error.isApiKeyTestError = true;
-        throw error; // Пробрасываем ошибку дальше для обработки
-    }
-}
-
-
-function translateError(error) {
-    let title = 'Неизвестная ошибка';
-    let meaning = 'Произошла непредвиденная ошибка при обращении к API Gemini.';
-    let suggestion = 'Проверьте консоль разработчика для получения дополнительной информации и попробуйте снова позже.';
-    
-    if (error.message.includes('API key is empty')) {
-        title = 'Пустой API ключ';
-        meaning = 'Ключ для этого режима не введен или не настроен.';
-        suggestion = 'Введите ваш ключ в поле выше или выберите другой режим подключения.';
-    } else if (error.message.includes('fetch')) {
-        title = 'Ошибка сети';
-        meaning = 'Не удалось подключиться к серверам Google. Возможно, у вас проблемы с интернетом или блокировщик рекламы/файрвол мешает соединению.';
-        suggestion = 'Проверьте ваше интернет-соединение и отключите блокировщики для этого сайта.';
-    } else if (error.message.includes('400')) {
-        title = 'Ошибка 400: Неверный запрос (Invalid API Key)';
-        meaning = 'Скорее всего, вы ввели недействительный API ключ. Он имеет неверный формат или был отозван.';
-        suggestion = 'Пожалуйста, проверьте ключ. Получите новый в <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a> и убедитесь, что скопировали его полностью.';
-    } else if (error.message.includes('429')) {
-        title = 'Ошибка 429: Исчерпана квота';
-        meaning = 'Ваш ключ превысил бесплатный лимит использования (количество запросов в минуту).';
-        suggestion = 'Подождите одну минуту и попробуйте снова. Если ошибка повторяется, возможно, стоит создать новый ключ.';
-    }
-    
-    error.userMessage = title;
-    return { title, meaning, suggestion };
-}
-
-/** Основная функция обновления глобального статуса AI */
-async function updateAIStatus() {
-    aiState.status = 'checking';
-    updateAIStatusUI();
-
-    const checkResults = await Promise.allSettled([
-        testApiKey(aiState.userKey),
-        testApiKey(GEMINI_API_KEY)
-    ]);
-
-    aiState.userKeyValid = checkResults[0].status === 'fulfilled';
-    aiState.builtinKeyValid = checkResults[1].status === 'fulfilled';
-    
-    const { key, source } = determineActiveKey();
-    aiState.activeKeySource = source;
-
-
-    if (!key) {
-        aiState.status = 'unavailable';
-    } else {
-        const keyIsValid = source === 'user' ? aiState.userKeyValid : aiState.builtinKeyValid;
-        aiState.status = keyIsValid ? `ready-${source}` : 'unavailable';
-    }
-    
-    updateAIStatusUI();
-    return aiState.status;
-}
-
-async function runAutoRepair() {
-    clearDiagnostics();
-    const buttons = [aiDiagAutorunBtn, aiDiagClearKeyBtn, aiDiagSaveBtn];
-    buttons.forEach(btn => btn.disabled = true);
-
-    const mode = document.querySelector('input[name="ai-diag-api-mode"]:checked').value;
-    logToDiagnostics(`--- Запуск авто-исправления (режим: ${mode}) ---`, 'info');
-
-    let userKeyError = null;
-    let builtinKeyError = null;
-
-    // Test user key
-    logToDiagnostics('Шаг 1: Проверка вашего ключа...', 'step');
-    if (!aiState.userKey) {
-        logToDiagnostics('   - Ваш ключ не введен.', 'info');
-        aiState.userKeyValid = false;
-    } else {
-        try {
-            await testApiKey(aiState.userKey);
-            logToDiagnostics('   - ✅ Ваш ключ действителен.', 'success');
-            aiState.userKeyValid = true;
-        } catch (e) {
-            logToDiagnostics('   - ❌ Ваш ключ недействителен.', 'error');
-            userKeyError = e;
-            aiState.userKeyValid = false;
-        }
-    }
-
-    // Test builtin key
-    logToDiagnostics('Шаг 2: Проверка встроенного ключа...', 'step');
-    const builtinKeyExists = GEMINI_API_KEY && GEMINI_API_KEY !== "__GEMINI_API_KEY__";
-    if (!builtinKeyExists) {
-        logToDiagnostics('   - Встроенный ключ не настроен.', 'info');
-        aiState.builtinKeyValid = false;
-    } else {
-        try {
-            await testApiKey(GEMINI_API_KEY);
-            logToDiagnostics('   - ✅ Встроенный ключ действителен.', 'success');
-            aiState.builtinKeyValid = true;
-        } catch (e) {
-            logToDiagnostics('   - ❌ Встроенный ключ не работает.', 'error');
-            builtinKeyError = e;
-            aiState.builtinKeyValid = false;
-        }
-    }
-    
-    // Step 3: Analysis and Solution
-    logToDiagnostics('Шаг 3: Анализ и применение решения...', 'step');
-    
-    const finalStatus = await updateAIStatus();
-    
-    if (finalStatus.startsWith('ready')) {
-        const source = finalStatus.includes('user') ? 'ваш ключ' : 'встроенный ключ';
-        logToDiagnostics(`✅ РЕШЕНИЕ: Система успешно настроена на использование (${source}). Приложение готово к работе.`, 'solution');
-    } else { // 'unavailable'
-        logToDiagnostics(`❌ РЕШЕНИЕ: Не удалось найти рабочий ключ в текущем режиме (${mode}).`, 'solution');
-        
-        if (mode === 'force_user' && aiState.builtinKeyValid) {
-            logToDiagnostics('   💡 Совет: Ваш ключ не работает, но встроенный исправен. Переключитесь в режим "Авто" или "Встроенный".', 'info');
-        } else if (mode === 'force_builtin' && aiState.userKeyValid) {
-             logToDiagnostics('   💡 Совет: Встроенный ключ не работает, но ваш ключ исправен. Переключитесь в режим "Авто" или "Ваш ключ".', 'info');
-        } else if (aiState.userKeyValid || aiState.builtinKeyValid) {
-             logToDiagnostics('   💡 Совет: Один из ключей работает. Попробуйте переключить режим подключения.', 'info');
-        }
-        
-        const errorToShow = userKeyError || builtinKeyError;
-        if (errorToShow) {
-            showDiagnosticsError(errorToShow);
-        }
-    }
-    
-    logToDiagnostics(`--- Проверка завершена. Итоговый статус: ${finalStatus.toUpperCase()} ---`, 'info');
-
-    buttons.forEach(btn => btn.disabled = false);
-}
-
-
-// --- Интеграция с Gemini AI ---
-
-async function generateWithAI(apiKey) {
+async function callGeminiAPI(apiKey) {
     let GoogleGenAI, Type;
     try {
         ({ GoogleGenAI, Type } = await import("https://esm.run/@google/generative-ai"));
@@ -562,18 +233,16 @@ async function generateWithAI(apiKey) {
     const ai = new GoogleGenAI({ apiKey });
 
     const prompt = `
-        Создай план питания на ${state.settings.days} дней для ${state.settings.people} человек.
-        Включи завтрак, обед и ужин на каждый день.
-        Блюда должны быть разнообразными, вкусными и относительно простыми в приготовлении.
-        Для каждого блюда предоставь уникальный recipeId.
+        Создай красивый и уютный план питания на ${state.settings.days} дней для ${state.settings.people} человек.
+        Предпочтения пользователя: "${state.settings.preferences || "сбалансированное питание, без особых предпочтений"}".
+        Включи завтрак, обед и ужин на каждый день. Блюда должны быть разнообразными, вкусными и относительно простыми в приготовлении, создающими ощущение домашнего уюта.
+        Для каждого блюда предоставь уникальный recipeId в формате "recipe-XXXX".
         
-        В ответе должно быть 3 ключа: 'menu', 'recipes', 'shoppingList'.
+        Твой ответ ДОЛЖЕН быть JSON объектом с 3 ключами: 'menu', 'recipes', 'shoppingList'.
         
-        'menu' - это массив объектов, где каждый объект представляет день и содержит поля 'day' (e.g., "День 1") и 'meals' (массив объектов с полями 'type', 'name', 'recipeId').
-        
-        'recipes' - это массив объектов рецептов. Каждый рецепт должен содержать: 'id' (уникальный), 'name', 'ingredients' (массив строк с количеством, e.g., "Куриное филе - 500г"), и 'instructions' (массив строк с шагами).
-        
-        'shoppingList' - это массив объектов продуктов для покупки. Каждый объект должен содержать 'name' и 'amount' (e.g., "Куриное филе", "1.5кг"). Сгруппируй одинаковые ингредиенты со всех рецептов.
+        - 'menu': массив объектов дней. Каждый объект: { "day": "День 1", "meals": [ { "type": "Завтрак", "name": "Овсяная каша с ягодами", "recipeId": "recipe-0001" } ... ] }.
+        - 'recipes': массив объектов рецептов. Каждый рецепт: { "id": "recipe-0001", "name": "Овсяная каша с ягодами", "ingredients": ["Овсяные хлопья - 100г", "Молоко - 200мл", "Свежие ягоды - 50г"], "instructions": ["Смешать хлопья с молоком.", "Варить 5 минут.", "Добавить ягоды."] }.
+        - 'shoppingList': массив объектов продуктов для покупки. Каждый объект: { "name": "Овсяные хлопья", "amount": "500г" }. Сгруппируй одинаковые ингредиенты со всех рецептов в одну позицию с общим количеством.
     `;
     
     const responseSchema = {
@@ -586,90 +255,52 @@ async function generateWithAI(apiKey) {
         required: ["menu", "recipes", "shoppingList"]
     };
 
-    try {
-        const genAIResponse = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: prompt,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: responseSchema,
-            },
-        });
+    const genAIResponse = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: responseSchema,
+        },
+    });
 
-        const jsonText = genAIResponse.text.trim();
-        return JSON.parse(jsonText);
-    } catch(e) {
-        aiState.lastError = e;
-        throw e;
-    }
+    const jsonText = genAIResponse.text.trim();
+    return JSON.parse(jsonText);
 }
 
-
-// --- Установка Обработчиков Событий ---
+// --- Обработчики событий ---
 
 function setupEventListeners() {
     navButtons.forEach(btn => {
         btn.addEventListener('click', () => showScreen(btn.dataset.screen));
     });
-    
-    // -- Основные настройки --
-    settingsBtn?.addEventListener('click', () => showModal(settingsModal));
-    closeSettingsBtn?.addEventListener('click', () => hideModal(settingsModal));
-    settingsModal?.addEventListener('click', (e) => {
+
+    document.getElementById('settings-btn').addEventListener('click', () => showModal(settingsModal));
+    document.getElementById('close-settings-btn').addEventListener('click', () => hideModal(settingsModal));
+    settingsModal.addEventListener('click', (e) => {
         if (e.target === settingsModal) hideModal(settingsModal);
     });
 
-    document.getElementById('days-increment')?.addEventListener('click', () => { state.settings.days < 14 && state.settings.days++; updateSettingsUI(); saveState(); });
-    document.getElementById('days-decrement')?.addEventListener('click', () => { state.settings.days > 1 && state.settings.days--; updateSettingsUI(); saveState(); });
-    document.getElementById('people-increment')?.addEventListener('click', () => { state.settings.people < 10 && state.settings.people++; updateSettingsUI(); saveState(); });
-    document.getElementById('people-decrement')?.addEventListener('click', () => { state.settings.people > 1 && state.settings.people--; updateSettingsUI(); saveState(); });
-
-    // -- Диагностика AI --
-    headerAiStatusBtn?.addEventListener('click', () => {
-        showModal(aiDiagnosticsModal);
-        runAutoRepair();
-    });
-    closeAiDiagBtn?.addEventListener('click', () => hideModal(aiDiagnosticsModal));
-    aiDiagnosticsModal?.addEventListener('click', (e) => {
-        if (e.target === aiDiagnosticsModal) hideModal(aiDiagnosticsModal);
-    });
-    aiDiagAutorunBtn?.addEventListener('click', runAutoRepair);
-    aiDiagSaveBtn?.addEventListener('click', () => {
-        saveAiConfig();
-        hideModal(aiDiagnosticsModal);
-        updateAIStatus();
-    });
-    aiDiagClearKeyBtn?.addEventListener('click', () => {
-        aiDiagApiKeyInput.value = '';
-        saveAiConfig();
-        runAutoRepair();
-    });
-    aiDiagToggleVisibilityBtn?.addEventListener('click', () => {
-        const openIcon = aiDiagToggleVisibilityBtn.querySelector('.eye-open');
-        const closedIcon = aiDiagToggleVisibilityBtn.querySelector('.eye-closed');
-        if (aiDiagApiKeyInput.type === 'password') {
-            aiDiagApiKeyInput.type = 'text';
-            openIcon.style.display = 'none';
-            closedIcon.style.display = 'block';
-        } else {
-            aiDiagApiKeyInput.type = 'password';
-            openIcon.style.display = 'block';
-            closedIcon.style.display = 'none';
-        }
-    });
+    // Настройки
+    document.getElementById('days-increment').addEventListener('click', () => { state.settings.days < 14 && state.settings.days++; updateSettingsUI(); });
+    document.getElementById('days-decrement').addEventListener('click', () => { state.settings.days > 1 && state.settings.days--; updateSettingsUI(); });
+    document.getElementById('people-increment').addEventListener('click', () => { state.settings.people < 10 && state.settings.people++; updateSettingsUI(); });
+    document.getElementById('people-decrement').addEventListener('click', () => { state.settings.people > 1 && state.settings.people--; updateSettingsUI(); });
+    document.getElementById('preferences-input').addEventListener('input', (e) => { state.settings.preferences = e.target.value; });
 
     // Кнопки генерации
-    document.getElementById('generate-btn')?.addEventListener('click', generatePlan);
-    document.getElementById('generate-from-settings-btn')?.addEventListener('click', () => {
+    document.getElementById('generate-btn').addEventListener('click', generatePlan);
+    document.getElementById('generate-from-settings-btn').addEventListener('click', () => {
+        saveState();
         hideModal(settingsModal);
-        setTimeout(generatePlan, 300);
+        setTimeout(generatePlan, 300); // Allow modal to close
     });
 
     // Навигация
-    document.getElementById('back-to-menu-btn')?.addEventListener('click', () => showScreen(state.lastActiveTab));
+    document.getElementById('back-to-menu-btn').addEventListener('click', () => showScreen(state.lastActiveTab));
 
     // Список покупок
-    document.getElementById('shopping-list')?.addEventListener('click', (e) => {
+    document.getElementById('shopping-list').addEventListener('click', (e) => {
         const itemEl = e.target.closest('.shopping-item');
         if (itemEl) {
             const index = parseInt(itemEl.dataset.index, 10);
@@ -680,80 +311,61 @@ function setupEventListeners() {
             }
         }
     });
-
+    
     // Импорт/Экспорт
     const importFileInput = document.getElementById('import-file-input');
-    document.getElementById('import-btn')?.addEventListener('click', () => importFileInput?.click());
-    importFileInput?.addEventListener('change', (e) => {
+    document.getElementById('import-btn').addEventListener('click', () => importFileInput.click());
+    importFileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
         const reader = new FileReader();
         reader.onload = function(event) {
             try {
                 const importedData = JSON.parse(event.target.result);
-                Object.assign(state.settings, importedData.settings);
-                state.menu = importedData.menu || null;
-                state.recipes = importedData.recipes || {};
-                state.shoppingList = importedData.shoppingList || [];
-                
-                saveState();
-                updateSettingsUI();
-                renderMenu();
-                renderAllRecipes();
-                renderShoppingList();
-                showToast("План успешно импортирован!");
-                hideModal(settingsModal);
+                // Basic validation
+                if (importedData.menu && importedData.recipes && importedData.shoppingList) {
+                    Object.assign(state, importedData);
+                    saveState();
+                    updateSettingsUI();
+                    renderMenu();
+                    renderAllRecipes();
+                    renderShoppingList();
+                    showToast("План успешно импортирован!");
+                    hideModal(settingsModal);
+                } else {
+                    throw new Error("Invalid file structure");
+                }
             } catch (err) {
-                showToast("Ошибка импорта: неверный формат файла.", 'warning');
+                showToast("Ошибка импорта: неверный формат.", 'warning');
             }
         };
         reader.readAsText(file);
-        e.target.value = '';
+        e.target.value = ''; // Reset for next import
     });
     
-    document.getElementById('export-btn')?.addEventListener('click', () => {
-        try {
-            const exportState = {
-                settings: state.settings,
-                menu: state.menu,
-                recipes: state.recipes,
-                shoppingList: state.shoppingList
-            };
-            const dataStr = JSON.stringify(exportState, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            const exportFileDefaultName = 'family_menu_plan.json';
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
-        } catch (error) {
-            showToast("Ошибка экспорта данных", "warning");
-        }
+    document.getElementById('export-btn').addEventListener('click', () => {
+        const exportData = JSON.stringify(state, null, 2);
+        const blob = new Blob([exportData], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'menu-plan.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast("Экспорт начат...");
     });
 }
 
-// --- Инициализация Приложения ---
+// --- Инициализация ---
 
 function init() {
-    try {
-        loadState();
-        loadAiConfig();
-        updateSettingsUI();
-        
-        renderMenu();
-        renderAllRecipes();
-        renderShoppingList();
-        showScreen(state.lastActiveTab || 'menu-screen');
-        setupEventListeners();
-
-        updateAIStatus(); // Первичная проверка при запуске
-    } catch (error) {
-        console.error("A critical error occurred during app initialization:", error);
-        document.body.innerHTML = `<div style="padding: 20px; text-align: center; font-family: sans-serif; color: #333;">
-            <h2>Произошла критическая ошибка</h2>
-            <p>Не удалось запустить приложение. Пожалуйста, попробуйте очистить данные сайта и перезагрузить страницу.</p>
-        </div>`;
-    }
+    loadState();
+    updateSettingsUI();
+    renderMenu();
+    renderAllRecipes();
+    renderShoppingList();
+    showScreen(state.lastActiveTab || 'menu-screen');
+    setupEventListeners();
 }
 
 document.addEventListener('DOMContentLoaded', init);
