@@ -176,40 +176,73 @@ function saveState() {
 }
 
 /**
- * BULLETPROOF loadState function.
- * It robustly validates data from localStorage to prevent crashes from corrupted state.
+ * HYPER-ROBUST `loadState` function.
+ * This is the critical fix. It deeply validates all loaded data structures from 
+ * localStorage. If any part of the saved data is corrupted, malformed, or null,
+ * it safely discards it and falls back to default values instead of crashing the app.
+ * This ensures the application ALWAYS starts successfully.
  */
 function loadState() {
-    let savedState;
+    let savedStateJSON;
     try {
-        const savedStateJSON = localStorage.getItem('familyMenuState');
+        savedStateJSON = localStorage.getItem('familyMenuState');
         if (!savedStateJSON) return;
 
-        savedState = JSON.parse(savedStateJSON);
+        const savedState = JSON.parse(savedStateJSON);
         
         if (typeof savedState !== 'object' || savedState === null) {
-            throw new Error("Saved state is not an object.");
+            throw new Error("Saved state is not a valid object.");
+        }
+
+        // Defensively load settings
+        if (savedState.settings && typeof savedState.settings === 'object') {
+            state.settings.days = (typeof savedState.settings.days === 'number' && savedState.settings.days > 0) ? savedState.settings.days : 7;
+            state.settings.people = (typeof savedState.settings.people === 'number' && savedState.settings.people > 0) ? savedState.settings.people : 3;
+            state.settings.apiKey = typeof savedState.settings.apiKey === 'string' ? savedState.settings.apiKey : '';
+        }
+
+        // Defensively load menu
+        if (Array.isArray(savedState.menu)) {
+            state.menu = savedState.menu.filter(day => 
+                day && typeof day === 'object' && typeof day.day === 'string' && Array.isArray(day.meals)
+            );
+        }
+
+        // Defensively load recipes
+        if (savedState.recipes && typeof savedState.recipes === 'object' && !Array.isArray(savedState.recipes)) {
+            state.recipes = savedState.recipes;
+        }
+
+        // Defensively load shopping list (this was a likely crash point)
+        if (Array.isArray(savedState.shoppingList)) {
+            state.shoppingList = savedState.shoppingList
+                .filter(item => item && typeof item === 'object') // CRITICAL: Filter out null/undefined items
+                .map(item => ({
+                    name: String(item.name || 'Без имени'),
+                    amount: String(item.amount || ''),
+                    checked: !!item.checked
+                }));
+        }
+
+        // Defensively load screen state
+        const validScreenIds = Array.from(screens).map(s => s.id);
+        if (validScreenIds.includes(savedState.currentScreen)) {
+            state.currentScreen = savedState.currentScreen;
+        }
+        if (validScreenIds.includes(savedState.lastActiveTab)) {
+            state.lastActiveTab = savedState.lastActiveTab;
         }
 
     } catch (e) {
-        console.error("Could not load or parse state from localStorage. Resetting.", e);
+        console.error("Critical error loading state from localStorage. Resetting for safety.", e);
         localStorage.removeItem('familyMenuState');
-        return;
+        // Reset state to default just in case it was partially loaded before erroring
+        Object.assign(state, {
+            settings: { days: 7, people: 3, apiKey: '' },
+            menu: null, recipes: {}, shoppingList: [],
+            currentScreen: 'menu-screen', lastActiveTab: 'menu-screen',
+        });
     }
-
-    if (savedState.settings && typeof savedState.settings === 'object') {
-        state.settings.days = (typeof savedState.settings.days === 'number' && savedState.settings.days > 0) ? savedState.settings.days : 7;
-        state.settings.people = (typeof savedState.settings.people === 'number' && savedState.settings.people > 0) ? savedState.settings.people : 3;
-        state.settings.apiKey = typeof savedState.settings.apiKey === 'string' ? savedState.settings.apiKey : '';
-    }
-
-    state.menu = Array.isArray(savedState.menu) ? savedState.menu : null;
-    state.recipes = (savedState.recipes && typeof savedState.recipes === 'object' && !Array.isArray(savedState.recipes)) ? savedState.recipes : {};
-    state.shoppingList = Array.isArray(savedState.shoppingList) ? savedState.shoppingList.map(item => ({...item, checked: !!item.checked})) : [];
-
-    const validScreenIds = Array.from(screens).map(s => s.id);
-    state.currentScreen = validScreenIds.includes(savedState.currentScreen) ? savedState.currentScreen : 'menu-screen';
-    state.lastActiveTab = validScreenIds.includes(savedState.lastActiveTab) ? savedState.lastActiveTab : 'menu-screen';
 }
 
 
@@ -268,7 +301,6 @@ async function generateWithAI() {
     let GoogleGenAI, Type;
     try {
         // Dynamically import the module ONLY when needed.
-        // This prevents the entire app from failing if the network is down on startup.
         ({ GoogleGenAI, Type } = await import("https://esm.run/@google/generative-ai"));
     } catch (e) {
         console.error("Failed to load GoogleGenAI module:", e);
@@ -408,11 +440,17 @@ function setupEventListeners() {
         reader.onload = function(event) {
             try {
                 const importedState = JSON.parse(event.target.result);
-                Object.assign(state, {
-                    settings: { days: 7, people: 3, apiKey: '' },
+                // Reset state before applying imported data for a clean import
+                 Object.assign(state, {
+                    settings: { days: 7, people: 3, apiKey: state.settings.apiKey }, // Keep API key
                     menu: null, recipes: {}, shoppingList: [],
-                    ...importedState
                 });
+                // Defensively merge imported state
+                if (importedState.settings) Object.assign(state.settings, importedState.settings);
+                if (importedState.menu) state.menu = importedState.menu;
+                if (importedState.recipes) state.recipes = importedState.recipes;
+                if (importedState.shoppingList) state.shoppingList = importedState.shoppingList;
+
                 saveState();
                 updateSettingsUI();
                 renderMenu();
@@ -445,7 +483,6 @@ function setupEventListeners() {
 
 // --- App Initialization ---
 function init() {
-    // This function is now safe to call, as it has no external network dependencies.
     loadState();
     updateSettingsUI();
     renderMenu();
@@ -460,7 +497,6 @@ document.addEventListener('DOMContentLoaded', () => {
         init();
     } catch (error) {
         console.error("A critical error occurred during app initialization:", error);
-        // This is a last-resort safety net.
         document.body.innerHTML = `<div style="padding: 20px; text-align: center; font-family: sans-serif; color: #333;">
             <h2>Произошла критическая ошибка</h2>
             <p>Не удалось запустить приложение. Пожалуйста, попробуйте очистить данные сайта (кэш и localStorage) и перезагрузить страницу.</p>
