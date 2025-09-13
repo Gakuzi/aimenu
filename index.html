@@ -1,883 +1,1656 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Семейное Меню</title>
-
-    <!-- PWA-like behavior for iOS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>СЕМЕЙНОЕ МЕНЮ</title>
+    
+    <!-- PWA Manifest & Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Семейное Меню">
-    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDE4MCAxODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgICA8cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjRjlGN0Y0Ii8+CiAgICA8cGF0aCBkPSJNNjIgNzRDMzggNzQgMzUgOTggMzUgMTEwQzM1IDEyMiAzOCAxNDYgNjIgMTQ2Qzg2IDE0NiA4OSAxMjIgODkgMTEwQzg5IDk4IDg2IDc0IDYyIDc0WiIgc3Ryb2tlPSIjOEI1RTNDIiBzdHJva2Utd2lkdGg9IjgiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPHBhdGggZD0iTTEyMCAxMzVMMTIwIDc1QzEyMCA2NSAxMTAgNjAgMTA1IDY1Qzk1IDc1IDEwMCA5NSAxMDggOTVDMTE2IDk1IDEyNSA4NSAxMTggODBDMTExIDc1IDEwMiA4NSAxMDIgOTVMMTAyIDEzNSIgc3Ryb2tlPSIjOEI1RTNDIiBzdHJva2Utd2lkdGg9IjgiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPHBhdGggZD0iTTU1IDYwQzYwIDUwIDcwIDUwIDc1IDYwIiBzdHJva2U9IiNENEEzNzMiIHN0cm9rZS13aWR0aPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICAgIDxwYXRoIGQ9Ik03MCA0MEM3NSAzMCA4NSAzMCA5MCA0MCIgc3Ryb2tlPSIjRDRBMzczIiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4=">
-
+    <meta name="apple-mobile-web-app-title" content="СЕМЕЙНОЕ МЕНЮ">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiB2aWV3Qm94PSIwIDAgMTAyNCAxMDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiByeD0iMjMyIiBmaWxsPSIjRjlGN0Y0Ii8+CjxwYXRoIGQ9Ik01MTIgNzM5QzQ1Ni45MSA3MzkgNDE3IDcyMC4wOSA0MTcgNjY1QzQxNyA2MDkuOTEgNDU2LjkxIDU5MSA1MTIgNTkxQzU2Ny4wOSA1OTEgNjA3IDYwOS45MSA2MDcgNjY1QzYwNyA3MjAuMDkgNTY3LjA5IDczOSA1MTIgNzM5WiIgZmlsbD0iIzhCNUUzQyIvPgo8cGF0aCBkPSJNNTEyIDcxOEM0NjguNDMgNzE4IDQzMyA2OTYuNTcgNDMzIDY2NUM0MzMgNjMzLjQzIDQ2OC40MyA2MTIgNTEyIDYxMkM1NTUuNTcgNjEyIDU5MSA2MzMuNDMgNTkxIDY2NUM1OTEgNjk2LjU3IDU1NS41NyA3MTggNTEyIDcxOFoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik01MTIgMzQ0QzUxMiAzNDQgNTM2IDM4NSA1MTIgNDA5QzQ4OCAzODUgNTEyIDM0NCA1MTIgMzQ0WiIgZmlsbD0iI0Q0QTM3MyIgb3BhY2l0eT0iMC41Ii8+CjxwYXRoIGQ9Ik00ODQgMzI2QzQ4NCAzMjYgNTAzIDM1OC42IDQ4NCAzNzZDNA2NSAzNTguNiA0ODQgMzI2IDQ4NCAzMjZaIiBmaWxsPSIjRDRBMzcyIiBvcGFjaXR5PSIwLjUiLz4KPHBhdGggZD0iTTU0MCAzMjZDNTAxIDMyNiA1OTcgMzU4LjYgNTQwIDM3NkM1NzMgMzU4LjYgNTQwIDMyNiA1NDAgMzI2WiIgZmlsbD0iI0Q0QTM3MyIgb3BhY2l0eT0iMC41Ii8+Cjwvc3ZnPgo=">
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiB2aWV3Qm94PSIwIDAgMTAyNCAxMDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiByeD0iMjMyIiBmaWxsPSIjRjlGN0Y0Ii8+CjxwYXRoIGQ9Ik01MTIgNzM5QzQ1Ni45MSA3MzkgNDE3IDcyMC4wOSA0MTcgNjY1QzQxNyA2MDkuOTEgNDU2LjkxIDU5MSA1MTIgNTkxQzU2Ny4wOSA1OTEgNjA3IDYwOS45MSA2MDcgNjY1QzYwNyA3MjAuMDkgNTY3LjA5IDczOSA1MTIgNzM5WiIgZmlsbD0iIzhCNUUzQyIvPgo8cGF0aCBkPSJNNTEyIDcxOEM0NjguNDMgNzE4IDQzMyA2OTYuNTcgNDMzIDY2NUM0MzMgNjMzLjQzIDQ2OC40MyA2MTIgNTEyIDYxMkM1NTUuNTcgNjEyIDU5MSA2MzMuNDMgNTkxIDY2NUM1OTEgNjk2LjU3IDU1NS41NyA3MTggNTEyIDcxOFoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik01MTIgMzQ0QzUxMiAzNDQgNTM2IDM4NSA1MTIgNDA5QzQ4OCAzODUgNTEyIDM0NCA1MTIgMzQ0WiIgZmlsbD0iI0Q0QTM3MyIgb3BhY2l0eT0iMC41Ii8+CjxwYXRoIGQ9Ik00ODQgMzI2QzQ4NCAzMjYgNTAzIDM1OC42IDQ4NCAzNzZDNA2NSAzNTguNiA0ODQgMzI2IDQ4NCAzMjZaIiBmaWxsPSIjRDRBMzcyIiBvcGFjaXR5PSIwLjUiLz4KPHBhdGggZD0iTTU0MCAzMjZDNTAxIDMyNiA1OTcgMzU4LjYgNTQwIDM3NkM1NzMgMzU4LjYgNTQwIDMyNiA1NDAgMzI2WiIgZmlsbD0iI0Q0QTM3MyIgb3BhY2l0eT0iMC41Ii8+Cjwvc3ZnPgo=">
+    
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&family=Lato:wght@400;700&display=swap" rel="stylesheet">
-    
-    <style>
-        /* --- DESIGN SYSTEM & BASE STYLES --- */
-        :root {
-            --bg-main: #F9F7F4;
-            --bg-card: #FFFFFF;
-            --text-primary: #333;
-            --text-secondary: #7D7D7D;
-            --accent-main: #8B5E3C; /* Тёплый кофе */
-            --accent-secondary: #D4A373; /* Бежевый */
-            --accent-success: #5E7A6E; /* Мятный */
-            --accent-warning: #E07A5F; /* Тёплый оранжевый */
-            --soft-shadow: 0 6px 20px rgba(139, 94, 60, 0.04);
-            --strong-shadow: 0 8px 24px rgba(139, 94, 60, 0.1);
-            --font-headings: 'Nunito', sans-serif;
-            --font-text: 'Lato', sans-serif;
-            --border-radius: 20px;
-            --nav-height: 80px;
-            --safe-area-inset-bottom: env(safe-area-inset-bottom, 20px);
-            --transition-curve: cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+<style>
+:root {
+    --font-nunito: 'Nunito', sans-serif;
+    --font-lato: 'Lato', sans-serif;
+    --bg-color: #F9F7F4;
+    --accent-color: #8B5E3C;
+    --secondary-color: #D4A373;
+    --success-color: #5E7A6E;
+    --warning-color: #E07A5F;
+    --text-color: #333;
+    --soft-text: #7D7D7D;
+    --card-bg: #FFFFFF;
+    --card-accent-bg: #F0E7DD;
+    --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
 
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            font-family: var(--font-text);
-            background-color: var(--bg-main);
-            color: var(--text-primary);
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCIgdmlld0JveD0iMCAwIDUwIDUwIj4KICA8ZmlsdGVyIGlkPSJub2lzZSI+CiAgICA8ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giIHR5cGU9ImZyYWN0YWxOb2lzZSIvPgogIDwvZmlsdGVyPgogIDxyZWN0IHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCIgZmlsbD0iI0Y5RjdGNCIvPgogIDxyZWN0IHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4wMiIvPgo8L3N2Zz4=');
-        }
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
 
-        #app-container {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: var(--font-lato);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
 
-        /* --- SCREENS & LAYOUT --- */
-        main {
-            flex-grow: 1;
-            position: relative;
-            overflow: hidden;
-        }
+body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%238B5E3C' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.1;
+    z-index: -1;
+}
 
-        .screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--bg-main);
-            display: flex;
-            flex-direction: column;
-            opacity: 0;
-            visibility: hidden;
-            transform: scale(1.05);
-            transition: opacity 0.4s var(--transition-curve), visibility 0.4s, transform 0.4s var(--transition-curve);
-            z-index: 1;
-        }
-        .screen.active {
-            opacity: 1;
-            visibility: visible;
-            transform: scale(1);
-            z-index: 2;
-        }
-        .screen-content {
-            padding: 24px;
-            overflow-y: auto;
-            flex-grow: 1;
-        }
-        .screen-header {
-            font-family: var(--font-headings);
-            font-size: 24pt;
-            font-weight: 700;
-            color: var(--accent-main);
-            text-align: center;
-            padding: 24px 24px 16px;
-        }
-        
-        /* --- COMPONENTS --- */
-        .card {
-            background-color: var(--bg-card);
-            border-radius: var(--border-radius);
-            padding: 24px;
-            margin-bottom: 16px;
-            box-shadow: var(--soft-shadow);
-            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48ZmlsdGVyIGlkPSJ0ZXh0dXJlIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iMC45IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIj48L2ZlVHVyYnVsZW5jZT48ZmVColorMatrixIHR5cGU9InNhdHVyYXRlIiB2YWx1ZXM9IjAiPjwvZmVColorMatrixPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCN0ZXh0dXJlKSIgb3BhY2l0eT0iMC4wMTUiPjwvcmVjdD48L3N2Zz4=');
-        }
-        
-        .main-button {
-            width: 100%;
-            height: 60px;
-            padding: 0 24px;
-            border: none;
-            border-radius: var(--border-radius);
-            background: linear-gradient(135deg, var(--accent-main) 0%, var(--accent-secondary) 100%);
-            color: white;
-            font-family: var(--font-headings);
-            font-size: 18pt;
-            font-weight: 700;
-            box-shadow: var(--strong-shadow);
-            cursor: pointer;
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .main-button:active {
-            transform: scale(0.95);
-            box-shadow: var(--soft-shadow);
-        }
-        .main-button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .input-field {
-            width: 100%;
-            padding: 16px;
-            border: 1px solid #EAE4DD;
-            border-radius: 16px;
-            background-color: var(--bg-card);
-            font-family: var(--font-text);
-            font-size: 16pt;
-            color: var(--text-primary);
-        }
-        
-        /* --- API KEY SCREEN --- */
-        #api-key-screen .screen-content {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-        #api-key-screen .logo {
-            font-family: var(--font-headings);
-            font-weight: 300;
-            font-size: 28pt;
-            color: var(--accent-main);
-        }
-        #api-key-screen p {
-            color: var(--text-secondary);
-            max-width: 300px;
-            line-height: 1.6;
-        }
-        #api-key-screen .input-field {
-            margin: 24px 0;
-            text-align: center;
-        }
-        
-        /* --- SETTINGS SCREEN --- */
-        .setting-card {
-            margin-bottom: 24px;
-        }
-        .setting-card h3 {
-            font-family: var(--font-headings);
-            font-weight: 600;
-            font-size: 18pt;
-            margin: 0 0 16px;
-            color: var(--text-primary);
-        }
-        .slider-container {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        .slider-container input[type="range"] {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100%;
-            height: 8px;
-            background: #EAE4DD;
-            border-radius: 4px;
-            outline: none;
-        }
-        .slider-container input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 24px;
-            height: 24px;
-            background: var(--accent-main);
-            cursor: pointer;
-            border-radius: 50%;
-        }
-        .slider-value {
-            font-family: var(--font-headings);
-            font-weight: 700;
-            font-size: 18pt;
-            color: var(--accent-main);
-        }
-        .radio-group, .checkbox-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        .radio-group label, .checkbox-group label {
-            padding: 10px 18px;
-            border: 1px solid #EAE4DD;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .radio-group input, .checkbox-group input {
-            display: none;
-        }
-        .radio-group input:checked + label, .checkbox-group input:checked + label {
-            background-color: var(--accent-success);
-            border-color: var(--accent-success);
-            color: white;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
-        }
+#app {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
 
-        /* --- LOADER --- */
-        .loader-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(249, 247, 244, 0.8);
-            backdrop-filter: blur(5px);
-            z-index: 1000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s;
-        }
-        .loader-overlay.visible {
-            opacity: 1;
-            visibility: visible;
-        }
-        .loader-spinner {
-            width: 60px;
-            height: 60px;
-            border: 5px solid var(--accent-secondary);
-            border-top-color: var(--accent-main);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        .loader-overlay p {
-            margin-top: 24px;
-            font-family: var(--font-headings);
-            font-size: 16pt;
-            color: var(--accent-main);
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        
-        /* --- NOTIFICATION TOAST --- */
-        .toast {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translate(-50%, -100px);
-            padding: 14px 24px;
-            border-radius: var(--border-radius);
-            background-color: var(--accent-main);
-            color: white;
-            font-weight: 700;
-            box-shadow: var(--strong-shadow);
-            z-index: 1100;
-            opacity: 0;
-            transition: all 0.5s var(--transition-curve);
-        }
-        .toast.show {
-            opacity: 1;
-            transform: translate(-50%, 0);
-        }
-        .toast.error {
-            background-color: var(--accent-warning);
-        }
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-color);
+    transition: transform 0.5s var(--ease-out), opacity 0.5s var(--ease-out);
+    opacity: 1;
+    transform: scale(1);
+    overflow-y: auto;
+    padding: 20px;
+    padding-top: calc(20px + env(safe-area-inset-top));
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+}
 
-        /* --- BOTTOM NAVIGATION --- */
-        #bottom-nav {
-            position: fixed;
-            bottom: 0; left: 0; right: 0;
-            height: calc(var(--nav-height) + var(--safe-area-inset-bottom));
-            padding-bottom: var(--safe-area-inset-bottom);
-            background-color: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border-top: 1px solid rgba(139, 94, 60, 0.1);
-            display: none; /* Hidden by default */
-            justify-content: space-around;
-            z-index: 100;
-        }
-        #bottom-nav.visible {
-            display: flex;
-        }
-        .nav-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            flex-grow: 1;
-            color: var(--accent-secondary);
-            background: none;
-            border: none;
-            cursor: pointer;
-        }
-        .nav-btn svg {
-            width: 24px; height: 24px;
-            stroke-width: 2px;
-            fill: none;
-            stroke: currentColor;
-            transition: transform 0.2s var(--transition-curve);
-        }
-        .nav-btn span {
-            font-size: 10pt;
-            margin-top: 4px;
-            font-family: var(--font-headings);
-            font-weight: 600;
-        }
-        .nav-btn.active {
-            color: var(--accent-main);
-        }
-        .nav-btn.active svg {
-            transform: scale(1.1);
-        }
+.screen.hidden {
+    transform: scale(1.05);
+    opacity: 0;
+    pointer-events: none;
+}
 
-        /* --- DEBUG CONSOLE --- */
-        .debug-console {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0,0,0,0.9);
-            color: #E0E0E0;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            height: 30vh;
-            border-top: 1px solid var(--accent-secondary);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
-            transform: translateY(100%);
-            transition: transform 0.4s var(--transition-curve);
-        }
-        .debug-console.visible {
-            transform: translateY(0);
-        }
-        #debug-log-output {
-            padding: 12px;
-            overflow-y: auto;
-            flex-grow: 1;
-            line-height: 1.5;
-        }
-        #debug-log-output span {
-            display: block;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
-        .debug-input-container {
-            display: flex;
-            align-items: center;
-            padding: 8px 12px;
-            border-top: 1px solid #444;
-            background: #111;
-        }
-        #debug-command-input {
-            flex-grow: 1;
-            background: transparent;
-            border: none;
-            color: #E0E0E0;
-            font-family: inherit;
-            font-size: 12px;
-            outline: none;
-        }
-        /* Log Colors */
-        .log-INFO { color: #87CEFA; }
-        .log-SUCCESS { color: #98FB98; }
-        .log-ERROR { color: #FF6347; font-weight: bold; }
-        .log-WARN { color: #FFA500; }
-        .log-CMD { color: #FFFFFF; font-style: italic; }
+/* --- Setup Screen --- */
+#setup-screen {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: linear-gradient(160deg, #F9F7F4, #EDE0D4);
+}
 
-    </style>
+.setup-container {
+    max-width: 350px;
+    width: 90%;
+}
+
+.setup-logo {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 30px;
+    animation: spin 10s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.setup-title {
+    font-family: var(--font-nunito);
+    font-weight: 800;
+    font-size: 28px;
+    color: var(--accent-color);
+    margin: 0 0 10px;
+}
+
+.setup-subtitle {
+    font-size: 16px;
+    color: var(--soft-text);
+    margin-bottom: 30px;
+    line-height: 1.5;
+}
+
+.input-group {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+#api-key-input {
+    width: 100%;
+    height: 50px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 0 20px;
+    font-size: 16px;
+    font-family: var(--font-lato);
+    outline: none;
+    transition: border-color 0.3s;
+}
+#api-key-input:focus {
+    border-color: var(--accent-color);
+}
+
+.primary-button {
+    width: 100%;
+    height: 50px;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: var(--font-nunito);
+    font-weight: 700;
+    font-size: 18px;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+    -webkit-appearance: none;
+}
+.primary-button:active {
+    transform: scale(0.98);
+}
+.primary-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+.primary-button.reveal {
+    animation: reveal 0.5s var(--ease-out) forwards;
+    opacity: 0;
+    transform: translateY(20px);
+}
+@keyframes reveal {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Generation Progress */
+#generation-progress {
+    width: 100%;
+}
+.progress-bar-container {
+    width: 100%;
+    height: 10px;
+    background-color: #e0e0e0;
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 20px 0;
+}
+#progress-bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
+    transition: width 0.5s var(--ease-out);
+}
+#progress-status {
+    font-family: var(--font-nunito);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--accent-color);
+    margin-bottom: 5px;
+    min-height: 25px;
+}
+#progress-details {
+    font-size: 14px;
+    color: var(--soft-text);
+    min-height: 40px;
+    line-height: 1.4;
+}
+
+/* --- Main Screen --- */
+#main-screen {
+    padding: 0;
+    padding-top: env(safe-area-inset-top);
+    display: flex;
+    flex-direction: column;
+}
+.main-header {
+    padding: 15px 20px;
+    font-family: var(--font-nunito);
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--accent-color);
+    flex-shrink: 0;
+}
+.content-area {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 0 20px 20px;
+}
+.bottom-nav {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    background-color: #fff;
+    border-top: 1px solid #eee;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    flex-shrink: 0;
+}
+.nav-button {
+    background: none;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--soft-text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.2s;
+}
+.nav-button svg {
+    width: 24px;
+    height: 24px;
+    stroke: var(--soft-text);
+    transition: stroke 0.2s;
+}
+.nav-button.active, .nav-button:active {
+    color: var(--accent-color);
+}
+.nav-button.active svg, .nav-button:active svg {
+    stroke: var(--accent-color);
+}
+.main-content {
+    display: none;
+}
+.main-content.active {
+    display: block;
+    animation: fadeIn 0.5s var(--ease-out);
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Menu Screen --- */
+.day-scroller {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 10px 0 20px;
+    -webkit-overflow-scrolling: touch;
+}
+.day-scroller::-webkit-scrollbar { display: none; }
+
+.day-card {
+    flex: 0 0 90%;
+    width: 90%;
+    margin-right: 15px;
+    scroll-snap-align: center;
+    background-color: var(--card-bg);
+    border-radius: 24px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+.day-card:last-child { margin-right: 0; }
+.day-title {
+    font-family: var(--font-nunito);
+    font-weight: 800;
+    font-size: 22px;
+    color: var(--accent-color);
+    text-align: center;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+.meal {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    font-size: 18px;
+}
+.meal-icon {
+    margin-right: 15px;
+    font-size: 20px;
+}
+.meal-name {
+    flex-grow: 1;
+}
+.meal.placeholder {
+    color: #ccc;
+}
+.meal.clickable {
+    background-color: var(--card-accent-bg);
+    border-radius: 12px;
+    padding: 12px 15px;
+    margin: 5px 0;
+    cursor: pointer;
+    font-family: var(--font-nunito);
+    font-weight: 600;
+    color: var(--accent-color);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.meal.clickable:active {
+    transform: scale(0.99);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+.leftover-icon {
+    font-size: 16px;
+    opacity: 0.5;
+    margin-left: 8px;
+    color: var(--secondary-color);
+}
+
+/* --- Recipe Screen --- */
+#recipe-screen {
+    background-color: #fff;
+    transform: translateX(100%);
+    z-index: 10;
+}
+#recipe-screen.active {
+    transform: translateX(0);
+}
+.recipe-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0 15px 0;
+}
+.back-button {
+    background: none; border: none; font-size: 24px; cursor: pointer; padding: 0;
+}
+#recipe-title {
+    font-family: var(--font-nunito);
+    font-weight: 800;
+    font-size: 22px;
+    color: var(--accent-color);
+    text-align: center;
+    flex-grow: 1;
+}
+#step-indicator {
+    font-size: 18px;
+    color: var(--secondary-color);
+    font-family: var(--font-nunito);
+    font-weight: 600;
+}
+#step-image {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 16px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    background-color: #eee;
+}
+#step-description {
+    font-size: 18px;
+    line-height: 1.6;
+    margin: 20px 0;
+}
+.timer-container {
+    background-color: var(--card-accent-bg);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    margin: 20px 0;
+}
+#timer-display {
+    font-family: var(--font-nunito);
+    font-weight: 800;
+    font-size: 48px;
+    color: var(--accent-color);
+    letter-spacing: 2px;
+}
+.timer-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 15px;
+}
+.timer-button {
+    border: none;
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-family: var(--font-nunito);
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.timer-button:active { transform: scale(0.95); }
+#start-timer-btn { background-color: var(--success-color); color: white; }
+#pause-timer-btn { background-color: var(--warning-color); color: white; }
+#reset-timer-btn { background-color: #ccc; color: #333; }
+
+#step-ingredients-title {
+    font-family: var(--font-nunito);
+    font-weight: 700;
+    font-size: 18px;
+    margin-top: 20px;
+}
+#step-ingredients {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+}
+#step-ingredients li {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 16px;
+}
+.ingredient-status {
+    margin-right: 12px;
+    font-size: 20px;
+}
+.ingredient-status.completed { color: var(--success-color); }
+.ingredient-status.missing { color: var(--warning-color); }
+.ingredient-status.unknown { color: #ccc; }
+
+.recipe-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+.nav-btn-recipe {
+    background: var(--card-accent-bg);
+    color: var(--accent-color);
+    border: none;
+    border-radius: 12px;
+    padding: 15px 30px;
+    font-family: var(--font-nunito);
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+}
+.nav-btn-recipe:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* --- Shopping List --- */
+#shopping-list-content { padding-bottom: 50px; }
+.progress-bar-shopping {
+    width: 100%;
+    height: 8px;
+    background-color: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 10px 0 20px;
+}
+#shopping-progress {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
+    transition: width 0.5s var(--ease-out);
+}
+#shopping-progress-text {
+    font-size: 14px;
+    color: var(--soft-text);
+    margin-bottom: 10px;
+}
+.category-toggle {
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    padding: 15px 0;
+    font-family: var(--font-nunito);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--accent-color);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+}
+.category-items {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 1000px;
+    overflow: hidden;
+    transition: max-height 0.5s var(--ease-out), padding 0.5s var(--ease-out);
+}
+.category-items.collapsed {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+.shopping-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f5f5f5;
+}
+.shopping-item label {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    cursor: pointer;
+}
+.shopping-item input[type="checkbox"] {
+    display: none;
+}
+.custom-checkbox {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #ccc;
+    border-radius: 50%;
+    margin-right: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: border-color 0.2s;
+}
+.custom-checkbox .checkmark {
+    width: 12px;
+    height: 12px;
+    background-color: var(--success-color);
+    border-radius: 50%;
+    transform: scale(0);
+    transition: transform 0.2s var(--ease-out);
+}
+.shopping-item input:checked + .custom-checkbox {
+    border-color: var(--success-color);
+}
+.shopping-item input:checked + .custom-checkbox .checkmark {
+    transform: scale(1);
+}
+.item-details {
+    flex-grow: 1;
+    transition: color 0.3s, text-decoration 0.3s;
+}
+.item-name {
+    font-size: 16px;
+    font-weight: 600;
+}
+.item-quantity {
+    font-size: 14px;
+    color: var(--soft-text);
+}
+.item-price {
+    font-family: var(--font-nunito);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--accent-color);
+}
+.shopping-item input:checked ~ .item-details {
+    color: #aaa;
+    text-decoration: line-through;
+}
+
+#shopping-list-total {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: var(--card-accent-bg);
+    border-radius: 16px;
+    text-align: center;
+    font-family: var(--font-nunito);
+    font-weight: 800;
+    font-size: 20px;
+    color: var(--accent-color);
+}
+
+/* --- Budget Screen --- */
+.budget-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+}
+.pie-chart-container {
+    position: relative;
+    width: 250px;
+    height: 250px;
+    margin-bottom: 30px;
+}
+.pie-chart {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+.pie-chart circle {
+    fill: none;
+    stroke-width: 32;
+    transition: stroke-dasharray 0.8s var(--ease-out);
+}
+.chart-center-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    font-family: var(--font-nunito);
+    font-weight: 800;
+    font-size: 32px;
+    color: var(--accent-color);
+}
+.budget-summary {
+    width: 100%;
+    text-align: center;
+}
+.budget-summary p {
+    margin: 8px 0;
+    font-size: 18px;
+}
+.budget-summary .amount {
+    font-family: var(--font-nunito);
+    font-weight: 700;
+}
+.budget-summary #budget-remaining.ok {
+    color: var(--success-color);
+}
+
+/* --- Sync Screen --- */
+.sync-container {
+    text-align: center;
+    padding-top: 40px;
+}
+.sync-container .primary-button {
+    margin-bottom: 20px;
+}
+.sync-instructions {
+    margin-top: 30px;
+    font-size: 14px;
+    color: var(--soft-text);
+    line-height: 1.6;
+}
+
+/* --- Dev Console --- */
+#dev-console {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 30vh;
+    background-color: rgba(0,0,0,0.9);
+    color: #e0e0e0;
+    border-top: 1px solid var(--secondary-color);
+    transform: translateY(100%);
+    transition: transform 0.4s var(--ease-out);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+}
+#dev-console.visible {
+    transform: translateY(0);
+}
+#log-output {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+}
+#log-output p { margin: 2px 0; }
+#command-input {
+    width: 100%;
+    background: #333;
+    border: none;
+    border-top: 1px solid #555;
+    color: #e0e0e0;
+    padding: 10px;
+    font-family: 'Courier New', Courier, monospace;
+    outline: none;
+}
+
+/* --- Notification --- */
+#notification {
+    position: fixed;
+    top: env(safe-area-inset-top, 0);
+    left: 50%;
+    transform: translate(-50%, -150%);
+    background-color: var(--success-color);
+    color: white;
+    padding: 12px 25px;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    font-family: var(--font-nunito);
+    font-weight: 700;
+    z-index: 200;
+    transition: transform 0.5s var(--ease-out);
+}
+#notification.show {
+    transform: translate(-50%, 20px);
+}
+</style>
 </head>
 <body>
 
-    <div id="app-container">
-        <main>
-            <!-- API Key Screen -->
-            <section id="api-key-screen" class="screen active">
-                <div class="screen-content">
-                    <h1 class="logo">СЕМЕЙНОЕ МЕНЮ</h1>
-                    <p>Привет! Давайте создадим ваше идеальное меню вместе с ИИ.</p>
-                    <input type="password" id="api-key-input" class="input-field" placeholder="Введите ваш API-ключ Google Gemini">
-                    <button id="connect-gemini-btn" class="main-button">Подключить Gemini</button>
-                    <p style="font-size: 12px; margin-top: 24px;">Получите ключ на <a href="https://makersuite.google.com/app/apikey" target="_blank">makersuite.google.com</a></p>
-                </div>
-            </section>
-
-            <!-- Settings Screen -->
-            <section id="settings-screen" class="screen">
-                <h1 class="screen-header">Создайте своё меню</h1>
-                <div class="screen-content">
-                    <div class="card setting-card">
-                        <h3>Параметры</h3>
-                        <div class="slider-container" style="margin-bottom: 24px;">
-                            <span>👨‍👩‍👧‍👦</span>
-                            <input type="range" id="people-slider" min="1" max="6" value="3">
-                            <span id="people-value" class="slider-value">3 чел.</span>
-                        </div>
-                        <div class="slider-container">
-                            <span>🗓️</span>
-                            <input type="range" id="days-slider" min="1" max="7" value="7" step="1">
-                             <span id="days-value" class="slider-value">7 дн.</span>
-                        </div>
-                    </div>
-
-                    <div class="card setting-card">
-                        <h3>Основной белок</h3>
-                        <div class="radio-group">
-                            <input type="radio" name="protein" id="protein-chicken" value="Курица" checked>
-                            <label for="protein-chicken">🐔 Курица</label>
-                            <input type="radio" name="protein" id="protein-beef" value="Говядина">
-                            <label for="protein-beef">🥩 Говядина</label>
-                            <input type="radio" name="protein" id="protein-pork" value="Свинина">
-                            <label for="protein-pork">🐖 Свинина</label>
-                            <input type="radio" name="protein" id="protein-veg" value="Вегетарианский">
-                            <label for="protein-veg">🌱 Вегетарианский</label>
-                        </div>
-                    </div>
-                    
-                    <div class="card setting-card">
-                        <h3>Ограничения</h3>
-                         <div class="checkbox-group">
-                             <input type="checkbox" id="restriction-fish" value="без рыбы" checked>
-                             <label for="restriction-fish">Без рыбы</label>
-                             <input type="checkbox" id="restriction-mushrooms" value="без грибов" checked>
-                             <label for="restriction-mushrooms">Без грибов</label>
-                             <input type="checkbox" id="restriction-dairy" value="без молочных продуктов">
-                             <label for="restriction-dairy">Без молочных</label>
-                             <input type="checkbox" id="restriction-sugar" value="без сахара">
-                             <label for="restriction-sugar">Без сахара</label>
-                         </div>
-                    </div>
-
-                     <div class="card setting-card">
-                        <h3>Аллергии</h3>
-                        <input type="text" id="allergies-input" class="input-field" placeholder="Например: орехи, соя, лактоза">
-                    </div>
-                </div>
-                 <div style="padding: 24px; padding-top: 0;">
-                    <button id="generate-btn" class="main-button">Сгенерировать меню с Gemini</button>
-                </div>
-            </section>
+<div id="app">
+    <!-- Экран первоначальной настройки и генерации -->
+    <div class="screen" id="setup-screen">
+        <div class="setup-container">
+            <svg class="setup-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="45" fill="#F0E7DD"/><path d="M50,10 A40,40 0 0,1 90,50" fill="none" stroke="#8B5E3C" stroke-width="8"/><path d="M50,90 A40,40 0 0,1 10,50" fill="none" stroke="#D4A373" stroke-width="8"/><circle cx="50" cy="50" r="20" fill="#fff"/><path d="M50 38 C 55 42, 55 48, 50 52 S 45 58, 50 62" stroke="#5E7A6E" stroke-width="4" fill="none" stroke-linecap="round"/></svg>
+            <h1 class="setup-title">СЕМЕЙНОЕ МЕНЮ</h1>
+            <p class="setup-subtitle">Ваш ИИ-помощник для вкусных и простых семейных обедов.</p>
             
-            <!-- Other screens will be populated by JS -->
-            <section id="menu-screen" class="screen"></section>
-            <section id="recipes-screen" class="screen"></section>
-            <section id="shopping-screen" class="screen"></section>
-            <section id="budget-screen" class="screen"></section>
-            <section id="recipe-detail-screen" class="screen"></section>
+            <div id="api-key-section">
+                <div class="input-group">
+                    <input type="password" id="api-key-input" placeholder="Ваш Google Gemini API ключ">
+                </div>
+                <button class="primary-button" id="start-setup-btn">Подключить Gemini</button>
+            </div>
 
-        </main>
+            <div id="generation-progress" class="hidden">
+                <div id="progress-status"></div>
+                <div class="progress-bar-container">
+                    <div id="progress-bar"></div>
+                </div>
+                <div id="progress-details"></div>
+                <button class="primary-button hidden" id="finish-setup-btn">Открыть меню</button>
+            </div>
+        </div>
+    </div>
 
-        <nav id="bottom-nav">
-            <button class="nav-btn active" data-screen="menu-screen">
-                <svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-                <span>Меню</span>
+    <!-- Основной экран приложения с навигацией -->
+    <div class="screen hidden" id="main-screen">
+        <header class="main-header" id="main-header-title">Меню на неделю</header>
+        <div class="content-area">
+            <div class="main-content active" id="menu-content">
+                <div class="day-scroller" id="day-scroller-container"></div>
+            </div>
+            <div class="main-content" id="shopping-list-content">
+                <p id="shopping-progress-text">0/0 куплено</p>
+                <div class="progress-bar-shopping">
+                    <div id="shopping-progress"></div>
+                </div>
+                <div id="shopping-list-container"></div>
+                <div id="shopping-list-total"></div>
+            </div>
+            <div class="main-content" id="budget-content">
+                <div class="budget-container">
+                    <div class="pie-chart-container">
+                        <svg class="pie-chart" viewBox="0 0 36 36">
+                          <circle cx="18" cy="18" r="15.9155" fill="#fff"/>
+                          <circle class="pie-slice" id="pie-products" cx="18" cy="18" r="15.9155" stroke="#8B5E3C" stroke-dasharray="0, 100"/>
+                          <circle class="pie-slice" id="pie-chem" cx="18" cy="18" r="15.9155" stroke="#D4A373" stroke-dasharray="0, 100" />
+                          <circle class="pie-slice" id="pie-other" cx="18" cy="18" r="15.9155" stroke="#E07A5F" stroke-dasharray="0, 100" />
+                        </svg>
+                        <div class="chart-center-text" id="budget-spent-total">0 ₽</div>
+                    </div>
+                    <div class="budget-summary">
+                        <p>Всего: <span class="amount" id="budget-total">10000 ₽</span></p>
+                        <p>Потрачено: <span class="amount" id="budget-spent">0 ₽</span></p>
+                        <p>Осталось: <span class="amount ok" id="budget-remaining">10000 ₽</span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="main-content" id="sync-content">
+                <div class="sync-container">
+                    <button class="primary-button" id="export-btn">📤 Экспортировать данные</button>
+                    <button class="primary-button" id="import-btn">📥 Импортировать данные</button>
+                    <input type="file" id="import-file-input" class="hidden" accept=".json">
+                    <p class="sync-instructions">Сохраните файл и поделитесь им с семьёй. Другие могут импортировать его, чтобы видеть то же меню, список покупок и бюджет.</p>
+                </div>
+            </div>
+        </div>
+        <nav class="bottom-nav">
+            <button class="nav-button active" data-content="menu-content" data-title="Меню на неделю">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
+                Меню
             </button>
-            <button class="nav-btn" data-screen="recipes-screen">
-                <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
-                <span>Рецепты</span>
+            <button class="nav-button" data-content="shopping-list-content" data-title="Список покупок">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c.51 0 .962-.343 1.087-.835l1.838-6.817a.5.5 0 00-.47-.665H5.25l-.838-3.141A.5.5 0 003.838 3H2.25zM7.5 14.25v3H6a3 3 0 01-3-3h4.5zM16.5 14.25v3h1.5a3 3 0 003-3h-4.5z" /></svg>
+                Покупки
             </button>
-            <button class="nav-btn" data-screen="shopping-screen">
-                 <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-                <span>Покупки</span>
+            <button class="nav-button" data-content="budget-content" data-title="Бюджет">
+                 <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 3a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 12m15 0a2.25 2.25 0 01-2.25 2.25H9.75a2.25 2.25 0 01-2.25-2.25M15 12a2.25 2.25 0 00-2.25-2.25H9.75A2.25 2.25 0 007.5 12m7.5 0v6M7.5 12v6m7.5-6H9.75" /></svg>
+                Бюджет
             </button>
-             <button class="nav-btn" data-screen="budget-screen">
-                <svg viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8.11 2.79"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
-                <span>Бюджет</span>
+            <button class="nav-button" data-content="sync-content" data-title="Синхронизация">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
+                Синхр.
             </button>
         </nav>
     </div>
 
-    <!-- Overlays -->
-    <div id="loader" class="loader-overlay">
-        <div class="loader-spinner"></div>
-        <p>Магия Gemini в действии...</p>
-    </div>
-
-    <div id="toast" class="toast"></div>
-    
-    <div id="debug-console" class="debug-console">
-        <div id="debug-log-output"></div>
-        <div class="debug-input-container">
-            <span>></span>
-            <input type="text" id="debug-command-input" placeholder="Введите команду (/help)...">
+    <!-- Экран рецепта -->
+    <div class="screen hidden" id="recipe-screen">
+        <header class="recipe-header">
+            <button class="back-button" id="back-to-menu-btn">◀︎</button>
+            <h2 id="recipe-title"></h2>
+            <span id="step-indicator"></span>
+        </header>
+        <div id="recipe-content">
+            <img id="step-image" src="" alt="Изображение шага">
+            <p id="step-description"></p>
+            <div class="timer-container hidden" id="timer-section">
+                <div id="timer-display">00:00</div>
+                <div class="timer-controls">
+                    <button class="timer-button" id="start-timer-btn">▶️ Запустить</button>
+                    <button class="timer-button" id="pause-timer-btn">⏸️ Пауза</button>
+                    <button class="timer-button" id="reset-timer-btn">♻️ Сброс</button>
+                </div>
+            </div>
+            <h3 id="step-ingredients-title">Ингредиенты на этом шаге:</h3>
+            <ul id="step-ingredients"></ul>
+            <div class="recipe-nav">
+                <button class="nav-btn-recipe" id="prev-step-btn">← Назад</button>
+                <button class="nav-btn-recipe" id="next-step-btn">Далее →</button>
+            </div>
         </div>
     </div>
+    
+    <!-- Консоль разработчика -->
+    <div id="dev-console">
+        <div id="log-output"></div>
+        <input type="text" id="command-input" placeholder="Введите команду...">
+    </div>
 
-    <script>
-    // --- APPLICATION LOGIC ---
-    document.addEventListener('DOMContentLoaded', () => {
+    <!-- Уведомление -->
+    <div id="notification"></div>
+</div>
+
+<audio id="notification-sound" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YU9vT18="></audio>
+
+<script type="module">
+import { GoogleGenAI, Type } from "https://esm.run/@google/genai";
+
+const app = {
+    state: {
+        settings: {
+            apiKey: null,
+            familySize: 3,
+            preferences: "Без рыбы, без грибов",
+            protein: "Курица",
+            totalBudget: 10000,
+        },
+        menu: [],
+        recipes: {},
+        shoppingList: [],
+        budget: {
+            expenses: [],
+        },
+        timestamp: null,
+    },
+    
+    // --- State & DOM Elements ---
+    dom: {},
+    currentRecipe: {
+        id: null,
+        step: 0,
+    },
+    timer: {
+        interval: null,
+        timeLeft: 0,
+        initialTime: 0,
+        isRunning: false,
+    },
+
+    // --- Initialization ---
+    init() {
+        this.cacheDom();
+        this.addEventListeners();
+        this.loadState();
+
+        if (this.state.settings.apiKey && this.state.menu.length > 0) {
+            this.showScreen('main-screen');
+            this.renderAll();
+        } else {
+            this.showScreen('setup-screen');
+        }
+    },
+
+    cacheDom() {
+        this.dom = {
+            screens: document.querySelectorAll('.screen'),
+            setupScreen: document.getElementById('setup-screen'),
+            mainScreen: document.getElementById('main-screen'),
+            recipeScreen: document.getElementById('recipe-screen'),
+            
+            apiKeySection: document.getElementById('api-key-section'),
+            apiKeyInput: document.getElementById('api-key-input'),
+            startSetupBtn: document.getElementById('start-setup-btn'),
+
+            generationProgress: document.getElementById('generation-progress'),
+            progressBar: document.getElementById('progress-bar'),
+            progressStatus: document.getElementById('progress-status'),
+            progressDetails: document.getElementById('progress-details'),
+            finishSetupBtn: document.getElementById('finish-setup-btn'),
+            
+            bottomNav: document.querySelector('.bottom-nav'),
+            mainContents: document.querySelectorAll('.main-content'),
+            mainHeaderTitle: document.getElementById('main-header-title'),
+            
+            dayScroller: document.getElementById('day-scroller-container'),
+            shoppingListContainer: document.getElementById('shopping-list-container'),
+            shoppingProgressText: document.getElementById('shopping-progress-text'),
+            shoppingProgress: document.getElementById('shopping-progress'),
+            shoppingListTotal: document.getElementById('shopping-list-total'),
+
+            backToMenuBtn: document.getElementById('back-to-menu-btn'),
+            recipeTitle: document.getElementById('recipe-title'),
+            stepIndicator: document.getElementById('step-indicator'),
+            stepImage: document.getElementById('step-image'),
+            stepDescription: document.getElementById('step-description'),
+            timerSection: document.getElementById('timer-section'),
+            timerDisplay: document.getElementById('timer-display'),
+            startTimerBtn: document.getElementById('start-timer-btn'),
+            pauseTimerBtn: document.getElementById('pause-timer-btn'),
+            resetTimerBtn: document.getElementById('reset-timer-btn'),
+            stepIngredientsList: document.getElementById('step-ingredients'),
+            prevStepBtn: document.getElementById('prev-step-btn'),
+            nextStepBtn: document.getElementById('next-step-btn'),
+            
+            budget: {
+                pieProducts: document.getElementById('pie-products'),
+                pieChem: document.getElementById('pie-chem'),
+                pieOther: document.getElementById('pie-other'),
+                spentTotal: document.getElementById('budget-spent-total'),
+                total: document.getElementById('budget-total'),
+                spent: document.getElementById('budget-spent'),
+                remaining: document.getElementById('budget-remaining'),
+            },
+
+            exportBtn: document.getElementById('export-btn'),
+            importBtn: document.getElementById('import-btn'),
+            importFileInput: document.getElementById('import-file-input'),
+
+            devConsole: document.getElementById('dev-console'),
+            logOutput: document.getElementById('log-output'),
+            commandInput: document.getElementById('command-input'),
+
+            notification: document.getElementById('notification'),
+            notificationSound: document.getElementById('notification-sound'),
+        };
+    },
+    
+    addEventListeners() {
+        this.dom.startSetupBtn.addEventListener('click', () => this.startGenerationProcess());
+        this.dom.finishSetupBtn.addEventListener('click', () => {
+            this.showScreen('main-screen');
+            this.renderAll();
+        });
+        this.dom.bottomNav.addEventListener('click', (e) => this.handleNav(e));
+        this.dom.backToMenuBtn.addEventListener('click', () => this.showScreen('main-screen'));
         
-        // --- STATE & CONSTANTS ---
-        const APP_STATE_KEY = 'familyMenuState_v2';
-        const API_KEY_KEY = 'geminiApiKey';
-        const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=';
-        const alarmSound = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YU9vT18=');
+        // Recipe navigation
+        this.dom.prevStepBtn.addEventListener('click', () => this.navigateRecipeStep(-1));
+        this.dom.nextStepBtn.addEventListener('click', () => this.navigateRecipeStep(1));
 
-        let state = {
-            settings: null,
-            menu: null,
-            recipes: null,
-            shoppingList: null,
-            budget: null,
-            currentScreen: 'api-key-screen',
-        };
+        // Timer controls
+        this.dom.startTimerBtn.addEventListener('click', () => this.startTimer());
+        this.dom.pauseTimerBtn.addEventListener('click', () => this.pauseTimer());
+        this.dom.resetTimerBtn.addEventListener('click', () => this.resetTimer());
 
-        // --- DOM ELEMENTS ---
-        const dom = {
-            loader: document.getElementById('loader'),
-            toast: document.getElementById('toast'),
-            bottomNav: document.getElementById('bottom-nav'),
-            screens: {
-                apiKey: document.getElementById('api-key-screen'),
-                settings: document.getElementById('settings-screen'),
-            },
-            inputs: {
-                apiKey: document.getElementById('api-key-input'),
-                people: document.getElementById('people-slider'),
-                days: document.getElementById('days-slider'),
-                allergies: document.getElementById('allergies-input'),
-            },
-            buttons: {
-                connectGemini: document.getElementById('connect-gemini-btn'),
-                generate: document.getElementById('generate-btn'),
-                nav: document.querySelectorAll('.nav-btn'),
-            },
-            values: {
-                people: document.getElementById('people-value'),
-                days: document.getElementById('days-value'),
-            },
-            debug: {
-                console: document.getElementById('debug-console'),
-                logOutput: document.getElementById('debug-log-output'),
-                commandInput: document.getElementById('debug-command-input'),
+        // Import/Export
+        this.dom.exportBtn.addEventListener('click', () => this.exportData());
+        this.dom.importBtn.addEventListener('click', () => this.dom.importFileInput.click());
+        this.dom.importFileInput.addEventListener('change', (e) => this.importData(e));
+
+        // Dev Console
+        let longPressTimer;
+        document.body.addEventListener('touchstart', e => {
+            if (e.touches.length === 3) {
+                longPressTimer = setTimeout(() => this.toggleDevConsole(), 1000);
             }
-        };
+        });
+        document.body.addEventListener('touchend', () => clearTimeout(longPressTimer));
+        this.dom.commandInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') this.executeCommand(e.target.value);
+        });
+    },
 
-        // --- UI & UX FUNCTIONS ---
-        const ui = {
-            showScreen(screenId) {
-                state.currentScreen = screenId;
-                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-                document.getElementById(screenId).classList.add('active');
-                
-                const isAppScreen = ['menu-screen', 'recipes-screen', 'shopping-screen', 'budget-screen'].includes(screenId);
-                dom.bottomNav.classList.toggle('visible', isAppScreen);
-
-                if (isAppScreen) {
-                    dom.buttons.nav.forEach(btn => {
-                        btn.classList.toggle('active', btn.dataset.screen === screenId);
-                    });
-                }
-            },
-            showLoader(text = 'Магия Gemini в действии...') {
-                dom.loader.querySelector('p').textContent = text;
-                dom.loader.classList.add('visible');
-            },
-            hideLoader() {
-                dom.loader.classList.remove('visible');
-            },
-            showToast(message, type = 'info', duration = 3000) {
-                dom.toast.textContent = message;
-                dom.toast.className = 'toast';
-                if (type === 'error') dom.toast.classList.add('error');
-                dom.toast.classList.add('show');
-                setTimeout(() => dom.toast.classList.remove('show'), duration);
-            },
-            updateSettingsValues() {
-                dom.values.people.textContent = `${dom.inputs.people.value} чел.`;
-                dom.values.days.textContent = `${dom.inputs.days.value} дн.`;
-            }
-        };
-
-        // --- STATE MANAGEMENT ---
-        const store = {
-            save() {
-                try {
-                    localStorage.setItem(APP_STATE_KEY, JSON.stringify(state));
-                    debug.log('INFO', `State saved. Size: ${((JSON.stringify(state).length)/1024).toFixed(2)} KB`);
-                } catch (e) {
-                    debug.log('ERROR', `Failed to save state: ${e.message}`);
-                    ui.showToast('Ошибка сохранения данных', 'error');
-                }
-            },
-            load() {
-                const savedState = localStorage.getItem(APP_STATE_KEY);
-                if (savedState) {
-                    state = JSON.parse(savedState);
-                    debug.log('INFO', 'State loaded from localStorage.');
-                }
-            }
-        };
-
-        // --- DEBUG CONSOLE ---
-        const debug = {
-            log(type, message) {
-                const timestamp = new Date().toISOString().split('T')[1].replace('Z','');
-                const logEntry = document.createElement('span');
-                logEntry.className = `log-${type}`;
-                logEntry.textContent = `[${timestamp}] ${message}`;
-                dom.debug.logOutput.appendChild(logEntry);
-                dom.debug.logOutput.scrollTop = dom.debug.logOutput.scrollHeight;
-            },
-            toggle() {
-                dom.debug.console.classList.toggle('visible');
-                if (dom.debug.console.classList.contains('visible')) {
-                    dom.debug.commandInput.focus();
-                }
-            },
-            init() {
-                let pressTimer;
-                let pressCount = 0;
-                
-                document.body.addEventListener('pointerdown', () => {
-                    pressTimer = setTimeout(() => {
-                        pressCount++;
-                        if (pressCount === 3) {
-                            debug.toggle();
-                            pressCount = 0;
-                        }
-                    }, 500);
-                });
-                document.body.addEventListener('pointerup', () => {
-                    clearTimeout(pressTimer);
-                });
-
-                dom.debug.commandInput.addEventListener('keydown', e => {
-                    if (e.key === 'Enter' && e.target.value) {
-                        debug.parseCommand(e.target.value);
-                        e.target.value = '';
-                    }
-                });
-            },
-            parseCommand(command) {
-              const [cmd, ...args] = command.trim().split(' ');
-              debug.log('CMD', `> ${command}`);
-              switch(cmd) {
-                case '/help':
-                    debug.log('CMD', 'Commands: /reset, /export, /import, /logs');
-                    break;
-                case '/reset':
-                    localStorage.removeItem(API_KEY_KEY);
-                    localStorage.removeItem(APP_STATE_KEY);
-                    window.location.reload();
-                    break;
-                case '/export':
-                    navigator.clipboard.writeText(JSON.stringify(state, null, 2));
-                    ui.showToast('Состояние скопировано в буфер обмена');
-                    break;
-                default:
-                    debug.log('ERROR', `Unknown command: ${cmd}`);
-              }
-            }
-        };
-
-        // --- GEMINI API HANDLER ---
-        const gemini = {
-            apiKey: localStorage.getItem(API_KEY_KEY),
-            
-            async testApiKey(key) {
-                const prompt = { contents: [{ parts: [{ text: "Ответь одним словом: OK" }] }] };
-                try {
-                    const response = await fetch(GEMINI_API_URL + key, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(prompt),
-                    });
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    const data = await response.json();
-                    const text = data.candidates[0].content.parts[0].text;
-                    return text.trim().toLowerCase() === 'ok';
-                } catch (e) {
-                    debug.log('ERROR', `API Key test failed: ${e.message}`);
-                    return false;
-                }
-            },
-
-            async generate(prompt, retries = 2) {
-                debug.log('INFO', `Sending prompt to Gemini...`);
-                try {
-                    const response = await fetch(GEMINI_API_URL + this.apiKey, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
-                    });
-
-                    if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
-                    
-                    const data = await response.json();
-                    if (!data.candidates || !data.candidates[0].content.parts[0].text) {
-                        throw new Error('Invalid response structure from Gemini.');
-                    }
-                    
-                    const rawText = data.candidates[0].content.parts[0].text;
-                    const jsonText = rawText.match(/```json\n([\s\S]*?)\n```/)?.[1] || rawText;
-                    
-                    return JSON.parse(jsonText);
-
-                } catch (e) {
-                    debug.log('ERROR', `Gemini generation failed: ${e.message}`);
-                    if (retries > 0) {
-                        debug.log('WARN', `Retrying... (${retries} attempts left)`);
-                        const fixPrompt = `Исправь ошибку в этих данных. Ошибка: ${e.message}. Верни исправленные данные в формате JSON.`;
-                        return await this.generate(fixPrompt, retries - 1);
-                    } else {
-                        throw new Error(`Failed to generate content after multiple retries. ${e.message}`);
-                    }
-                }
-            }
-        };
-
-        // --- APP LOGIC ---
-        const app = {
-            async generatePlan() {
-                ui.showLoader('Собираем ваши предпочтения...');
-                
-                const settings = {
-                    people: dom.inputs.people.value,
-                    days: dom.inputs.days.value,
-                    protein: document.querySelector('input[name="protein"]:checked').value,
-                    restrictions: Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value).join(', ') || 'нет',
-                    allergies: dom.inputs.allergies.value || 'нет',
-                };
-                state.settings = settings;
-
-                try {
-                    // Step 1: Generate Menu
-                    ui.showLoader('Генерируем меню...');
-                    const menuPrompt = `Создай детальное меню на ${settings.days} дней для ${settings.people} человек с основным белком: ${settings.protein}. Ограничения: ${settings.restrictions}. Аллергии: ${settings.allergies}. Формат: только JSON без лишнего текста. {"menu": [{"day": "День 1", "breakfast": "...", "lunch": "...", "dinner": "..."}]}`;
-                    const menuResponse = await gemini.generate(menuPrompt);
-                    state.menu = menuResponse.menu;
-                    debug.log('SUCCESS', 'Menu generated.');
-
-                    // Step 2: Generate Recipes
-                    ui.showLoader('Подбираем рецепты...');
-                    state.recipes = {};
-                    const allDishes = [...new Set(state.menu.flatMap(day => [day.lunch, day.dinner]))];
-                    for (const dish of allDishes) {
-                        const recipePrompt = `Создай подробный рецепт для блюда: "${dish}". Ингредиенты должны быть доступны в России. Ограничения: ${settings.restrictions}. Добавь 5–7 шагов приготовления с временем в секундах, где нужно ждать. Формат: только JSON без лишнего текста. {"recipe": {"name": "${dish}", "ingredients": [...], "steps": [{"title": "...", "description": "...", "time": 0}]}}`;
-                        const recipeResponse = await gemini.generate(recipePrompt);
-                        state.recipes[dish] = recipeResponse.recipe;
-                        debug.log('SUCCESS', `Recipe for "${dish}" generated.`);
-                    }
-
-                    // Step 3: Generate Shopping List
-                    ui.showLoader('Составляем список покупок...');
-                    const shoppingPrompt = `На основе всех рецептов: ${Object.keys(state.recipes).join(', ')} создай единый список покупок для ${settings.people} человек на ${settings.days} дней. Рассчитай точное количество каждого продукта. Используй средние цены РФ 2025. Сгруппируй по категориям. Формат: только JSON. {"shoppingList": [{"category": "...", "item": "...", "quantity": "...", "price": 0}], "totalCost": 0}`;
-                    const shoppingResponse = await gemini.generate(shoppingPrompt);
-                    state.shoppingList = shoppingResponse.shoppingList;
-                    debug.log('SUCCESS', 'Shopping list generated.');
-
-                    // Step 4: Generate Budget
-                    ui.showLoader('Считаем бюджет...');
-                    const budgetPrompt = `На основе списка покупок стоимостью ${shoppingResponse.totalCost} ₽ создай бюджет. Добавь категории: Продукты, Бытовая химия, Прочее. Бюджет семьи — 10000 ₽. Формат: только JSON. {"budget": {"total": 10000, "spent": ${shoppingResponse.totalCost}, "remaining": ..., "categories": [...]}}`;
-                    const budgetResponse = await gemini.generate(budgetPrompt);
-                    state.budget = budgetResponse.budget;
-                    debug.log('SUCCESS', 'Budget calculated.');
-                    
-                    store.save();
-                    this.renderAll();
-                    ui.showScreen('menu-screen');
-                    ui.showToast('Ваше идеальное меню готово!');
-
-                } catch (error) {
-                    ui.showToast(`Ошибка генерации: ${error.message}`, 'error');
-                    debug.log('ERROR', `Generation failed catastrophically: ${error.message}`);
-                } finally {
-                    ui.hideLoader();
-                }
-            },
-            
-            renderAll() {
-                // Placeholder for render functions which would populate the respective screens
-                // Example for menu screen:
-                const menuScreen = document.getElementById('menu-screen');
-                if (state.menu) {
-                    menuScreen.innerHTML = `<h1 class="screen-header">Ваше Меню</h1><div class="screen-content">${state.menu.map(day => `<div class="card"><h3>${day.day}</h3><p><b>Обед:</b> ${day.lunch}</p><p><b>Ужин:</b> ${day.dinner}</p></div>`).join('')}</div>`;
-                }
-                const recipesScreen = document.getElementById('recipes-screen');
-                if (state.recipes) {
-                    recipesScreen.innerHTML = `<h1 class="screen-header">Рецепты</h1><div class="screen-content">${Object.values(state.recipes).map(recipe => `<div class="card"><h3>${recipe.name}</h3></div>`).join('')}</div>`;
-                }
-                const shoppingScreen = document.getElementById('shopping-screen');
-                 if (state.shoppingList) {
-                    shoppingScreen.innerHTML = `<h1 class="screen-header">Покупки</h1><div class="screen-content">${state.shoppingList.map(item => `<div class="card"><p>${item.item} - ${item.quantity} (${item.price}₽)</p></div>`).join('')}</div>`;
-                }
-                const budgetScreen = document.getElementById('budget-screen');
-                if (state.budget) {
-                    budgetScreen.innerHTML = `<h1 class="screen-header">Бюджет</h1><div class="screen-content"><div class="card"><h3>Потрачено: ${state.budget.spent}₽</h3><p>Осталось: ${state.budget.remaining}₽</p></div></div>`;
-                }
-            },
-
-            init() {
-                debug.init();
-                store.load();
-
-                if (gemini.apiKey) {
-                    debug.log('INFO', 'API key found in localStorage.');
-                    if (state.menu) {
-                        this.renderAll();
-                        ui.showScreen(state.currentScreen || 'menu-screen');
-                    } else {
-                        ui.showScreen('settings-screen');
-                    }
+    // --- State Management ---
+    saveState() {
+        try {
+            localStorage.setItem('familyMenuState', JSON.stringify(this.state));
+        } catch (e) {
+            console.error("Failed to save state:", e);
+        }
+    },
+    
+    loadState() {
+        const savedState = localStorage.getItem('familyMenuState');
+        if (savedState) {
+            try {
+                const loadedData = JSON.parse(savedState);
+                // Simple validation to ensure critical parts exist
+                if (loadedData.settings && loadedData.menu) {
+                     this.state = loadedData;
                 } else {
-                    debug.log('INFO', 'No API key found. Showing setup screen.');
-                    ui.showScreen('api-key-screen');
+                    console.error("Loaded state is missing critical data, resetting.");
+                    this.resetState();
                 }
+            } catch (e) {
+                console.error("Failed to parse saved state, resetting.");
+                this.resetState();
+            }
+        }
+    },
 
-                // --- EVENT LISTENERS ---
-                dom.buttons.connectGemini.addEventListener('click', async () => {
-                    const key = dom.inputs.apiKey.value.trim();
-                    if (!key) {
-                        ui.showToast('Пожалуйста, введите ключ', 'error');
-                        return;
-                    }
-                    ui.showLoader('Проверяем ключ...');
-                    const isValid = await gemini.testApiKey(key);
-                    ui.hideLoader();
-                    if (isValid) {
-                        gemini.apiKey = key;
-                        localStorage.setItem(API_KEY_KEY, key);
-                        ui.showToast('Ключ успешно подключен!');
-                        ui.showScreen('settings-screen');
-                    } else {
-                        ui.showToast('Неверный ключ или нет доступа к Gemini', 'error');
-                    }
-                });
-                
-                dom.inputs.people.addEventListener('input', ui.updateSettingsValues);
-                dom.inputs.days.addEventListener('input', ui.updateSettingsValues);
-                
-                dom.buttons.generate.addEventListener('click', () => this.generatePlan());
+    resetState() {
+        localStorage.removeItem('familyMenuState');
+        window.location.reload();
+    },
+    
+    // --- Screen Navigation ---
+    showScreen(screenId) {
+        this.dom.screens.forEach(screen => {
+            if (screen.id === screenId) {
+                screen.classList.remove('hidden');
+                if (screen.id === 'recipe-screen') screen.classList.add('active');
+            } else {
+                screen.classList.add('hidden');
+                if (screen.id === 'recipe-screen') screen.classList.remove('active');
+            }
+        });
+        if (screenId === 'main-screen') this.renderAll();
+    },
 
-                dom.buttons.nav.forEach(btn => {
-                    btn.addEventListener('click', () => ui.showScreen(btn.dataset.screen));
+    // --- Gemini Generation Process ---
+    async startGenerationProcess() {
+        const apiKey = this.dom.apiKeyInput.value.trim();
+        if (!apiKey) {
+            alert('Пожалуйста, введите API ключ.');
+            return;
+        }
+        
+        this.state.settings.apiKey = apiKey;
+        this.saveState();
+        
+        this.dom.apiKeySection.classList.add('hidden');
+        this.dom.generationProgress.classList.remove('hidden');
+        
+        try {
+            this.ai = new GoogleGenAI({ apiKey: this.state.settings.apiKey });
+            await this.updateProgress(1, 6, "Подключение к Google Gemini…", "Проверка ключа...");
+            await this.ai.models.generateContent({model:'gemini-2.5-flash', contents: 'test'});
+            this.logToConsole('✅ API KEY VALIDATED');
+            this.dom.progressDetails.innerHTML += '<br>✅ Ключ активен. Доступ к Gemini получен.';
+            
+            await this.generateMenu();
+            await this.generateRecipes();
+            await this.generateShoppingList();
+            await this.generateBudget();
+            await this.updateProgress(6, 6, "Генерация изображений…", "Это займёт несколько секунд...");
+            this.dom.progressDetails.innerHTML += '<br>✅ Placeholder-изображения готовы.';
+
+            await this.updateProgress(6, 6, "Готово!", "Добро пожаловать в 'СЕМЕЙНОЕ МЕНЮ'.");
+            this.dom.finishSetupBtn.classList.remove('hidden');
+            this.dom.finishSetupBtn.classList.add('reveal');
+            
+            this.state.timestamp = new Date().toISOString();
+            this.saveState();
+
+        } catch (error) {
+            console.error("Generation failed:", error);
+            this.updateProgress(0, 6, "Ошибка!", `Не удалось подключиться к Gemini. Проверьте ключ и соединение. ${error.message}`);
+            this.dom.apiKeySection.classList.remove('hidden');
+            this.dom.generationProgress.classList.add('hidden');
+            this.state.settings.apiKey = null;
+            this.saveState();
+        }
+    },
+    
+    async updateProgress(step, totalSteps, status, details) {
+        return new Promise(resolve => {
+            const percent = (step / totalSteps) * 100;
+            this.dom.progressBar.style.width = `${percent}%`;
+            this.dom.progressStatus.textContent = `Шаг ${step}/${totalSteps}: ${status}`;
+            this.dom.progressDetails.innerHTML = details;
+            setTimeout(resolve, 300); // Visual delay
+        });
+    },
+
+    async makeGeminiRequest(prompt, jsonSchema) {
+        this.logToConsole(`🟡 REQUEST: ${prompt.substring(0, 50)}...`);
+        let retries = 3;
+        while (retries > 0) {
+            try {
+                const result = await this.ai.models.generateContent({
+                  model: "gemini-2.5-flash",
+                  contents: prompt,
+                  config: {
+                    responseMimeType: "application/json",
+                    responseSchema: jsonSchema
+                  }
                 });
+                const jsonText = result.text.trim();
+                const data = JSON.parse(jsonText);
+                this.logToConsole(`✅ RESPONSE RECEIVED`);
+                return data;
+            } catch (error) {
+                retries--;
+                this.logToConsole(`🔴 ERROR: ${error}. Retrying... (${retries} left)`);
+                if (retries === 0) throw error;
+                await new Promise(res => setTimeout(res, 1000));
+            }
+        }
+    },
+
+    async generateMenu() {
+        await this.updateProgress(2, 6, "Генерация меню...", `Для ${this.state.settings.familySize} человек, с учётом: ${this.state.settings.preferences}. Основной белок: ${this.state.settings.protein}.`);
+        
+        const prompt = `Сгенерируй меню на 7 дней (с воскресенья по субботу) для семьи из ${this.state.settings.familySize} человек. Предпочтения: ${this.state.settings.preferences}. Основной белок: ${this.state.settings.protein}. Каждый день должен включать: Завтрак, Перекус, Обед, Полдник, Ужин. Обед и ужин должны быть основными блюдами. Перекусы и завтраки - легкими. Используй остатки блюд (например, "Плов (остатки)") для некоторых приемов пищи на следующий день.`;
+        
+        const schema = {
+            type: Type.ARRAY,
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    day: { type: Type.STRING },
+                    meals: {
+                        type: Type.OBJECT,
+                        properties: {
+                            breakfast: { type: Type.STRING },
+                            snack1: { type: Type.STRING },
+                            lunch: { type: Type.STRING },
+                            snack2: { type: Type.STRING },
+                            dinner: { type: Type.STRING }
+                        },
+                        required: ["breakfast", "snack1", "lunch", "snack2", "dinner"]
+                    }
+                },
+                required: ["day", "meals"]
             }
         };
 
-        // --- START THE APP ---
-        app.init();
-    });
-    </script>
+        const menuData = await this.makeGeminiRequest(prompt, schema);
+        this.state.menu = menuData;
+        
+        const mealExample = menuData[0].meals.lunch;
+        this.dom.progressDetails.innerHTML += `<br>✅ Сгенерировано меню. Пример: ${menuData[0].day}, Обед - "${mealExample}".`;
+    },
+    
+    async generateRecipes() {
+        await this.updateProgress(3, 6, "Генерация рецептов…", "Создаём пошаговые инструкции...");
+        const uniqueMeals = [...new Set(this.state.menu.flatMap(d => [d.meals.lunch, d.meals.dinner]))]
+            .filter(name => !name.includes("(остатки)"));
+
+        const schema = {
+            type: Type.OBJECT,
+            properties: {
+                id: { type: Type.STRING },
+                name: { type: Type.STRING },
+                ingredients: {
+                    type: Type.ARRAY,
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            name: { type: Type.STRING },
+                            quantity: { type: Type.STRING }
+                        },
+                        required: ["name", "quantity"]
+                    }
+                },
+                steps: {
+                    type: Type.ARRAY,
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            description: { type: Type.STRING },
+                            time: { type: Type.NUMBER, description: "Время в минутах. 0 если таймер не нужен." },
+                            ingredients: { type: Type.ARRAY, items: { type: Type.STRING } }
+                        },
+                        required: ["description", "time", "ingredients"]
+                    }
+                }
+            },
+            required: ["id", "name", "ingredients", "steps"]
+        };
+        
+        for (const mealName of uniqueMeals) {
+            this.dom.progressDetails.textContent = `Обрабатывается: "${mealName}"...`;
+            const prompt = `Создай детальный рецепт для блюда "${mealName}" для ${this.state.settings.familySize} человек.`;
+            const recipeData = await this.makeGeminiRequest(prompt, schema);
+            this.state.recipes[recipeData.id] = recipeData;
+        }
+        this.dom.progressDetails.innerHTML += `<br>✅ Все ${uniqueMeals.length} рецептов сгенерированы.`;
+    },
+
+    async generateShoppingList() {
+        await this.updateProgress(4, 6, "Формирование списка покупок…", "Собираем все ингредиенты...");
+        const allIngredients = Object.values(this.state.recipes).flatMap(r => r.ingredients);
+        
+        const prompt = `Сгруппируй и суммируй этот список ингредиентов. Категории: "Мясо и птица", "Молочные и яйца", "Овощи и зелень", "Фрукты и орехи", "Крупы и мука", "Хлеб и выпечка", "Прочее". Укажи примерную цену в рублях для каждого пункта. Ингредиенты: ${JSON.stringify(allIngredients)}`;
+        
+        const schema = {
+            type: Type.ARRAY,
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    category: { type: Type.STRING },
+                    items: {
+                        type: Type.ARRAY,
+                        items: {
+                            type: Type.OBJECT,
+                            properties: {
+                                name: { type: Type.STRING },
+                                quantity: { type: Type.STRING },
+                                price: { type: Type.NUMBER },
+                                completed: { type: Type.BOOLEAN, default: false }
+                            },
+                            required: ["name", "quantity", "price", "completed"]
+                        }
+                    }
+                },
+                required: ["category", "items"]
+            }
+        };
+
+        const shoppingListData = await this.makeGeminiRequest(prompt, schema);
+        this.state.shoppingList = shoppingListData;
+
+        const totalCost = shoppingListData.flatMap(c => c.items).reduce((sum, item) => sum + item.price, 0);
+        this.dom.progressDetails.innerHTML += `<br>✅ Список из ${shoppingListData.flatMap(c => c.items).length} продуктов сгруппирован. Итого: ${totalCost} ₽`;
+    },
+
+    async generateBudget() {
+        await this.updateProgress(5, 6, "Расчёт бюджета…", "Анализируем расходы...");
+        const productsCost = this.state.shoppingList.flatMap(c => c.items).reduce((sum, item) => sum + item.price, 0);
+        
+        const prompt = `Основываясь на стоимости продуктов ${productsCost} руб и общем бюджете ${this.state.settings.totalBudget} руб, предложи распределение на "бытовую химию" и "прочее".`;
+
+        const schema = {
+            type: Type.OBJECT,
+            properties: {
+                products: { type: Type.NUMBER },
+                household_chem: { type: Type.NUMBER },
+                other: { type: Type.NUMBER }
+            },
+            required: ["products", "household_chem", "other"]
+        };
+        
+        const budgetData = await this.makeGeminiRequest(prompt, schema);
+        this.state.budget.expenses = [
+            { category: 'Продукты', amount: budgetData.products },
+            { category: 'Бытовая химия', amount: budgetData.household_chem },
+            { category: 'Прочее', amount: budgetData.other },
+        ];
+        this.dom.progressDetails.innerHTML += `<br>✅ Бюджет сформирован. Продукты: ${budgetData.products}₽, Химия: ${budgetData.household_chem}₽, Прочее: ${budgetData.other}₽`;
+    },
+    
+    // --- UI Rendering ---
+    renderAll() {
+        this.renderMenu();
+        this.renderShoppingList();
+        this.renderBudget();
+    },
+
+    renderMenu() {
+        if (!this.state.menu || this.state.menu.length === 0) return;
+        this.dom.dayScroller.innerHTML = '';
+        const daysOrder = ["ВОСКРЕСЕНЬЕ", "ПОНЕДЕЛЬНИК", "ВТОРНИК", "СРЕДА", "ЧЕТВЕРГ", "ПЯТНИЦА", "СУББОТА"];
+        const sortedMenu = [...this.state.menu].sort((a, b) => {
+            const dayA = a.day ? a.day.toUpperCase() : '';
+            const dayB = b.day ? b.day.toUpperCase() : '';
+            return daysOrder.indexOf(dayA) - daysOrder.indexOf(dayB);
+        });
+        
+        sortedMenu.forEach(dayData => {
+            if (!dayData || !dayData.meals) return;
+            const dayCard = document.createElement('div');
+            dayCard.className = 'day-card';
+            
+            const mealsHtml = `
+                <div class="meal">
+                    <span class="meal-icon">☀️</span>
+                    <span class="meal-name">${dayData.meals.breakfast || ''}</span>
+                </div>
+                <div class="meal">
+                    <span class="meal-icon">🍎</span>
+                    <span class="meal-name">${dayData.meals.snack1 || ''}</span>
+                </div>
+                <div class="meal clickable" data-meal-name="${dayData.meals.lunch || ''}">
+                    <span class="meal-icon">🍲</span>
+                    <span class="meal-name">${(dayData.meals.lunch || '').replace(/\s*\(остатки\)/i, '')}</span>
+                    ${(dayData.meals.lunch || '').includes('(остатки)') ? '<span class="leftover-icon">🔄</span>' : ''}
+                </div>
+                <div class="meal">
+                    <span class="meal-icon">🥛</span>
+                    <span class="meal-name">${dayData.meals.snack2 || ''}</span>
+                </div>
+                <div class="meal clickable" data-meal-name="${dayData.meals.dinner || ''}">
+                    <span class="meal-icon">🌙</span>
+                    <span class="meal-name">${(dayData.meals.dinner || '').replace(/\s*\(остатки\)/i, '')}</span>
+                    ${(dayData.meals.dinner || '').includes('(остатки)') ? '<span class="leftover-icon">🔄</span>' : ''}
+                </div>
+            `;
+            
+            dayCard.innerHTML = `<h3 class="day-title">${dayData.day}</h3>${mealsHtml}`;
+            
+            dayCard.querySelectorAll('.clickable').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    const mealName = e.currentTarget.dataset.mealName.replace(/\s*\(остатки\)/i, '').trim();
+                    const recipe = Object.values(this.state.recipes).find(r => r.name === mealName);
+                    if (recipe) {
+                        this.showRecipe(recipe.id);
+                    } else {
+                        this.showNotification(`Рецепт для "${mealName}" не найден.`);
+                    }
+                });
+            });
+
+            this.dom.dayScroller.appendChild(dayCard);
+        });
+    },
+
+    renderShoppingList() {
+        if (!this.state.shoppingList || this.state.shoppingList.length === 0) return;
+        this.dom.shoppingListContainer.innerHTML = '';
+        
+        this.state.shoppingList.forEach(category => {
+            if (!category || !category.items) return;
+            const categoryElement = document.createElement('div');
+            categoryElement.className = 'category-group';
+            
+            const itemsHtml = category.items.map(item => `
+                <li class="shopping-item">
+                    <label>
+                        <input type="checkbox" data-item-name="${item.name}" ${item.completed ? 'checked' : ''}>
+                        <span class="custom-checkbox"><span class="checkmark"></span></span>
+                        <div class="item-details">
+                            <span class="item-name">${item.name}</span>
+                            <div class="item-quantity">${item.quantity}</div>
+                        </div>
+                        <span class="item-price">${item.price || 0} ₽</span>
+                    </label>
+                </li>
+            `).join('');
+            
+            categoryElement.innerHTML = `
+                <button class="category-toggle">${category.category} ▼</button>
+                <ul class="category-items">${itemsHtml}</ul>
+            `;
+
+            this.dom.shoppingListContainer.appendChild(categoryElement);
+        });
+        
+        this.dom.shoppingListContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const itemName = e.target.dataset.itemName;
+                const category = this.state.shoppingList.find(c => c.items.some(i => i.name === itemName));
+                if (category) {
+                    const item = category.items.find(i => i.name === itemName);
+                    item.completed = e.target.checked;
+                    this.saveState();
+                    this.updateShoppingProgress();
+                }
+            });
+        });
+        
+        this.dom.shoppingListContainer.querySelectorAll('.category-toggle').forEach(button => {
+            button.addEventListener('click', e => {
+                const list = e.target.nextElementSibling;
+                list.classList.toggle('collapsed');
+                e.target.textContent = list.classList.contains('collapsed') 
+                    ? `${e.target.textContent.replace('▼', '▶')}` 
+                    : `${e.target.textContent.replace('▶', '▼')}`;
+            });
+        });
+
+        this.updateShoppingProgress();
+        const totalCost = this.state.shoppingList.flatMap(c => c.items).reduce((sum, item) => sum + (item.price || 0), 0);
+        this.dom.shoppingListTotal.textContent = `Общая сумма: ${totalCost.toLocaleString('ru-RU')} ₽`;
+    },
+
+    updateShoppingProgress() {
+        if (!this.state.shoppingList) return;
+        const allItems = this.state.shoppingList.flatMap(c => c.items || []);
+        const totalItems = allItems.length;
+        const completedItems = allItems.filter(i => i.completed).length;
+        
+        if (totalItems > 0) {
+            const percent = (completedItems / totalItems) * 100;
+            this.dom.shoppingProgress.style.width = `${percent}%`;
+            this.dom.shoppingProgressText.textContent = `${completedItems}/${totalItems} куплено`;
+        }
+    },
+
+    renderBudget() {
+        if (!this.state.budget || !this.state.budget.expenses) return;
+        const totalBudget = this.state.settings.totalBudget;
+        const expenses = this.state.budget.expenses;
+
+        const products = expenses.find(e => e.category === 'Продукты')?.amount || 0;
+        const chem = expenses.find(e => e.category === 'Бытовая химия')?.amount || 0;
+        const other = expenses.find(e => e.category === 'Прочее')?.amount || 0;
+        const spent = products + chem + other;
+        const remaining = totalBudget - spent;
+        
+        const productsPercent = (products / totalBudget) * 100;
+        const chemPercent = (chem / totalBudget) * 100;
+        
+        this.dom.budget.pieProducts.style.strokeDasharray = `${productsPercent} 100`;
+        this.dom.budget.pieChem.style.strokeDasharray = `${chemPercent} 100`;
+        this.dom.budget.pieChem.style.strokeDashoffset = `-${productsPercent}`;
+        this.dom.budget.pieOther.style.strokeDasharray = `${(other / totalBudget) * 100} 100`;
+        this.dom.budget.pieOther.style.strokeDashoffset = `-${productsPercent + chemPercent}`;
+
+        this.dom.budget.spentTotal.textContent = `${spent.toLocaleString('ru-RU')} ₽`;
+        this.dom.budget.total.textContent = `${totalBudget.toLocaleString('ru-RU')} ₽`;
+        this.dom.budget.spent.textContent = `${spent.toLocaleString('ru-RU')} ₽`;
+        this.dom.budget.remaining.textContent = `${remaining.toLocaleString('ru-RU')} ₽`;
+    },
+
+    // --- Recipe Screen Logic ---
+    showRecipe(recipeId) {
+        const recipe = this.state.recipes[recipeId];
+        if (!recipe) return;
+        
+        this.currentRecipe.id = recipeId;
+        this.currentRecipe.step = 0;
+        
+        this.dom.recipeTitle.textContent = recipe.name;
+        this.renderRecipeStep();
+        this.showScreen('recipe-screen');
+    },
+
+    renderRecipeStep() {
+        const recipe = this.state.recipes[this.currentRecipe.id];
+        const step = recipe.steps[this.currentRecipe.step];
+
+        this.dom.stepIndicator.textContent = `Шаг ${this.currentRecipe.step + 1}/${recipe.steps.length}`;
+        const imageName = step.description.split(' ').slice(0, 3).join('+');
+        this.dom.stepImage.src = `https://placehold.co/600x400/F0E7DD/8B5E3C?text=${encodeURIComponent(imageName)}`;
+        this.dom.stepDescription.textContent = step.description;
+
+        // Timer
+        if (step.time > 0) {
+            this.dom.timerSection.classList.remove('hidden');
+            this.timer.initialTime = step.time * 60;
+            this.resetTimer();
+        } else {
+            this.dom.timerSection.classList.add('hidden');
+        }
+
+        // Ingredients
+        this.dom.stepIngredientsList.innerHTML = '';
+        step.ingredients.forEach(ingName => {
+            const li = document.createElement('li');
+            const flatShoppingList = this.state.shoppingList.flatMap(c => c.items);
+            const shopItem = flatShoppingList.find(item => item.name.toLowerCase().includes(ingName.toLowerCase()));
+            
+            let statusIcon = '⚠️';
+            let statusClass = 'unknown';
+            if (shopItem) {
+                statusIcon = shopItem.completed ? '✅' : '❌';
+                statusClass = shopItem.completed ? 'completed' : 'missing';
+            }
+            li.innerHTML = `<span class="ingredient-status ${statusClass}">${statusIcon}</span> ${ingName}`;
+            this.dom.stepIngredientsList.appendChild(li);
+        });
+
+        // Navigation buttons
+        this.dom.prevStepBtn.disabled = this.currentRecipe.step === 0;
+        this.dom.nextStepBtn.disabled = this.currentRecipe.step === recipe.steps.length - 1;
+    },
+
+    navigateRecipeStep(direction) {
+        const recipe = this.state.recipes[this.currentRecipe.id];
+        const newStep = this.currentRecipe.step + direction;
+        if (newStep >= 0 && newStep < recipe.steps.length) {
+            this.currentRecipe.step = newStep;
+            this.renderRecipeStep();
+        }
+    },
+    
+    // --- Timer Logic ---
+    startTimer() {
+        if (this.timer.isRunning) return;
+        if (this.timer.timeLeft <= 0) this.timer.timeLeft = this.timer.initialTime;
+        
+        this.timer.isRunning = true;
+        this.timer.interval = setInterval(() => {
+            this.timer.timeLeft--;
+            this.updateTimerDisplay();
+            if (this.timer.timeLeft <= 0) {
+                this.stopTimer(true);
+            }
+        }, 1000);
+    },
+
+    pauseTimer() {
+        this.timer.isRunning = false;
+        clearInterval(this.timer.interval);
+    },
+
+    stopTimer(finished = false) {
+        this.pauseTimer();
+        if (finished) {
+            this.showNotification("Время вышло!");
+            this.dom.notificationSound.play();
+        }
+    },
+
+    resetTimer() {
+        this.stopTimer();
+        this.timer.timeLeft = this.timer.initialTime;
+        this.updateTimerDisplay();
+    },
+
+    updateTimerDisplay() {
+        const minutes = Math.floor(this.timer.timeLeft / 60);
+        const seconds = this.timer.timeLeft % 60;
+        this.dom.timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    },
+    
+    // --- Navigation and Utils ---
+    handleNav(e) {
+        const button = e.target.closest('.nav-button');
+        if (!button) return;
+        
+        this.dom.bottomNav.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        
+        const contentId = button.dataset.content;
+        this.dom.mainHeaderTitle.textContent = button.dataset.title;
+        this.dom.mainContents.forEach(content => {
+            content.classList.toggle('active', content.id === contentId);
+        });
+    },
+
+    showNotification(message) {
+        this.dom.notification.textContent = message;
+        this.dom.notification.classList.add('show');
+        setTimeout(() => {
+            this.dom.notification.classList.remove('show');
+        }, 3000);
+    },
+
+    // --- Import/Export ---
+    exportData() {
+        const dataStr = JSON.stringify(this.state, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const date = new Date().toISOString().slice(0, 10);
+        a.href = url;
+        a.download = `семейное-меню-${date}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        this.showNotification("Данные экспортированы!");
+    },
+
+    importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const importedState = JSON.parse(e.target.result);
+                // Basic validation
+                if (importedState.settings && importedState.menu) {
+                    this.state = importedState;
+                    this.saveState();
+                    this.showNotification("Данные успешно импортированы!");
+                    this.renderAll();
+                } else {
+                    throw new Error("Invalid file structure");
+                }
+            } catch (error) {
+                console.error("Import failed:", error);
+                this.showNotification("Ошибка импорта. Неверный формат файла.");
+            }
+        };
+        reader.readAsText(file);
+    },
+    
+    // --- Dev Console ---
+    toggleDevConsole() {
+        this.dom.devConsole.classList.toggle('visible');
+    },
+
+    logToConsole(message) {
+        const timestamp = new Date().toISOString();
+        const p = document.createElement('p');
+        p.textContent = `[${timestamp}] ${message}`;
+        this.dom.logOutput.appendChild(p);
+        this.dom.logOutput.scrollTop = this.dom.logOutput.scrollHeight;
+    },
+    
+    executeCommand(commandStr) {
+        const [command, ...args] = commandStr.trim().split(' ');
+        this.logToConsole(`> ${commandStr}`);
+        
+        switch(command) {
+            case '/reset':
+                if (confirm("Вы уверены, что хотите сбросить все данные?")) {
+                    this.resetState();
+                }
+                break;
+            case '/export':
+                navigator.clipboard.writeText(JSON.stringify(this.state));
+                this.logToConsole('State copied to clipboard.');
+                break;
+            case '/import':
+                try {
+                    const json = args.join(' ');
+                    this.state = JSON.parse(json);
+                    this.saveState();
+                    this.renderAll();
+                    this.logToConsole('State imported successfully.');
+                } catch (e) {
+                    this.logToConsole(`Error importing: ${e.message}`);
+                }
+                break;
+            default:
+                this.logToConsole('Unknown command. Try /reset, /export, /import <json>');
+        }
+        this.dom.commandInput.value = '';
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => app.init());
+
+</script>
 </body>
 </html>
