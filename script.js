@@ -1,6 +1,5 @@
 // --- Константы и Глобальное Состояние ---
-const GEMINI_API_KEY = "__GEMINI_API_KEY__"; // Сюда будет встроен ключ
-const USER_API_KEY_STORAGE_KEY = 'userGeminiApiKey'; // Для будущих расширений, если понадобится
+const GEMINI_API_KEY = "__GEMINI_API_KEY__";
 const APP_STATE_STORAGE_KEY = 'familyMenuState';
 
 const state = {
@@ -22,6 +21,10 @@ const navButtons = document.querySelectorAll('.nav-btn');
 const preloader = document.getElementById('preloader');
 const toast = document.getElementById('toast');
 const settingsModal = document.getElementById('settings-modal');
+const aiDiagModal = document.getElementById('ai-diag-modal');
+const diagLog = document.getElementById('ai-diag-log');
+const diagError = document.getElementById('ai-diag-error');
+
 
 // --- Управление UI ---
 
@@ -201,11 +204,12 @@ function processGeneratedPlan(plan) {
     showScreen('menu-screen');
 }
 
-// --- Интеграция с Gemini AI ---
+// --- Интеграция с Gemini AI & Диагностика ---
 
 async function generatePlan() {
     if (!GEMINI_API_KEY || GEMINI_API_KEY === "__GEMINI_API_KEY__") {
-        showToast("Ключ API не настроен в приложении.", "warning");
+        showToast("Ключ API не настроен. Запустите диагностику.", "warning");
+        showModal(settingsModal);
         return;
     }
     
@@ -216,13 +220,14 @@ async function generatePlan() {
         showToast("Ваше меню готово!");
     } catch (error) {
         console.error("Ошибка генерации AI:", error);
-        showToast("Ошибка генерации. Попробуйте снова.", "warning");
+        showToast("Ошибка генерации. Запустите диагностику.", "warning");
+        showModal(settingsModal);
     } finally {
         hidePreloader();
     }
 }
 
-async function callGeminiAPI(apiKey) {
+async function callGeminiAPI(apiKey, isTest = false) {
     let GoogleGenAI, Type;
     try {
         ({ GoogleGenAI, Type } = await import("https://esm.run/@google/generative-ai"));
@@ -231,6 +236,12 @@ async function callGeminiAPI(apiKey) {
     }
 
     const ai = new GoogleGenAI({ apiKey });
+
+    if (isTest) {
+        // Простая и быстрая проверка
+        const response = await ai.models.generateContent({model: "gemini-2.5-flash", contents: "test"});
+        return response.text.length > 0;
+    }
 
     const prompt = `
         Создай красивый и уютный план питания на ${state.settings.days} дней для ${state.settings.people} человек.
@@ -268,6 +279,67 @@ async function callGeminiAPI(apiKey) {
     return JSON.parse(jsonText);
 }
 
+function logToDiagnostics(message, type) {
+    const p = document.createElement('p');
+    p.textContent = message;
+    p.className = `log-${type}`;
+    diagLog.appendChild(p);
+    diagLog.scrollTop = diagLog.scrollHeight;
+}
+
+function showDiagnosticsError(error) {
+    diagError.innerHTML = translateError(error);
+    diagError.style.display = 'block';
+}
+
+function translateError(error) {
+    if (!error) return '';
+    let message = error.message || '';
+    if (message.includes("API key not valid")) {
+        return `<strong>Ошибка 400: Неверный API Ключ</strong>
+                <p>Что это значит: Встроенный в приложение ключ недействителен или его срок действия истек.</p>
+                <p>Что делать: К сожалению, это проблема на стороне разработчика. Попробуйте зайти позже.</p>`;
+    }
+    if (message.includes("fetch")) {
+         return `<strong>Ошибка сети</strong>
+                <p>Что это значит: Ваше устройство не может подключиться к серверам Google AI.</p>
+                <p>Что делать: Проверьте ваше интернет-соединение и попробуйте снова.</p>`;
+    }
+    return `<strong>Неизвестная ошибка</strong><p>${message}</p>`;
+}
+
+async function runAutoRepair() {
+    diagLog.innerHTML = '';
+    diagError.innerHTML = '';
+    diagError.style.display = 'none';
+    const repairBtn = document.getElementById('run-auto-repair-btn');
+    repairBtn.disabled = true;
+
+    logToDiagnostics('Шаг 1: Проверка встроенного ключа...', 'step');
+    if (!GEMINI_API_KEY || GEMINI_API_KEY === "__GEMINI_API_KEY__") {
+        logToDiagnostics('❌ Встроенный ключ отсутствует.', 'error');
+        showDiagnosticsError({ message: "API key not valid" });
+        repairBtn.disabled = false;
+        return;
+    }
+
+    try {
+        const isValid = await callGeminiAPI(GEMINI_API_KEY, true);
+        if (isValid) {
+            logToDiagnostics('✅ Встроенный ключ действителен.', 'success');
+            logToDiagnostics('➡️ РЕШЕНИЕ: Система готова к работе. Можете закрыть это окно и генерировать меню.', 'solution');
+        } else {
+             throw new Error("API key not valid. Received empty response.");
+        }
+    } catch (e) {
+        logToDiagnostics('❌ Встроенный ключ не работает.', 'error');
+        showDiagnosticsError(e);
+    } finally {
+        repairBtn.disabled = false;
+    }
+}
+
+
 // --- Обработчики событий ---
 
 function setupEventListeners() {
@@ -280,6 +352,14 @@ function setupEventListeners() {
     settingsModal.addEventListener('click', (e) => {
         if (e.target === settingsModal) hideModal(settingsModal);
     });
+    
+    // Диагностика
+    document.getElementById('run-diag-btn').addEventListener('click', () => showModal(aiDiagModal));
+    document.getElementById('close-diag-btn').addEventListener('click', () => hideModal(aiDiagModal));
+    aiDiagModal.addEventListener('click', (e) => {
+        if (e.target === aiDiagModal) hideModal(aiDiagModal);
+    });
+    document.getElementById('run-auto-repair-btn').addEventListener('click', runAutoRepair);
 
     // Настройки
     document.getElementById('days-increment').addEventListener('click', () => { state.settings.days < 14 && state.settings.days++; updateSettingsUI(); });
@@ -312,6 +392,9 @@ function setupEventListeners() {
         }
     });
     
+    // Печать
+    document.getElementById('print-btn').addEventListener('click', handlePrint);
+    
     // Импорт/Экспорт
     const importFileInput = document.getElementById('import-file-input');
     document.getElementById('import-btn').addEventListener('click', () => importFileInput.click());
@@ -322,7 +405,6 @@ function setupEventListeners() {
         reader.onload = function(event) {
             try {
                 const importedData = JSON.parse(event.target.result);
-                // Basic validation
                 if (importedData.menu && importedData.recipes && importedData.shoppingList) {
                     Object.assign(state, importedData);
                     saveState();
@@ -354,6 +436,50 @@ function setupEventListeners() {
         URL.revokeObjectURL(url);
         showToast("Экспорт начат...");
     });
+}
+
+function handlePrint() {
+    if (state.shoppingList.length === 0) {
+        showToast("Список покупок пуст для печати", "warning");
+        return;
+    }
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Список покупок</title>
+                <style>
+                    body { font-family: 'Nunito', sans-serif; padding: 20px; }
+                    h1 { color: #8B5E3C; border-bottom: 2px solid #F0EDE7; padding-bottom: 10px; }
+                    ul { list-style: none; padding: 0; }
+                    li { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #F0EDE7; }
+                    .checkbox-print { width: 20px; height: 20px; border: 2px solid #D4A373; border-radius: 5px; margin-right: 15px; }
+                    .item-details-print { flex-grow: 1; }
+                    .item-name-print { font-size: 14pt; font-weight: 600; }
+                    .item-amount-print { font-size: 11pt; color: #7D7D7D; }
+                    footer { text-align: center; margin-top: 30px; font-size: 10pt; color: #7D7D7D; }
+                </style>
+                <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+            </head>
+            <body>
+                <h1>Список покупок на ${state.settings.days} дней</h1>
+                <ul>
+                    ${state.shoppingList.map(item => `
+                        <li>
+                           <div class="checkbox-print"></div>
+                           <div class="item-details-print">
+                                <div class="item-name-print">${item.name}</div>
+                                <div class="item-amount-print">${item.amount}</div>
+                           </div>
+                        </li>
+                    `).join('')}
+                </ul>
+                <footer>Семейное меню на неделю • Создано с любовью</footer>
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
+    setTimeout(() => printWindow.print(), 500); // Wait for fonts to load
 }
 
 // --- Инициализация ---

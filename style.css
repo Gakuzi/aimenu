@@ -162,6 +162,7 @@ button:disabled {
     border: 1px solid #EAE4DD;
     border-radius: 12px;
     font-weight: 700;
+    font-size: 11pt;
 }
 
 .icon-btn {
@@ -449,6 +450,7 @@ button:disabled {
 
 .modal-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 16px;
     margin-top: 24px;
     padding-top: 24px;
@@ -470,6 +472,46 @@ button:disabled {
     margin-top: 24px;
     line-height: 1.5;
 }
+
+/* AI Diagnostics Modal */
+#ai-diag-log {
+    background-color: var(--bg-card);
+    border: 1px solid #EAE4DD;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 16px;
+    min-height: 100px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 12pt;
+    line-height: 1.6;
+}
+#ai-diag-log p {
+    margin: 0 0 8px;
+    padding: 0;
+}
+#ai-diag-log .log-step { color: var(--text-primary); }
+#ai-diag-log .log-success { color: var(--accent-success); font-weight: bold; }
+#ai-diag-log .log-error { color: var(--accent-warning); font-weight: bold; }
+#ai-diag-log .log-solution { color: var(--accent-main); font-weight: bold; }
+
+.error-box {
+    background-color: #fdebe7;
+    border: 1px solid var(--accent-warning);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 16px;
+    font-size: 13pt;
+    display: none;
+}
+.error-box strong {
+    color: var(--accent-warning);
+    display: block;
+    margin-bottom: 8px;
+}
+.error-box p { margin: 4px 0; }
+.error-box a { color: var(--accent-main); font-weight: bold; }
+
 
 /* Preloader */
 .preloader-overlay {
@@ -537,4 +579,19 @@ button:disabled {
 }
 .toast.warning {
     background-color: var(--accent-warning);
+}
+
+/* Print Styles */
+@media print {
+    body {
+        background: none;
+        font-size: 12pt;
+        color: #000;
+    }
+    #app-container, .modal-overlay, .preloader-overlay, .toast {
+        display: none;
+    }
+    .print-area {
+        display: block !important;
+    }
 }
