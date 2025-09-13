@@ -606,11 +606,23 @@ button:disabled {
     font-size: 12pt;
     color: var(--text-secondary);
     white-space: pre-wrap;
-    word-break: break-all;
-    max-height: 150px;
+    word-break: break-word;
+    max-height: 200px;
     overflow-y: auto;
     border: 1px solid #EAE4DD;
 }
+#ai-diag-log p {
+    margin: 0 0 4px;
+    padding: 0;
+    line-height: 1.4;
+}
+.log-success { color: var(--accent-success); }
+.log-error { color: var(--accent-warning); }
+.log-info { color: var(--text-secondary); }
+.log-step { font-weight: bold; color: var(--text-primary); margin-top: 8px; }
+.log-solution { font-weight: bold; color: var(--accent-main); background-color: #d4a3732b; padding: 4px 8px; border-radius: 4px; margin-top: 12px; }
+
+
 .error-details {
     margin-top: 16px;
     padding: 16px;
@@ -627,6 +639,10 @@ button:disabled {
     margin: 0 0 12px;
     font-size: 13pt;
     color: var(--text-primary);
+}
+.error-details p a {
+    color: var(--accent-warning);
+    font-weight: bold;
 }
 .error-details p:last-child {
     margin-bottom: 0;

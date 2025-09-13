@@ -48,7 +48,7 @@ const closeAiDiagBtn = document.getElementById('close-ai-diag-btn');
 const aiDiagStatusIndicator = document.getElementById('ai-diag-status-indicator');
 const aiDiagApiKeyInput = document.getElementById('ai-diag-api-key-input');
 const aiDiagToggleVisibilityBtn = document.getElementById('ai-diag-toggle-visibility');
-const aiDiagTestBtn = document.getElementById('ai-diag-test-btn');
+const aiDiagAutorunBtn = document.getElementById('ai-diag-autorun-btn');
 const aiDiagClearKeyBtn = document.getElementById('ai-diag-clear-key-btn');
 const aiDiagSaveBtn = document.getElementById('ai-diag-save-btn');
 const aiDiagModeRadios = document.querySelectorAll('input[name="ai-diag-api-mode"]');
@@ -306,7 +306,7 @@ async function generatePlan() {
     if (!key || aiState.status === 'unavailable') {
          showToast("AI недоступен. Откройте диагностику для решения проблемы.", "warning");
          showModal(aiDiagnosticsModal);
-         runDiagnostics();
+         runAutoRepair();
          return;
     }
 
@@ -321,7 +321,7 @@ async function generatePlan() {
         updateAIStatus(); // Обновляем статус, чтобы отразить ошибку
         showToast(`Ошибка генерации. ${error.userMessage || 'Откройте диагностику.'}`, 'warning', 4000);
         showModal(aiDiagnosticsModal);
-        runDiagnostics();
+        runAutoRepair();
     } finally {
         hidePreloader();
     }
@@ -329,15 +329,18 @@ async function generatePlan() {
 
 
 // --- Статус и Диагностика AI ---
-function logToDiagnostics(message) {
+function logToDiagnostics(message, type = 'info') {
     if (aiDiagLog) {
-        aiDiagLog.textContent += message + '\n';
+        const p = document.createElement('p');
+        p.className = `log-${type}`;
+        p.textContent = message;
+        aiDiagLog.appendChild(p);
         aiDiagLog.scrollTop = aiDiagLog.scrollHeight;
     }
 }
 
 function clearDiagnostics() {
-    if(aiDiagLog) aiDiagLog.textContent = '';
+    if(aiDiagLog) aiDiagLog.innerHTML = '';
     if(aiDiagErrorDetails) aiDiagErrorDetails.style.display = 'none';
 }
 
@@ -346,15 +349,11 @@ function showDiagnosticsError(error) {
     const { title, meaning, suggestion } = translateError(error);
     document.getElementById('ai-diag-error-title').textContent = title;
     document.getElementById('ai-diag-error-meaning').textContent = meaning;
-    document.getElementById('ai-diag-error-suggestion').textContent = suggestion;
+    document.getElementById('ai-diag-error-suggestion').innerHTML = suggestion;
     aiDiagErrorDetails.style.display = 'block';
 }
 
 function updateAIStatusUI() {
-    if (!headerAiStatusBtn || !aiDiagStatusIndicator) {
-        console.error("One or more AI status UI elements are missing.");
-        return;
-    }
     const indicators = [headerAiStatusBtn, aiDiagStatusIndicator];
     const statusClasses = ['checking', 'ready-user', 'ready-builtin', 'unavailable'];
 
@@ -377,7 +376,8 @@ function updateAIStatusUI() {
     }
     
     indicators.forEach(ind => {
-        // Robust class management
+        if (!ind) return; // Failsafe
+        
         statusClasses.forEach(cls => ind.classList.remove(cls));
         ind.classList.add(aiState.status);
         
@@ -432,8 +432,8 @@ function translateError(error) {
         suggestion = 'Проверьте ваше интернет-соединение и отключите блокировщики для этого сайта.';
     } else if (error.message.includes('400')) {
         title = 'Ошибка 400: Неверный запрос (Invalid API Key)';
-        meaning = 'Скорее всего, вы ввели недействительный API ключ. Он имеет неверный формат.';
-        suggestion = 'Пожалуйста, скопируйте и вставьте ваш ключ из Google AI Studio еще раз, убедившись, что в нем нет лишних символов.';
+        meaning = 'Скорее всего, вы ввели недействительный API ключ. Он имеет неверный формат или был отозван.';
+        suggestion = 'Пожалуйста, проверьте ключ. Получите новый в <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a> и убедитесь, что скопировали его полностью.';
     } else if (error.message.includes('429')) {
         title = 'Ошибка 429: Исчерпана квота';
         meaning = 'Ваш ключ превысил бесплатный лимит использования (количество запросов в минуту).';
@@ -472,65 +472,80 @@ async function updateAIStatus() {
     return aiState.status;
 }
 
-async function runDiagnostics() {
+async function runAutoRepair() {
     clearDiagnostics();
-    const buttons = [aiDiagTestBtn, aiDiagClearKeyBtn, aiDiagSaveBtn];
+    const buttons = [aiDiagAutorunBtn, aiDiagClearKeyBtn, aiDiagSaveBtn];
     buttons.forEach(btn => btn.disabled = true);
 
     const mode = document.querySelector('input[name="ai-diag-api-mode"]:checked').value;
-    logToDiagnostics(`--- Начало теста (режим: ${mode}) ---`);
+    logToDiagnostics(`--- Запуск авто-исправления (режим: ${mode}) ---`, 'info');
 
-    try {
-        // Test user key
-        logToDiagnostics('1. Проверка вашего ключа...');
-        if (!aiState.userKey) {
-            logToDiagnostics('   - Ваш ключ не введен.');
+    let userKeyError = null;
+    let builtinKeyError = null;
+
+    // Test user key
+    logToDiagnostics('Шаг 1: Проверка вашего ключа...', 'step');
+    if (!aiState.userKey) {
+        logToDiagnostics('   - Ваш ключ не введен.', 'info');
+        aiState.userKeyValid = false;
+    } else {
+        try {
+            await testApiKey(aiState.userKey);
+            logToDiagnostics('   - ✅ Ваш ключ действителен.', 'success');
+            aiState.userKeyValid = true;
+        } catch (e) {
+            logToDiagnostics('   - ❌ Ваш ключ недействителен.', 'error');
+            userKeyError = e;
             aiState.userKeyValid = false;
-        } else {
-            try {
-                await testApiKey(aiState.userKey);
-                logToDiagnostics('   - ✅ Ваш ключ действителен.');
-                aiState.userKeyValid = true;
-            } catch (e) {
-                logToDiagnostics('   - ❌ Ваш ключ недействителен.');
-                aiState.lastError = e;
-                aiState.userKeyValid = false;
-            }
         }
-
-        // Test builtin key
-        logToDiagnostics('2. Проверка встроенного ключа...');
-        const builtinKeyExists = GEMINI_API_KEY && GEMINI_API_KEY !== "__GEMINI_API_KEY__";
-        if (!builtinKeyExists) {
-            logToDiagnostics('   - Встроенный ключ не настроен в приложении.');
-            aiState.builtinKeyValid = false;
-        } else {
-            try {
-                await testApiKey(GEMINI_API_KEY);
-                logToDiagnostics('   - ✅ Встроенный ключ действителен.');
-                aiState.builtinKeyValid = true;
-            } catch (e) {
-                logToDiagnostics('   - ❌ Встроенный ключ не работает.');
-                if (!aiState.lastError) aiState.lastError = e; // Показываем ошибку, если другой не было
-                aiState.builtinKeyValid = false;
-            }
-        }
-        
-        // Final status determination
-        logToDiagnostics('3. Определение итогового статуса...');
-        const finalStatus = await updateAIStatus();
-        logToDiagnostics(`--- Тест завершен. Статус: ${finalStatus.toUpperCase()} ---`);
-        
-        if (finalStatus === 'unavailable' && aiState.lastError) {
-            showDiagnosticsError(aiState.lastError);
-        }
-
-    } catch (e) {
-        logToDiagnostics(`Критическая ошибка во время диагностики: ${e.message}`);
-        showDiagnosticsError(e);
-    } finally {
-        buttons.forEach(btn => btn.disabled = false);
     }
+
+    // Test builtin key
+    logToDiagnostics('Шаг 2: Проверка встроенного ключа...', 'step');
+    const builtinKeyExists = GEMINI_API_KEY && GEMINI_API_KEY !== "__GEMINI_API_KEY__";
+    if (!builtinKeyExists) {
+        logToDiagnostics('   - Встроенный ключ не настроен.', 'info');
+        aiState.builtinKeyValid = false;
+    } else {
+        try {
+            await testApiKey(GEMINI_API_KEY);
+            logToDiagnostics('   - ✅ Встроенный ключ действителен.', 'success');
+            aiState.builtinKeyValid = true;
+        } catch (e) {
+            logToDiagnostics('   - ❌ Встроенный ключ не работает.', 'error');
+            builtinKeyError = e;
+            aiState.builtinKeyValid = false;
+        }
+    }
+    
+    // Step 3: Analysis and Solution
+    logToDiagnostics('Шаг 3: Анализ и применение решения...', 'step');
+    
+    const finalStatus = await updateAIStatus();
+    
+    if (finalStatus.startsWith('ready')) {
+        const source = finalStatus.includes('user') ? 'ваш ключ' : 'встроенный ключ';
+        logToDiagnostics(`✅ РЕШЕНИЕ: Система успешно настроена на использование (${source}). Приложение готово к работе.`, 'solution');
+    } else { // 'unavailable'
+        logToDiagnostics(`❌ РЕШЕНИЕ: Не удалось найти рабочий ключ в текущем режиме (${mode}).`, 'solution');
+        
+        if (mode === 'force_user' && aiState.builtinKeyValid) {
+            logToDiagnostics('   💡 Совет: Ваш ключ не работает, но встроенный исправен. Переключитесь в режим "Авто" или "Встроенный".', 'info');
+        } else if (mode === 'force_builtin' && aiState.userKeyValid) {
+             logToDiagnostics('   💡 Совет: Встроенный ключ не работает, но ваш ключ исправен. Переключитесь в режим "Авто" или "Ваш ключ".', 'info');
+        } else if (aiState.userKeyValid || aiState.builtinKeyValid) {
+             logToDiagnostics('   💡 Совет: Один из ключей работает. Попробуйте переключить режим подключения.', 'info');
+        }
+        
+        const errorToShow = userKeyError || builtinKeyError;
+        if (errorToShow) {
+            showDiagnosticsError(errorToShow);
+        }
+    }
+    
+    logToDiagnostics(`--- Проверка завершена. Итоговый статус: ${finalStatus.toUpperCase()} ---`, 'info');
+
+    buttons.forEach(btn => btn.disabled = false);
 }
 
 
@@ -612,13 +627,13 @@ function setupEventListeners() {
     // -- Диагностика AI --
     headerAiStatusBtn?.addEventListener('click', () => {
         showModal(aiDiagnosticsModal);
-        runDiagnostics();
+        runAutoRepair();
     });
     closeAiDiagBtn?.addEventListener('click', () => hideModal(aiDiagnosticsModal));
     aiDiagnosticsModal?.addEventListener('click', (e) => {
         if (e.target === aiDiagnosticsModal) hideModal(aiDiagnosticsModal);
     });
-    aiDiagTestBtn?.addEventListener('click', runDiagnostics);
+    aiDiagAutorunBtn?.addEventListener('click', runAutoRepair);
     aiDiagSaveBtn?.addEventListener('click', () => {
         saveAiConfig();
         hideModal(aiDiagnosticsModal);
@@ -627,7 +642,7 @@ function setupEventListeners() {
     aiDiagClearKeyBtn?.addEventListener('click', () => {
         aiDiagApiKeyInput.value = '';
         saveAiConfig();
-        runDiagnostics();
+        runAutoRepair();
     });
     aiDiagToggleVisibilityBtn?.addEventListener('click', () => {
         const openIcon = aiDiagToggleVisibilityBtn.querySelector('.eye-open');
@@ -720,22 +735,18 @@ function setupEventListeners() {
 // --- Инициализация Приложения ---
 
 function init() {
-    loadState();
-    loadAiConfig();
-    updateSettingsUI();
-    
-    renderMenu();
-    renderAllRecipes();
-    renderShoppingList();
-    showScreen(state.lastActiveTab || 'menu-screen');
-    setupEventListeners();
-
-    updateAIStatus(); // Первичная проверка при запуске
-}
-
-document.addEventListener('DOMContentLoaded', () => {
     try {
-        init();
+        loadState();
+        loadAiConfig();
+        updateSettingsUI();
+        
+        renderMenu();
+        renderAllRecipes();
+        renderShoppingList();
+        showScreen(state.lastActiveTab || 'menu-screen');
+        setupEventListeners();
+
+        updateAIStatus(); // Первичная проверка при запуске
     } catch (error) {
         console.error("A critical error occurred during app initialization:", error);
         document.body.innerHTML = `<div style="padding: 20px; text-align: center; font-family: sans-serif; color: #333;">
@@ -743,4 +754,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <p>Не удалось запустить приложение. Пожалуйста, попробуйте очистить данные сайта и перезагрузить страницу.</p>
         </div>`;
     }
-});
+}
+
+document.addEventListener('DOMContentLoaded', init);
