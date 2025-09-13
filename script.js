@@ -1,5 +1,5 @@
-// IMPORTANT: This import is crucial for browser environments.
-import { GoogleGenAI, Type } from "https://esm.run/@google/generative-ai";
+// IMPORTANT: The GoogleGenAI module is now imported dynamically inside generateWithAI()
+// to ensure the app can start and function offline without relying on the network.
 
 const state = {
     settings: {
@@ -250,7 +250,7 @@ async function generatePlan() {
         showToast("Меню сгенерировано с помощью Gemini!");
     } catch (error) {
         console.error("AI generation failed, falling back to local DB:", error);
-        showToast("Ошибка Gemini. Используется локальная база.", 'warning', 4000);
+        showToast("Ошибка AI. Используется локальная база.", 'warning', 4000);
         const plan = generateWithLocalDB();
         processGeneratedPlan(plan);
     } finally {
@@ -263,6 +263,16 @@ async function generateWithAI() {
     const apiKey = state.settings.apiKey;
     if (!apiKey) {
         throw new Error("API Key is not provided.");
+    }
+    
+    let GoogleGenAI, Type;
+    try {
+        // Dynamically import the module ONLY when needed.
+        // This prevents the entire app from failing if the network is down on startup.
+        ({ GoogleGenAI, Type } = await import("https://esm.run/@google/generative-ai"));
+    } catch (e) {
+        console.error("Failed to load GoogleGenAI module:", e);
+        throw new Error("Could not load AI module. Check network connection.");
     }
 
     const ai = new GoogleGenAI({ apiKey });
@@ -435,6 +445,7 @@ function setupEventListeners() {
 
 // --- App Initialization ---
 function init() {
+    // This function is now safe to call, as it has no external network dependencies.
     loadState();
     updateSettingsUI();
     renderMenu();
@@ -449,6 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
         init();
     } catch (error) {
         console.error("A critical error occurred during app initialization:", error);
+        // This is a last-resort safety net.
         document.body.innerHTML = `<div style="padding: 20px; text-align: center; font-family: sans-serif; color: #333;">
             <h2>Произошла критическая ошибка</h2>
             <p>Не удалось запустить приложение. Пожалуйста, попробуйте очистить данные сайта (кэш и localStorage) и перезагрузить страницу.</p>
