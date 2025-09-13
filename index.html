@@ -39,6 +39,18 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+/* Set a readable placeholder color */
+::placeholder {
+  color: #888;
+  opacity: 1; /* Firefox */
+}
+:-ms-input-placeholder { /* Internet Explorer 10-11 */
+  color: #888;
+}
+::-ms-input-placeholder { /* Microsoft Edge */
+  color: #888;
+}
+
 html, body {
     margin: 0;
     padding: 0;
@@ -194,6 +206,8 @@ body::before {
     font-family: var(--font-lato);
     outline: none;
     transition: border-color 0.3s;
+    color: var(--text-color);
+    background-color: var(--card-bg);
 }
 #api-key-input:focus {
     border-color: var(--accent-color);
@@ -773,6 +787,7 @@ body::before {
     font-family: var(--font-lato);
     background: #fff;
     -webkit-appearance: none;
+    color: var(--text-color);
 }
 .settings-textarea {
     height: auto;
@@ -941,6 +956,8 @@ body::before {
     padding: 0 15px;
     font-size: 16px;
     font-family: var(--font-lato);
+    color: var(--text-color);
+    background-color: var(--card-bg);
 }
 .modal-textarea {
     height: auto;
@@ -1089,6 +1106,15 @@ body::before {
                     <div id="family-members-container"></div>
                     <button class="secondary-button" id="add-family-member-btn">+ Добавить члена семьи</button>
                 </div>
+                
+                <div class="settings-section">
+                    <h3 class="settings-title">API-ключ</h3>
+                    <div class="settings-form-group">
+                        <label for="settings-api-key">Google Gemini API Key</label>
+                        <input type="password" id="settings-api-key" class="settings-input" placeholder="Введите ваш ключ">
+                    </div>
+                    <button class="primary-button" id="save-api-key-btn">Проверить и сохранить</button>
+                </div>
 
                 <div class="settings-section">
                     <h3 class="settings-title">Управление данными</h3>
@@ -1217,6 +1243,7 @@ const app = {
         this.loadState();
 
         if (this.state.settings.apiKey && this.state.menu && this.state.menu.length > 0) {
+            this.ai = new GoogleGenAI({ apiKey: this.state.settings.apiKey });
             this.showScreen('main-screen');
             this.renderAll();
         } else {
@@ -1289,6 +1316,8 @@ const app = {
                 familyContainer: document.getElementById('family-members-container'),
                 addMemberBtn: document.getElementById('add-family-member-btn'),
                 regenerateAllBtn: document.getElementById('regenerate-all-btn'),
+                apiKeyInput: document.getElementById('settings-api-key'),
+                saveApiKeyBtn: document.getElementById('save-api-key-btn'),
             },
             exportBtn: document.getElementById('export-btn'),
             importBtn: document.getElementById('import-btn'),
@@ -1334,6 +1363,7 @@ const app = {
         this.dom.settings.preferences.addEventListener('change', () => this.saveSettings());
         this.dom.settings.addMemberBtn.addEventListener('click', () => this.openFamilyMemberModal());
         this.dom.settings.regenerateAllBtn.addEventListener('click', () => this.confirmRegenerateAll());
+        this.dom.settings.saveApiKeyBtn.addEventListener('click', () => this.saveApiKey());
         this.dom.wizardAddMemberBtn.addEventListener('click', () => this.openFamilyMemberModal(true));
 
         this.dom.exportBtn.addEventListener('click', () => this.exportData());
@@ -1572,7 +1602,7 @@ const app = {
     
     async generateRecipes() {
         await this.updateProgress(3, 5, "Генерация рецептов…", "Создаём пошаговые инструкции...");
-        const uniqueMeals = [...new Set(this.state.menu.flatMap(d => [d.meals.lunch, d.meals.dinner]))].filter(name => name && !name.includes("(остатки)"));
+        const uniqueMeals = [...new Set(this.state.menu.flatMap(d => Object.values(d.meals)))].filter(name => name && !name.includes("(остатки)"));
         if (uniqueMeals.length === 0) {
              this.dom.progressDetails.innerHTML += `<br>⚠️ Не найдено новых блюд для генерации рецептов.`;
              return;
@@ -1625,7 +1655,6 @@ const app = {
         this.dom.dayScroller.innerHTML = '';
         const daysOrder = ["ВОСКРЕСЕНЬЕ", "ПОНЕДЕЛЬНИК", "ВТОРНИК", "СРЕДА", "ЧЕТВЕРГ", "ПЯТНИЦА", "СУББОТА"];
         
-        // Filter out any potentially invalid entries to prevent crashes.
         const validMenuData = this.state.menu.filter(day => day && day.day && day.meals);
         
         const sortedMenu = [...validMenuData].sort((a, b) => {
@@ -1637,15 +1666,16 @@ const app = {
             dayCard.className = 'day-card';
             
             const mealHtml = (icon, mealName, mealKey, dayName) => {
-                const isClickable = icon === '🍲' || icon === '🌙';
                 const cleanName = (mealName || 'Не указано').replace(/\s*\(остатки\)/i, '');
                 const isLeftover = (mealName || '').includes('(остатки)');
+                const isClickable = !isLeftover && mealName && mealName.trim() !== '' && mealName.trim() !== 'Не указано';
+                
                 return `
                 <div class="meal ${isClickable ? 'clickable' : ''}" data-meal-name="${mealName || ''}" data-meal-key="${mealKey}" data-day-name="${dayName}">
                     <span class="meal-icon">${icon}</span>
                     <span class="meal-name">${cleanName}</span>
                     ${isLeftover ? '<span class="leftover-icon">🔄</span>' : ''}
-                    ${isClickable && !isLeftover ? '<button class="regenerate-btn">🔄</button>' : ''}
+                    ${isClickable ? '<button class="regenerate-btn">🔄</button>' : ''}
                 </div>`;
             };
 
@@ -1811,7 +1841,17 @@ const app = {
             this.showRecipe(recipeId);
         }
     },
-    showRecipe(recipeId) { /* ... unchanged ... */ },
+    showRecipe(recipeId) {
+        this.currentRecipe.id = recipeId;
+        this.currentRecipe.step = 0;
+        const recipe = this.state.recipes[recipeId];
+        if (!recipe) {
+            this.showNotification(`Не удалось найти рецепт с ID: ${recipeId}.`, 'error');
+            return;
+        }
+        this.showScreen('recipe-screen');
+        this.renderRecipeStep();
+    },
     renderRecipeStep() { /* ... unchanged ... */ },
     navigateRecipeStep(direction) { /* ... unchanged ... */ },
     finishCooking() { /* ... unchanged ... */ },
@@ -1914,6 +1954,7 @@ const app = {
         this.dom.settings.duration.value = s.menuDuration;
         this.dom.settings.budget.value = s.totalBudget;
         this.dom.settings.preferences.value = s.preferences;
+        this.dom.settings.apiKeyInput.value = s.apiKey || '';
         this.renderFamilyMembers();
     },
     saveSettings() {
@@ -1924,6 +1965,28 @@ const app = {
         this.saveState();
         this.renderBudget(); // Update budget display immediately
         this.showNotification("Настройки сохранены");
+    },
+    async saveApiKey() {
+        const newApiKey = this.dom.settings.apiKeyInput.value.trim();
+        if (!newApiKey) {
+            this.showNotification('API ключ не может быть пустым', 'error');
+            return;
+        }
+        this.showNotification('Проверка ключа...', 'loading');
+        try {
+            // Perform a test call to validate the key
+            const testAI = new GoogleGenAI({ apiKey: newApiKey });
+            await testAI.models.generateContent({model:'gemini-2.5-flash', contents: 'test'});
+            
+            // If successful, save it
+            this.state.settings.apiKey = newApiKey;
+            this.ai = testAI; // Update the main AI instance
+            this.saveState();
+            this.showNotification('API ключ успешно сохранен и проверен!');
+        } catch (error) {
+            console.error("API Key validation failed:", error);
+            this.showNotification('Неверный API ключ. Проверьте его и попробуйте снова.', 'error');
+        }
     },
     renderFamilyMembers(isWizard = false) {
         const container = isWizard ? this.dom.wizardFamilyContainer : this.dom.settings.familyContainer;
