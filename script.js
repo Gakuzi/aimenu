@@ -40,22 +40,23 @@ function showScreen(screenId, isDetailView = false) {
 }
 
 function showModal(modal) {
-    modal.classList.add('visible');
+    if(modal) modal.classList.add('visible');
 }
 
 function hideModal(modal) {
-    modal.classList.remove('visible');
+    if(modal) modal.classList.remove('visible');
 }
 
 function showPreloader() {
-    preloader.classList.add('visible');
+    if(preloader) preloader.classList.add('visible');
 }
 
 function hidePreloader() {
-    preloader.classList.remove('visible');
+    if(preloader) preloader.classList.remove('visible');
 }
 
 function showToast(message, type = 'info', duration = 3000) {
+    if (!toast) return;
     toast.textContent = message;
     toast.className = 'toast'; // Reset classes
     toast.classList.add('show');
@@ -72,6 +73,7 @@ function showToast(message, type = 'info', duration = 3000) {
 
 function renderMenu() {
     const content = document.getElementById('menu-content');
+    if (!content) return;
     if (!state.menu || state.menu.length === 0) {
         content.innerHTML = `<p class="placeholder">Нажмите "Сгенерировать меню", чтобы начать планирование.</p>`;
         return;
@@ -98,6 +100,7 @@ function renderMenu() {
 
 function renderAllRecipes() {
     const list = document.getElementById('recipes-list');
+    if (!list) return;
      if (!state.recipes || Object.keys(state.recipes).length === 0) {
         list.innerHTML = `<p class="placeholder">Здесь появятся рецепты после генерации меню.</p>`;
         return;
@@ -121,7 +124,10 @@ function renderRecipeDetail(recipeId) {
     const recipe = state.recipes[recipeId];
     if (!recipe) return;
     const content = document.getElementById('recipe-detail-content');
-    document.getElementById('recipe-detail-title').textContent = recipe.name;
+    const title = document.getElementById('recipe-detail-title');
+    if (!content || !title) return;
+    
+    title.textContent = recipe.name;
     
     content.innerHTML = `
         <img src="https://placeholder.co/600x400/D4A373/8B5E3C?text=${encodeURIComponent(recipe.name)}" alt="${recipe.name}">
@@ -139,6 +145,7 @@ function renderRecipeDetail(recipeId) {
 
 function renderShoppingList() {
     const list = document.getElementById('shopping-list');
+    if (!list) return;
      if (state.shoppingList.length === 0) {
         list.innerHTML = `<p class="placeholder">Список покупок пуст. Сгенерируйте меню.</p>`;
         return;
@@ -164,42 +171,56 @@ function saveState() {
         localStorage.setItem('familyMenuState', JSON.stringify(state));
     } catch (error) {
         console.error("Could not save state to localStorage:", error);
+        showToast("Не удалось сохранить состояние", "warning");
     }
 }
 
+/**
+ * BULLETPROOF loadState function.
+ * It robustly validates data from localStorage to prevent crashes from corrupted state.
+ */
 function loadState() {
-    const savedStateJSON = localStorage.getItem('familyMenuState');
-    if (savedStateJSON) {
-        try {
-            const savedState = JSON.parse(savedStateJSON);
-            
-            // Robustly merge settings
-            if (savedState.settings && typeof savedState.settings === 'object') {
-                const { settings } = savedState;
-                state.settings.days = (typeof settings.days === 'number' && settings.days > 0) ? settings.days : 7;
-                state.settings.people = (typeof settings.people === 'number' && settings.people > 0) ? settings.people : 3;
-                state.settings.apiKey = typeof settings.apiKey === 'string' ? settings.apiKey : '';
-            }
+    let savedState;
+    try {
+        const savedStateJSON = localStorage.getItem('familyMenuState');
+        if (!savedStateJSON) return;
 
-            // Robustly merge other state properties
-            state.menu = Array.isArray(savedState.menu) ? savedState.menu : null;
-            state.recipes = (savedState.recipes && typeof savedState.recipes === 'object' && !Array.isArray(savedState.recipes)) ? savedState.recipes : {};
-            state.shoppingList = Array.isArray(savedState.shoppingList) ? savedState.shoppingList.map(item => ({...item, checked: !!item.checked})) : [];
-            state.currentScreen = typeof savedState.currentScreen === 'string' ? savedState.currentScreen : 'menu-screen';
-            state.lastActiveTab = typeof savedState.lastActiveTab === 'string' ? savedState.lastActiveTab : 'menu-screen';
-
-        } catch (error) {
-            console.error("Failed to parse state, resetting.", error);
-            localStorage.removeItem('familyMenuState');
+        savedState = JSON.parse(savedStateJSON);
+        
+        if (typeof savedState !== 'object' || savedState === null) {
+            throw new Error("Saved state is not an object.");
         }
+
+    } catch (e) {
+        console.error("Could not load or parse state from localStorage. Resetting.", e);
+        localStorage.removeItem('familyMenuState');
+        return;
     }
+
+    if (savedState.settings && typeof savedState.settings === 'object') {
+        state.settings.days = (typeof savedState.settings.days === 'number' && savedState.settings.days > 0) ? savedState.settings.days : 7;
+        state.settings.people = (typeof savedState.settings.people === 'number' && savedState.settings.people > 0) ? savedState.settings.people : 3;
+        state.settings.apiKey = typeof savedState.settings.apiKey === 'string' ? savedState.settings.apiKey : '';
+    }
+
+    state.menu = Array.isArray(savedState.menu) ? savedState.menu : null;
+    state.recipes = (savedState.recipes && typeof savedState.recipes === 'object' && !Array.isArray(savedState.recipes)) ? savedState.recipes : {};
+    state.shoppingList = Array.isArray(savedState.shoppingList) ? savedState.shoppingList.map(item => ({...item, checked: !!item.checked})) : [];
+
+    const validScreenIds = Array.from(screens).map(s => s.id);
+    state.currentScreen = validScreenIds.includes(savedState.currentScreen) ? savedState.currentScreen : 'menu-screen';
+    state.lastActiveTab = validScreenIds.includes(savedState.lastActiveTab) ? savedState.lastActiveTab : 'menu-screen';
 }
 
 
 function updateSettingsUI() {
-    document.getElementById('days-value').textContent = state.settings.days;
-    document.getElementById('people-value').textContent = state.settings.people;
-    document.getElementById('api-key-input').value = state.settings.apiKey;
+    const daysValue = document.getElementById('days-value');
+    const peopleValue = document.getElementById('people-value');
+    const apiKeyInput = document.getElementById('api-key-input');
+
+    if (daysValue) daysValue.textContent = state.settings.days;
+    if (peopleValue) peopleValue.textContent = state.settings.people;
+    if (apiKeyInput) apiKeyInput.value = state.settings.apiKey;
 }
 
 function processGeneratedPlan(plan) {
@@ -212,7 +233,7 @@ function processGeneratedPlan(plan) {
     renderMenu();
     renderAllRecipes();
     renderShoppingList();
-    showScreen(state.lastActiveTab);
+    showScreen('menu-screen');
 }
 
 async function generatePlan() {
@@ -287,7 +308,6 @@ async function generateWithAI() {
 
 // --- Local Fallback ---
 function generateWithLocalDB() {
-    // This is a simplified local fallback.
     const localRecipes = {
         '1': { id: '1', name: 'Овсяная каша с фруктами', ingredients: [`Овсяные хлопья - ${50 * state.settings.people}г`, `Молоко - ${150 * state.settings.people}мл`, `Банан - ${state.settings.people} шт`], instructions: ['Сварить кашу на молоке.', 'Нарезать банан и добавить в кашу.'] },
         '2': { id: '2', name: 'Куриный суп', ingredients: [`Курица - ${200 * state.settings.people}г`, `Картофель - ${150 * state.settings.people}г`, `Морковь - ${50 * state.settings.people}г`, 'Лук - 1 шт'], instructions: ['Сварить бульон.', 'Добавить овощи и варить до готовности.'] },
@@ -307,7 +327,6 @@ function generateWithLocalDB() {
         });
     }
     
-    // Simple aggregation for shopping list
     const shoppingList = [
         {name: 'Овсяные хлопья', amount: `${50 * state.settings.people * state.settings.days}г`},
         {name: 'Курица', amount: `${200 * state.settings.people * state.settings.days}г`},
@@ -325,70 +344,60 @@ function setupEventListeners() {
         btn.addEventListener('click', () => showScreen(btn.dataset.screen));
     });
 
-    settingsBtn.addEventListener('click', () => showModal(settingsModal));
-    closeSettingsBtn.addEventListener('click', () => hideModal(settingsModal));
-    settingsModal.addEventListener('click', (e) => {
+    if (settingsBtn) settingsBtn.addEventListener('click', () => showModal(settingsModal));
+    if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', () => hideModal(settingsModal));
+    if (settingsModal) settingsModal.addEventListener('click', (e) => {
         if (e.target === settingsModal) hideModal(settingsModal);
     });
 
-    document.getElementById('days-increment').addEventListener('click', () => {
+    document.getElementById('days-increment')?.addEventListener('click', () => {
         if (state.settings.days < 14) state.settings.days++;
         updateSettingsUI(); saveState();
     });
-    document.getElementById('days-decrement').addEventListener('click', () => {
+    document.getElementById('days-decrement')?.addEventListener('click', () => {
         if (state.settings.days > 1) state.settings.days--;
         updateSettingsUI(); saveState();
     });
-    document.getElementById('people-increment').addEventListener('click', () => {
+    document.getElementById('people-increment')?.addEventListener('click', () => {
         if (state.settings.people < 10) state.settings.people++;
         updateSettingsUI(); saveState();
     });
-    document.getElementById('people-decrement').addEventListener('click', () => {
+    document.getElementById('people-decrement')?.addEventListener('click', () => {
         if (state.settings.people > 1) state.settings.people--;
         updateSettingsUI(); saveState();
     });
 
-    document.getElementById('api-key-input').addEventListener('change', (e) => {
+    document.getElementById('api-key-input')?.addEventListener('change', (e) => {
         state.settings.apiKey = e.target.value.trim();
         saveState();
         showToast("API ключ сохранен.");
     });
 
-    document.getElementById('generate-btn').addEventListener('click', generatePlan);
+    document.getElementById('generate-btn')?.addEventListener('click', generatePlan);
 
-    document.getElementById('back-to-menu-btn').addEventListener('click', () => showScreen(state.lastActiveTab));
+    document.getElementById('back-to-menu-btn')?.addEventListener('click', () => showScreen(state.lastActiveTab));
 
-    document.getElementById('shopping-list').addEventListener('click', (e) => {
+    document.getElementById('shopping-list')?.addEventListener('click', (e) => {
         const itemEl = e.target.closest('.shopping-item');
         if (itemEl) {
             const index = parseInt(itemEl.dataset.index, 10);
-            state.shoppingList[index].checked = !state.shoppingList[index].checked;
-            saveState();
-            renderShoppingList();
+            if(state.shoppingList[index]) {
+                state.shoppingList[index].checked = !state.shoppingList[index].checked;
+                saveState();
+                renderShoppingList();
+            }
         }
     });
 
-    // Import / Export
-    document.getElementById('export-btn').addEventListener('click', () => {
-        const dataStr = JSON.stringify(state, null, 2);
-        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-        const exportFileDefaultName = 'family_menu_plan.json';
-        let linkElement = document.createElement('a');
-        linkElement.setAttribute('href', dataUri);
-        linkElement.setAttribute('download', exportFileDefaultName);
-        linkElement.click();
-    });
-
     const importFileInput = document.getElementById('import-file-input');
-    document.getElementById('import-btn').addEventListener('click', () => importFileInput.click());
-    importFileInput.addEventListener('change', (e) => {
+    document.getElementById('import-btn')?.addEventListener('click', () => importFileInput?.click());
+    if (importFileInput) importFileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
         const reader = new FileReader();
         reader.onload = function(event) {
             try {
                 const importedState = JSON.parse(event.target.result);
-                // Reset state before importing to avoid merging issues
                 Object.assign(state, {
                     settings: { days: 7, people: 3, apiKey: '' },
                     menu: null, recipes: {}, shoppingList: [],
@@ -406,28 +415,43 @@ function setupEventListeners() {
             }
         };
         reader.readAsText(file);
-        e.target.value = ''; // Reset input
+        e.target.value = '';
+    });
+    
+    document.getElementById('export-btn')?.addEventListener('click', () => {
+        try {
+            const dataStr = JSON.stringify(state, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = 'family_menu_plan.json';
+            let linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        } catch (error) {
+            showToast("Ошибка экспорта данных", "warning");
+        }
     });
 }
 
 // --- App Initialization ---
 function init() {
-    try {
-        loadState();
-        updateSettingsUI();
-        renderMenu();
-        renderAllRecipes();
-        renderShoppingList();
-        showScreen(state.currentScreen || 'menu-screen');
-        setupEventListeners();
-    } catch (error) {
-        console.error("A critical error occurred during app initialization:", error);
-        // Display a user-friendly error message on the screen
-        document.body.innerHTML = `<div style="padding: 20px; text-align: center; font-family: sans-serif;">
-            <h2>Произошла критическая ошибка</h2>
-            <p>Пожалуйста, попробуйте очистить данные сайта и перезагрузить страницу.</p>
-        </div>`;
-    }
+    loadState();
+    updateSettingsUI();
+    renderMenu();
+    renderAllRecipes();
+    renderShoppingList();
+    showScreen(state.currentScreen || 'menu-screen');
+    setupEventListeners();
 }
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        init();
+    } catch (error) {
+        console.error("A critical error occurred during app initialization:", error);
+        document.body.innerHTML = `<div style="padding: 20px; text-align: center; font-family: sans-serif; color: #333;">
+            <h2>Произошла критическая ошибка</h2>
+            <p>Не удалось запустить приложение. Пожалуйста, попробуйте очистить данные сайта (кэш и localStorage) и перезагрузить страницу.</p>
+        </div>`;
+    }
+});
