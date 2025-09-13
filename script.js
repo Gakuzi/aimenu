@@ -1,17 +1,20 @@
 // IMPORTANT: The GoogleGenAI module is now imported dynamically inside generateWithAI()
 // to ensure the app can start and function offline without relying on the network.
 
+// This placeholder will be replaced by the GitHub Action secret
+const GEMINI_API_KEY = "__GEMINI_API_KEY__";
+
 const state = {
     settings: {
         days: 7,
         people: 3,
-        apiKey: '',
     },
     menu: null,
     recipes: {},
     shoppingList: [],
     currentScreen: 'menu-screen',
     lastActiveTab: 'menu-screen',
+    aiStatus: 'checking', // 'checking', 'ready', 'unavailable'
 };
 
 // DOM Elements
@@ -168,20 +171,14 @@ function renderShoppingList() {
 
 function saveState() {
     try {
-        localStorage.setItem('familyMenuState', JSON.stringify(state));
+        const stateToSave = { ...state };
+        localStorage.setItem('familyMenuState', JSON.stringify(stateToSave));
     } catch (error) {
         console.error("Could not save state to localStorage:", error);
         showToast("Не удалось сохранить состояние", "warning");
     }
 }
 
-/**
- * HYPER-ROBUST `loadState` function.
- * This is the critical fix. It deeply validates all loaded data structures from 
- * localStorage. If any part of the saved data is corrupted, malformed, or null,
- * it safely discards it and falls back to default values instead of crashing the app.
- * This ensures the application ALWAYS starts successfully.
- */
 function loadState() {
     let savedStateJSON;
     try {
@@ -194,37 +191,31 @@ function loadState() {
             throw new Error("Saved state is not a valid object.");
         }
 
-        // Defensively load settings
         if (savedState.settings && typeof savedState.settings === 'object') {
             state.settings.days = (typeof savedState.settings.days === 'number' && savedState.settings.days > 0) ? savedState.settings.days : 7;
             state.settings.people = (typeof savedState.settings.people === 'number' && savedState.settings.people > 0) ? savedState.settings.people : 3;
-            state.settings.apiKey = typeof savedState.settings.apiKey === 'string' ? savedState.settings.apiKey : '';
         }
 
-        // Defensively load menu
         if (Array.isArray(savedState.menu)) {
             state.menu = savedState.menu.filter(day => 
                 day && typeof day === 'object' && typeof day.day === 'string' && Array.isArray(day.meals)
             );
         }
 
-        // Defensively load recipes
         if (savedState.recipes && typeof savedState.recipes === 'object' && !Array.isArray(savedState.recipes)) {
             state.recipes = savedState.recipes;
         }
 
-        // Defensively load shopping list (this was a likely crash point)
         if (Array.isArray(savedState.shoppingList)) {
             state.shoppingList = savedState.shoppingList
-                .filter(item => item && typeof item === 'object') // CRITICAL: Filter out null/undefined items
+                .filter(item => item && typeof item === 'object')
                 .map(item => ({
                     name: String(item.name || 'Без имени'),
                     amount: String(item.amount || ''),
                     checked: !!item.checked
                 }));
         }
-
-        // Defensively load screen state
+        
         const validScreenIds = Array.from(screens).map(s => s.id);
         if (validScreenIds.includes(savedState.currentScreen)) {
             state.currentScreen = savedState.currentScreen;
@@ -236,9 +227,8 @@ function loadState() {
     } catch (e) {
         console.error("Critical error loading state from localStorage. Resetting for safety.", e);
         localStorage.removeItem('familyMenuState');
-        // Reset state to default just in case it was partially loaded before erroring
         Object.assign(state, {
-            settings: { days: 7, people: 3, apiKey: '' },
+            settings: { days: 7, people: 3 },
             menu: null, recipes: {}, shoppingList: [],
             currentScreen: 'menu-screen', lastActiveTab: 'menu-screen',
         });
@@ -249,11 +239,9 @@ function loadState() {
 function updateSettingsUI() {
     const daysValue = document.getElementById('days-value');
     const peopleValue = document.getElementById('people-value');
-    const apiKeyInput = document.getElementById('api-key-input');
 
     if (daysValue) daysValue.textContent = state.settings.days;
     if (peopleValue) peopleValue.textContent = state.settings.people;
-    if (apiKeyInput) apiKeyInput.value = state.settings.apiKey;
 }
 
 function processGeneratedPlan(plan) {
@@ -270,9 +258,14 @@ function processGeneratedPlan(plan) {
 }
 
 async function generatePlan() {
-    if (!state.settings.apiKey) {
-        showToast("Введите Gemini API ключ в настройках", 'warning', 4000);
-        showModal(settingsModal);
+    if (state.aiStatus !== 'ready') {
+        const useFallback = confirm("AI-функции недоступны. Использовать локальную базу данных для генерации простого меню?");
+        if (useFallback) {
+            showPreloader();
+            const plan = generateWithLocalDB();
+            processGeneratedPlan(plan);
+            hidePreloader();
+        }
         return;
     }
 
@@ -291,13 +284,88 @@ async function generatePlan() {
     }
 }
 
-// --- Gemini AI Integration ---
-async function generateWithAI() {
-    const apiKey = state.settings.apiKey;
-    if (!apiKey) {
-        throw new Error("API Key is not provided.");
+
+// --- AI Status Check ---
+function updateAIStatusUI() {
+    const modalIndicator = document.getElementById('ai-status-indicator');
+    const headerIndicator = document.getElementById('header-ai-status');
+    
+    if (!modalIndicator && !headerIndicator) return;
+
+    let statusText = 'Проверка...';
+    let statusTitle = 'Статус AI: Проверка...';
+    const statusClass = state.aiStatus; // 'checking', 'ready', 'unavailable'
+
+    switch(state.aiStatus) {
+        case 'ready':
+            statusText = 'Готово';
+            statusTitle = 'Статус AI: Готово';
+            break;
+        case 'unavailable':
+            statusText = 'Недоступно';
+            statusTitle = 'Статус AI: Недоступно';
+            break;
     }
     
+    // Update modal indicator
+    if (modalIndicator) {
+        const textEl = modalIndicator.querySelector('.status-text');
+        modalIndicator.className = `ai-status-indicator ${statusClass}`;
+        if(textEl) textEl.textContent = statusText;
+    }
+
+    // Update header indicator
+    if (headerIndicator) {
+        headerIndicator.className = `header-status ${statusClass}`;
+        headerIndicator.title = statusTitle;
+    }
+}
+
+async function checkAIStatus() {
+    // No need to change status if it's already 'ready'
+    if (state.aiStatus === 'ready') return;
+
+    state.aiStatus = 'checking';
+    updateAIStatusUI();
+
+    if (GEMINI_API_KEY === "__GEMINI_API_KEY__" || !GEMINI_API_KEY) {
+        state.aiStatus = 'unavailable';
+        updateAIStatusUI();
+        console.warn("AI Status: Unavailable (API key placeholder not replaced).");
+        return;
+    }
+
+    let GoogleGenAI;
+    try {
+        ({ GoogleGenAI } = await import("https://esm.run/@google/generative-ai"));
+        const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+        
+        // Lightweight check to validate key and connectivity
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: "hi",
+            config: {
+                thinkingConfig: { thinkingBudget: 0 } // Fast and cheap
+            }
+        });
+        
+        if (response && response.text) {
+             state.aiStatus = 'ready';
+             console.log("AI Status: Ready.");
+        } else {
+            throw new Error("Invalid response from AI check.");
+        }
+    } catch (error) {
+        state.aiStatus = 'unavailable';
+        console.error("AI Status Check Failed:", error);
+    } finally {
+        updateAIStatusUI();
+    }
+}
+
+
+// --- Gemini AI Integration ---
+async function generateWithAI() {
     let GoogleGenAI, Type;
     try {
         // Dynamically import the module ONLY when needed.
@@ -307,7 +375,7 @@ async function generateWithAI() {
         throw new Error("Could not load AI module. Check network connection.");
     }
 
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
     const prompt = `
         Создай план питания на ${state.settings.days} дней для ${state.settings.people} человек.
@@ -409,12 +477,6 @@ function setupEventListeners() {
         updateSettingsUI(); saveState();
     });
 
-    document.getElementById('api-key-input')?.addEventListener('change', (e) => {
-        state.settings.apiKey = e.target.value.trim();
-        saveState();
-        showToast("API ключ сохранен.");
-    });
-
     document.getElementById('generate-btn')?.addEventListener('click', generatePlan);
 
     document.getElementById('generate-from-settings-btn')?.addEventListener('click', () => {
@@ -448,7 +510,7 @@ function setupEventListeners() {
                 const importedState = JSON.parse(event.target.result);
                 // Reset state before applying imported data for a clean import
                  Object.assign(state, {
-                    settings: { days: 7, people: 3, apiKey: state.settings.apiKey }, // Keep API key
+                    settings: { days: 7, people: 3 },
                     menu: null, recipes: {}, shoppingList: [],
                 });
                 // Defensively merge imported state
@@ -496,6 +558,9 @@ function init() {
     renderShoppingList();
     showScreen(state.currentScreen || 'menu-screen');
     setupEventListeners();
+
+    checkAIStatus(); // Initial check
+    setInterval(checkAIStatus, 60000); // Re-check every minute
 }
 
 document.addEventListener('DOMContentLoaded', () => {
