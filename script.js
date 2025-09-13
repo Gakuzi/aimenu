@@ -5,8 +5,6 @@ const state = {
     settings: {
         days: 7,
         people: 3,
-        useAI: false,
-        apiKey: '',
     },
     menu: null,
     recipes: {},
@@ -56,13 +54,18 @@ function hidePreloader() {
     preloader.classList.remove('visible');
 }
 
-function showToast(message, duration = 3000) {
+function showToast(message, type = 'info', duration = 3000) {
     toast.textContent = message;
+    toast.className = 'toast'; // Reset classes
     toast.classList.add('show');
+    if (type === 'warning') {
+        toast.classList.add('warning');
+    }
     setTimeout(() => {
         toast.classList.remove('show');
     }, duration);
 }
+
 
 // --- Rendering ---
 
@@ -156,63 +159,64 @@ function renderShoppingList() {
 // --- Data & Logic ---
 
 function saveState() {
-    localStorage.setItem('familyMenuState', JSON.stringify(state));
+    try {
+        localStorage.setItem('familyMenuState', JSON.stringify(state));
+    } catch (error) {
+        console.error("Could not save state to localStorage:", error);
+    }
 }
 
 function loadState() {
     const savedState = localStorage.getItem('familyMenuState');
     if (savedState) {
-        Object.assign(state, JSON.parse(savedState));
+        try {
+            const parsedState = JSON.parse(savedState);
+            // Safely merge properties
+            if (parsedState.settings) {
+                Object.assign(state.settings, parsedState.settings);
+            }
+            state.menu = parsedState.menu || null;
+            state.recipes = parsedState.recipes || {};
+            state.shoppingList = parsedState.shoppingList || [];
+            state.currentScreen = parsedState.currentScreen || 'menu-screen';
+            state.lastActiveTab = parsedState.lastActiveTab || 'menu-screen';
+        } catch (error) {
+            console.error("Failed to parse saved state, starting fresh.", error);
+            // Clear corrupted state to prevent future errors
+            localStorage.removeItem('familyMenuState');
+        }
     }
 }
 
 function updateSettingsUI() {
     document.getElementById('days-value').textContent = state.settings.days;
     document.getElementById('people-value').textContent = state.settings.people;
-    document.getElementById('use-ai-toggle').checked = state.settings.useAI;
-    document.getElementById('api-key-input').value = state.settings.apiKey;
-    document.getElementById('ai-settings').classList.toggle('hidden', !state.settings.useAI);
+}
+
+function processGeneratedPlan(plan) {
+    state.menu = plan.menu;
+    state.recipes = {};
+    plan.recipes.forEach(r => state.recipes[r.id] = r);
+    state.shoppingList = plan.shoppingList.map(item => ({...item, checked: false }));
+    
+    saveState();
+    renderMenu();
+    renderAllRecipes();
+    renderShoppingList();
+    showScreen(state.lastActiveTab);
 }
 
 async function generatePlan() {
     showPreloader();
-    let plan;
     try {
-        if (state.settings.useAI && state.settings.apiKey) {
-            plan = await generateWithAI();
-        } else {
-            if (state.settings.useAI && !state.settings.apiKey) {
-                 showToast('API ключ Gemini не указан.');
-            }
-            plan = generateWithLocalDB();
-        }
-
-        state.menu = plan.menu;
-        state.recipes = {};
-        plan.recipes.forEach(r => state.recipes[r.id] = r);
-        state.shoppingList = plan.shoppingList.map(item => ({...item, checked: false }));
-        
-        saveState();
-        renderMenu();
-        renderAllRecipes();
-        renderShoppingList();
-        showScreen(state.lastActiveTab);
-
+        // Always try AI first
+        const plan = await generateWithAI();
+        processGeneratedPlan(plan);
     } catch (error) {
-        console.error("Error generating plan:", error);
-        showToast("Ошибка генерации. Попробуйте снова.");
-        // Fallback to local DB if AI fails
-        if(state.settings.useAI) {
-            plan = generateWithLocalDB();
-            state.menu = plan.menu;
-            state.recipes = {};
-            plan.recipes.forEach(r => state.recipes[r.id] = r);
-            state.shoppingList = plan.shoppingList.map(item => ({...item, checked: false }));
-            saveState();
-            renderMenu();
-            renderAllRecipes();
-            renderShoppingList();
-        }
+        console.warn("AI generation failed, falling back to local DB:", error);
+        showToast("Gemini недоступен. Используется локальная база.", 'warning', 4000);
+        const plan = generateWithLocalDB();
+        processGeneratedPlan(plan);
     } finally {
         hidePreloader();
     }
@@ -220,10 +224,10 @@ async function generatePlan() {
 
 // --- Gemini AI Integration ---
 async function generateWithAI() {
-    if (!state.settings.apiKey) {
-        throw new Error("API key is missing.");
-    }
-    const ai = new GoogleGenAI({ apiKey: state.settings.apiKey });
+    // The API key is expected to be in the environment (e.g., set as a secret).
+    // The GoogleGenAI constructor will throw an error if the key is missing or invalid,
+    // which will be caught by generatePlan().
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
     const prompt = `
         Создай план питания на ${state.settings.days} дней для ${state.settings.people} человек.
@@ -243,72 +247,24 @@ async function generateWithAI() {
     const responseSchema = {
         type: Type.OBJECT,
         properties: {
-            menu: {
-                type: Type.ARRAY,
-                items: {
-                    type: Type.OBJECT,
-                    properties: {
-                        day: { type: Type.STRING },
-                        meals: {
-                            type: Type.ARRAY,
-                            items: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    type: { type: Type.STRING },
-                                    name: { type: Type.STRING },
-                                    recipeId: { type: Type.STRING }
-                                },
-                                required: ["type", "name", "recipeId"]
-                            }
-                        }
-                    },
-                    required: ["day", "meals"]
-                }
-            },
-            recipes: {
-                type: Type.ARRAY,
-                items: {
-                    type: Type.OBJECT,
-                    properties: {
-                        id: { type: Type.STRING },
-                        name: { type: Type.STRING },
-                        ingredients: { type: Type.ARRAY, items: { type: Type.STRING } },
-                        instructions: { type: Type.ARRAY, items: { type: Type.STRING } }
-                    },
-                    required: ["id", "name", "ingredients", "instructions"]
-                }
-            },
-            shoppingList: {
-                type: Type.ARRAY,
-                items: {
-                    type: Type.OBJECT,
-                    properties: {
-                        name: { type: Type.STRING },
-                        amount: { type: Type.STRING }
-                    },
-                    required: ["name", "amount"]
-                }
-            }
+            menu: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { day: { type: Type.STRING }, meals: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { type: { type: Type.STRING }, name: { type: Type.STRING }, recipeId: { type: Type.STRING } } } } } } },
+            recipes: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, name: { type: Type.STRING }, ingredients: { type: Type.ARRAY, items: { type: Type.STRING } }, instructions: { type: Type.ARRAY, items: { type: Type.STRING } } } } },
+            shoppingList: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, amount: { type: Type.STRING } } } }
         },
         required: ["menu", "recipes", "shoppingList"]
     };
 
-    try {
-        const genAIResponse = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: prompt,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: responseSchema,
-            },
-        });
-        const jsonText = genAIResponse.text.trim();
-        return JSON.parse(jsonText);
-    } catch (error) {
-        console.error("Gemini AI error:", error);
-        showToast("Ошибка Gemini AI. Используется локальная база.");
-        return generateWithLocalDB();
-    }
+    const genAIResponse = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: responseSchema,
+        },
+    });
+
+    const jsonText = genAIResponse.text.trim();
+    return JSON.parse(jsonText);
 }
 
 
@@ -375,18 +331,6 @@ function setupEventListeners() {
         updateSettingsUI(); saveState();
     });
 
-    const useAiToggle = document.getElementById('use-ai-toggle');
-    useAiToggle.addEventListener('change', () => {
-        state.settings.useAI = useAiToggle.checked;
-        updateSettingsUI(); saveState();
-    });
-
-    const apiKeyInput = document.getElementById('api-key-input');
-    apiKeyInput.addEventListener('change', () => {
-        state.settings.apiKey = apiKeyInput.value;
-        saveState();
-    });
-    
     document.getElementById('generate-btn').addEventListener('click', generatePlan);
 
     document.getElementById('back-to-menu-btn').addEventListener('click', () => showScreen(state.lastActiveTab));
@@ -421,7 +365,12 @@ function setupEventListeners() {
         reader.onload = function(event) {
             try {
                 const importedState = JSON.parse(event.target.result);
-                Object.assign(state, importedState);
+                // Reset state before importing to avoid merging issues
+                Object.assign(state, {
+                    settings: { days: 7, people: 3 },
+                    menu: null, recipes: {}, shoppingList: [],
+                    ...importedState
+                });
                 saveState();
                 updateSettingsUI();
                 renderMenu();
@@ -430,7 +379,7 @@ function setupEventListeners() {
                 showToast("План успешно импортирован!");
                 hideModal(settingsModal);
             } catch (err) {
-                showToast("Ошибка импорта: неверный формат файла.");
+                showToast("Ошибка импорта: неверный формат файла.", 'warning');
             }
         };
         reader.readAsText(file);
