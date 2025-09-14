@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "https://esm.run/@google/genai";
 import qrcode from 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/+esm'
 
@@ -1409,10 +1408,8 @@ const app = {
 
 
     exportData() {
-        const exportState = {...this.state};
-        // Do not export sync credentials in file exports
-        delete exportState.settings.jsonBin;
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportState));
+        // Теперь включает учетные данные для синхронизации, как и было запрошено.
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state));
         const downloadAnchorNode = document.createElement('a');
         downloadAnchorNode.setAttribute("href", dataStr);
         downloadAnchorNode.setAttribute("download", `family_menu_backup_${new Date().toISOString().split('T')[0]}.json`);
@@ -1421,6 +1418,7 @@ const app = {
         downloadAnchorNode.remove();
         this.showNotification("Данные экспортированы!");
     },
+
     importData(event, isQr=false, qrData=null) {
         const importLogic = (dataString) => {
              try {
@@ -1515,18 +1513,30 @@ const app = {
     
     async startQrScanner() {
         this.dom.qrScannerOverlay.classList.remove('hidden');
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            this.showNotification("Ваш браузер не поддерживает доступ к камере.", "error");
+            this.stopQrScanner();
+            return;
+        }
         try {
             this.qrScanner.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
             this.dom.qrVideo.srcObject = this.qrScanner.stream;
-            this.dom.qrVideo.setAttribute("playsinline", true); // required to tell iOS safari we don't want fullscreen
-            this.dom.qrVideo.play();
+            this.dom.qrVideo.setAttribute("playsinline", true);
+            await this.dom.qrVideo.play();
             this.qrScanner.animationFrameId = requestAnimationFrame(this.scanTick.bind(this));
         } catch (err) {
             console.error("QR Scanner Error:", err);
-            this.showNotification("Не удалось получить доступ к камере.", "error");
+            let message = "Не удалось получить доступ к камере.";
+            if (err.name === 'NotAllowedError') {
+                message = "Вы не разрешили доступ к камере. Проверьте настройки браузера.";
+            } else if (err.name === 'NotFoundError') {
+                message = "Камера не найдена на вашем устройстве.";
+            }
+            this.showNotification(message, "error");
             this.stopQrScanner();
         }
     },
+
 
     stopQrScanner() {
         if (this.qrScanner.stream) {
@@ -1573,23 +1583,47 @@ const app = {
     },
     
     async requestNotificationPermission() {
-        if (!("Notification" in window)) {
-            this.showNotification("Уведомления не поддерживаются.", "error");
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS && !navigator.standalone) {
+            this.showModal(
+                "Уведомления на iPhone/iPad",
+                "<p>Чтобы включить push-уведомления на вашем устройстве, сначала необходимо добавить приложение на экран 'Домой'.</p><p>Для этого нажмите кнопку 'Поделиться' в браузере Safari, а затем выберите 'На экран 'Домой''.</p>",
+                [{ text: "Понятно", class: "primary", action: () => {} }]
+            );
             return;
         }
+
+        if (!("Notification" in window)) {
+            this.showNotification("Уведомления не поддерживаются на вашем устройстве.", "error");
+            return;
+        }
+        
+        if (Notification.permission === "granted") {
+            this.showNotification("Уведомления уже включены. Отправляем тестовое.", "success");
+            this.showSystemNotification("Тестовое уведомление", "Если вы видите это, все работает отлично!");
+            return;
+        }
+        
+        if (Notification.permission === "denied") {
+            this.showNotification("Уведомления заблокированы. Измените настройки браузера.", "error");
+            return;
+        }
+
         const permission = await Notification.requestPermission();
         if (permission === "granted") {
-            this.showNotification("Уведомления включены!", "success");
+            this.showNotification("Уведомления успешно включены!", "success");
             this.showSystemNotification("Проверка", "Теперь вы будете получать уведомления от приложения.");
         } else {
-             this.showNotification("Вы не разрешили уведомления.", "warning");
+             this.showNotification("Вы не разрешили отправку уведомлений.", "warning");
         }
     },
 
     showSystemNotification(title, body) {
          if ("Notification" in window && Notification.permission === "granted") {
             navigator.serviceWorker.getRegistration().then(reg => {
-                reg.showNotification(title, { body });
+                if (reg) {
+                    reg.showNotification(title, { body });
+                }
             });
         }
     },
