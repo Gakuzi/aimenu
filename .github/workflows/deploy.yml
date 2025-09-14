@@ -21,3 +21,5 @@ jobs:
         with:
           folder: dist  # Директория билда
           branch: gh-pages  # Бранч для Pages
+          token: ${{ secrets.GITHUB_TOKEN }}
+          clean: true
