@@ -1,49 +1,104 @@
-// Комментарий: Глобальное состояние с Context API. Хранит данные о семье, меню, бюджете и т.д. Использует useReducer для сложной логики, useLocalStorage для persistent хранения. Синхронизирует с Firebase через useEffect.
+// Комментарий: Глобальное состояние приложения через Context API. Содержит family (члены семьи), menu (сгенерированное меню), shoppingList (агрегированный список), budget (расходы/лимит), preferences (аллергии/предпочтения). Использует useReducer для управления сложным состоянием, localStorage для persistence.
 
-import React, { createContext, useReducer, useEffect } from 'react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
-import { AppState, MenuItem } from '../types';
-import { firebaseSync } from '../services/firebaseService';  // Для синхронизации
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { FamilyMember, MenuItem, ShoppingListItem, Budget } from '../types';
 
-type Action = { type: 'UPDATE_FAMILY', payload: any } | { type: 'SET_MENU', payload: MenuItem[] };  // Примеры actions
+// Типы состояния
+interface AppState {
+  family: FamilyMember[];
+  menu: MenuItem[];
+  shoppingList: ShoppingListItem[];
+  budget: Budget;
+  preferences: {
+    allergies: string[];
+    preferences: string[];
+  };
+  // ... другие поля состояния
+}
 
+// Типы действий
+type AppAction =
+  | { type: 'SET_FAMILY'; payload: FamilyMember[] }
+  | { type: 'SET_MENU'; payload: MenuItem[] }
+  | { type: 'SET_SHOPPING_LIST'; payload: ShoppingListItem[] }
+  | { type: 'SET_BUDGET'; payload: Budget }
+  | { type: 'UPDATE_PREFERENCES'; payload: { allergies: string[]; preferences: string[] } }
+  // ... другие действия
+
+// Начальное состояние
 const initialState: AppState = {
   family: [],
   menu: [],
-  budget: 0,
   shoppingList: [],
-  // ... другие поля
+  budget: { limit: 0, spent: 0, items: [] },
+  preferences: { allergies: [], preferences: [] },
 };
 
-function reducer(state: AppState, action: Action): AppState {
+// Редьюсер
+function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
-    case 'UPDATE_FAMILY':
+    case 'SET_FAMILY':
       return { ...state, family: action.payload };
     case 'SET_MENU':
       return { ...state, menu: action.payload };
+    case 'SET_SHOPPING_LIST':
+      return { ...state, shoppingList: action.payload };
+    case 'SET_BUDGET':
+      return { ...state, budget: action.payload };
+    case 'UPDATE_PREFERENCES':
+      return { ...state, preferences: action.payload };
+    // ... другие кейсы
     default:
       return state;
   }
 }
 
-export const AppContext = createContext<{ state: AppState; dispatch: React.Dispatch<Action> } | undefined>(undefined);
+// Создание контекста
+interface AppContextType extends AppState {
+  dispatch: React.Dispatch<AppAction>;
+}
 
+const AppContext = createContext<AppContextType | undefined>(undefined);
+
+// Провайдер контекста
 export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [storedState, setStoredState] = useLocalStorage<AppState>('appState', initialState);
-  const [state, dispatch] = useReducer(reducer, storedState);
+  const [state, dispatch] = useReducer(appReducer, initialState);
 
+  // Сохранение состояния в localStorage
   useEffect(() => {
-    setStoredState(state);  // Auto-save в LocalStorage
-  }, [state, setStoredState]);
-
-  useEffect(() => {
-    // Синхронизация с Firebase при монтировании
-    firebaseSync(state, dispatch);
+    const savedState = localStorage.getItem('appState');
+    if (savedState) {
+      try {
+        const parsedState = JSON.parse(savedState);
+        // Диспатчим действия для восстановления состояния
+        if (parsedState.family) dispatch({ type: 'SET_FAMILY', payload: parsedState.family });
+        if (parsedState.menu) dispatch({ type: 'SET_MENU', payload: parsedState.menu });
+        if (parsedState.shoppingList) dispatch({ type: 'SET_SHOPPING_LIST', payload: parsedState.shoppingList });
+        if (parsedState.budget) dispatch({ type: 'SET_BUDGET', payload: parsedState.budget });
+        if (parsedState.preferences) dispatch({ type: 'UPDATE_PREFERENCES', payload: parsedState.preferences });
+      } catch (e) {
+        console.error('Ошибка при восстановлении состояния из localStorage:', e);
+      }
+    }
   }, []);
 
+  // Сохранение состояния в localStorage при изменении
+  useEffect(() => {
+    localStorage.setItem('appState', JSON.stringify(state));
+  }, [state]);
+
   return (
-    <AppContext.Provider value={{ state, dispatch }}>
+    <AppContext.Provider value={{ ...state, dispatch }}>
       {children}
     </AppContext.Provider>
   );
+};
+
+// Хук для использования контекста
+export const useAppContext = () => {
+  const context = useContext(AppContext);
+  if (!context) {
+    throw new Error('useAppContext должен использоваться внутри AppContextProvider');
+  }
+  return context;
 };

@@ -1,52 +1,93 @@
-// Комментарий: Календарь с react-calendar. Выбор недели, статистика калорий по дням (графики recharts).
+// Комментарий: Компонент для отображения меню в календарном виде. Содержит календарь с возможностью выбора дней и отображения меню на выбранный день. Использует react-calendar для отображения календаря.
 
-import React from 'react';
+import React, { useState } from 'react';
 import Calendar from 'react-calendar';
+import { useAppContext } from '../context/AppContext';
+import { MenuItem } from '../types';
 import 'react-calendar/dist/Calendar.css';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const CalendarView: React.FC = () => {
-  const [date, setDate] = React.useState(new Date());
+  const { menu } = useAppContext();
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
 
-  // Пример данных для графика
-  const data = [
-    { day: 'Пн', calories: 2000 },
-    { day: 'Вт', calories: 1800 },
-    { day: 'Ср', calories: 2200 },
-    { day: 'Чт', calories: 1900 },
-    { day: 'Пт', calories: 2100 },
-    { day: 'Сб', calories: 2300 },
-    { day: 'Вс', calories: 1800 }
-  ];
+  // Фильтрация меню по выбранной дате
+  const getMenuForDate = (date: Date | null): MenuItem[] => {
+    if (!date || menu.length === 0) return [];
+    
+    // Преобразуем дату в строку для сравнения
+    // const dateString = date.toISOString().split('T')[0]; // Не используется, закомментировано
+    
+    // Ищем день недели, соответствующий дате
+    const daysOfWeek = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+    const dayName = daysOfWeek[date.getDay()];
+    
+    return menu.filter(item => item.day === dayName);
+  };
 
-  // Обработчик изменения даты в календаре
-  const handleDateChange = (value: any) => {
+  // Получаем меню для выбранной даты
+  const dailyMenu = getMenuForDate(selectedDate);
+
+  // Функция для определения, есть ли меню для конкретной даты
+  const hasMenuForDate = (date: Date): boolean => {
+    const daysOfWeek = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+    const dayName = daysOfWeek[date.getDay()];
+    return menu.some(item => item.day === dayName);
+  };
+
+  // Функция для отображения содержимого дня в календаре
+  const tileContent = ({ date, view }: { date: Date; view: string }) => {
+    if (view === 'month' && hasMenuForDate(date)) {
+      return <div className="menu-indicator">●</div>;
+    }
+    return null;
+  };
+
+  // Обработчик изменения даты
+  const handleDateChange = (value: any, _event: React.MouseEvent<HTMLButtonElement>) => {
     if (value instanceof Date) {
-      setDate(value);
+      setSelectedDate(value);
+    } else if (Array.isArray(value) && value[0] instanceof Date) {
+      setSelectedDate(value[0]);
+    } else {
+      setSelectedDate(null);
     }
   };
 
   return (
-    <div>
-      <Calendar onChange={handleDateChange} value={date} />
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart
-          data={data}
-          margin={{
-            top: 5,
-            right: 30,
-            left: 20,
-            bottom: 5,
-          }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="day" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Bar dataKey="calories" fill="#8884d8" />
-        </BarChart>
-      </ResponsiveContainer>
+    <div className="calendar-view">
+      <h2>Календарь меню</h2>
+      
+      <div className="calendar-container">
+        <Calendar
+          onChange={handleDateChange}
+          value={selectedDate}
+          tileContent={tileContent}
+          locale="ru-RU"
+        />
+      </div>
+      
+      {selectedDate && dailyMenu.length > 0 ? (
+        <div className="daily-menu">
+          <h3>Меню на {selectedDate.toLocaleDateString('ru-RU')}</h3>
+          {dailyMenu.map(item => (
+            <div key={item.id} className={`menu-item ${item.cooked ? 'cooked' : ''}`}>
+              <h4>{item.mealType === 'breakfast' ? 'Завтрак' : 
+                   item.mealType === 'lunch' ? 'Обед' : 
+                   item.mealType === 'dinner' ? 'Ужин' : 'Перекус'}</h4>
+              <p>{item.dish}</p>
+              <p>Калории: {item.calories}</p>
+              <button className={item.cooked ? 'cooked' : ''}>
+                {item.cooked ? 'Приготовлено' : 'Отметить приготовленным'}
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : selectedDate ? (
+        <div className="daily-menu">
+          <h3>Меню на {selectedDate.toLocaleDateString('ru-RU')}</h3>
+          <p>Меню на этот день не сгенерировано</p>
+        </div>
+      ) : null}
     </div>
   );
 };

@@ -1,24 +1,659 @@
-/* Комментарий: Глобальные стили с adaptive media queries для responsivity. */
+/* Комментарий: Глобальные стили приложения. Содержит базовые стили, переменные CSS, сбросы и общие классы для компонентов. Использует CSS Custom Properties для темизации. */
 
-body {
-  font-family: Arial, sans-serif;
+:root {
+  --primary-color: #8B5E3C;
+  --secondary-color: #D4A373;
+  --accent-color: #5E7A6E;
+  --background-color: #F9F7F4;
+  --card-background: #FFFFFF;
+  --text-color: #333333;
+  --text-secondary: #7D7D7D;
+  --border-color: #E0E0E0;
+  --success-color: #4CAF50;
+  --warning-color: #FF9800;
+  --error-color: #F44336;
+  --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  --border-radius: 16px;
+  --transition: all 0.3s ease;
+}
+
+* {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Nunito', 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .app-container {
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Mobile-first design */
+@media (min-width: 768px) {
+  .app-container {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  font-weight: 800;
+}
+
+h1 {
+  font-size: 1.8rem;
+  text-align: center;
+  margin: 20px 0;
+  padding: 0 20px;
+}
+
+h2 {
+  font-size: 1.5rem;
+  padding: 0 20px;
+  margin: 20px 0 15px 0;
+}
+
+h3 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+p {
+  margin-bottom: 1rem;
+}
+
+button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 16px 20px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 1rem;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  transition: var(--transition);
+  width: 100%;
+  margin: 10px 0;
+  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+button:disabled {
+  background-color: var(--text-secondary);
+  cursor: not-allowed;
+  transform: none;
+  opacity: 0.7;
+}
+
+button.secondary {
+  background-color: var(--card-background);
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
+}
+
+button.secondary:active {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 16px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  font-family: 'Lato', sans-serif;
+  margin-bottom: 1rem;
+  background-color: var(--card-background);
+  color: var(--text-color);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(139, 94, 60, 0.2);
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.error {
+  color: var(--error-color);
+  background-color: rgba(244, 67, 54, 0.1);
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  margin: 1rem 20px;
+  border-left: 4px solid var(--error-color);
+}
+
+.warning {
+  color: var(--warning-color);
+  background-color: rgba(255, 152, 0, 0.1);
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  margin: 1rem 20px;
+  border-left: 4px solid var(--warning-color);
+}
+
+.success {
+  color: var(--success-color);
+  background-color: rgba(76, 175, 80, 0.1);
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  margin: 1rem 20px;
+  border-left: 4px solid var(--success-color);
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading::after {
+  content: "";
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(139, 94, 60, 0.3);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-top: 10px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  background-color: var(--border-color);
+  border-radius: 5px;
+  overflow: hidden;
+  margin: 1rem 0;
+}
+
+.progress {
+  height: 100%;
+  background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.family-member-card {
+  background-color: var(--card-background);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin: 15px 20px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+}
+
+.menu-item {
+  background-color: var(--card-background);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin: 15px 20px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+  position: relative;
+}
+
+.menu-item.cooked {
+  opacity: 0.7;
+}
+
+.menu-item.cooked h4,
+.menu-item.cooked p {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
+.shopping-item {
+  background-color: var(--card-background);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin: 15px 20px;
+  box-shadow: var(--shadow);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--border-color);
+}
+
+.shopping-item.purchased {
+  opacity: 0.7;
+}
+
+.shopping-item.purchased h4,
+.shopping-item.purchased p {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
+.toggle-purchased {
+  background-color: var(--accent-color);
+  min-width: 120px;
+  padding: 12px;
+  font-size: 0.9rem;
+}
+
+.toggle-purchased.purchased {
+  background-color: var(--success-color);
+}
+
+.budget-warning {
+  background-color: rgba(244, 67, 54, 0.1);
+  border: 1px solid var(--error-color);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin: 20px;
+  text-align: center;
+}
+
+.budget-warning.warning {
+  background-color: rgba(255, 152, 0, 0.1);
+  border-color: var(--warning-color);
+}
+
+.chart-container {
+  background-color: var(--card-background);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin: 20px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+}
+
+.calendar-container {
+  background-color: var(--card-background);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin: 20px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+}
+
+.react-calendar {
+  border: none;
+  width: 100%;
+}
+
+.react-calendar__tile--active {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+}
+
+.menu-indicator {
+  color: var(--primary-color);
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.recipe-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
   padding: 20px;
 }
 
+.recipe-modal {
+  position: relative;
+  background-color: var(--card-background);
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  max-width: 100%;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow);
+}
+
+.close-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  width: auto;
+  padding: 0;
+  margin: 0;
+}
+
+.close-button:hover {
+  color: var(--text-color);
+}
+
+.step-indicator {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+  font-size: 1.2rem;
+}
+
+.timer-section {
+  background-color: rgba(139, 94, 60, 0.1);
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.timer-display {
+  font-family: 'Courier New', monospace;
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--primary-color);
+  margin: 10px 0;
+}
+
+.timer-controls {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.timer-controls button {
+  min-width: 120px;
+  margin: 5px;
+}
+
+.step-navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+  gap: 10px;
+}
+
+.step-navigation button {
+  flex: 1;
+  margin: 0;
+}
+
+.partial-purchase {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.partial-purchase input {
+  width: 100px;
+  margin-bottom: 0;
+  flex: 1;
+  min-width: 80px;
+}
+
+.partial-purchase button {
+  flex: 2;
+  min-width: 120px;
+  margin: 0;
+}
+
+.budget-summary {
+  background-color: var(--card-background);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin: 20px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+}
+
+.budget-amounts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.budget-amounts p {
+  text-align: center;
+  padding: 10px;
+  background-color: rgba(139, 94, 60, 0.05);
+  border-radius: 8px;
+}
+
+.budget-percentage p {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.daily-menu {
+  background-color: var(--card-background);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin: 20px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+}
+
+.shopping-list-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin: 20px;
+}
+
+.search-container input {
+  margin-bottom: 0;
+}
+
+.category-filter select {
+  margin-bottom: 0;
+}
+
+.shopping-list-summary {
+  background-color: var(--card-background);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin: 20px;
+  box-shadow: var(--shadow);
+  text-align: center;
+  border: 1px solid var(--border-color);
+}
+
+.shopping-list-summary p {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.budget-charts {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  margin: 20px;
+}
+
+.menu-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: end;
+  margin: 20px;
+  flex-wrap: wrap;
+}
+
+.menu-controls > div {
+  flex: 1;
+  min-width: 150px;
+}
+
+.menu-controls input {
+  margin-bottom: 0;
+}
+
+.generated-menu {
+  background-color: var(--card-background);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin: 20px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+}
+
+.family-members-list {
+  background-color: var(--card-background);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin: 20px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+}
+
+/* Mobile-specific optimizations */
 @media (max-width: 768px) {
   .app-container {
+    padding: 0;
+  }
+  
+  h1 {
+    font-size: 1.5rem;
+    margin: 15px 0;
+  }
+  
+  h2 {
+    font-size: 1.3rem;
+    margin: 15px 0;
+  }
+  
+  .shopping-list-controls {
+    grid-template-columns: 1fr;
+  }
+  
+  .budget-amounts {
+    grid-template-columns: 1fr;
+  }
+  
+  .budget-charts {
+    grid-template-columns: 1fr;
+  }
+  
+  .menu-controls {
+    flex-direction: column;
+  }
+  
+  .step-navigation {
+    flex-direction: column;
+  }
+  
+  .step-navigation button {
+    margin: 5px 0;
+  }
+  
+  .timer-controls {
+    flex-direction: column;
+  }
+  
+  .timer-controls button {
+    width: 100%;
+  }
+  
+  .partial-purchase {
+    flex-direction: column;
+  }
+  
+  .partial-purchase input,
+  .partial-purchase button {
+    width: 100%;
+  }
+  
+  .recipe-modal-overlay {
     padding: 10px;
   }
-  table {
-    font-size: 14px;
+  
+  .recipe-modal {
+    padding: 1.5rem 1rem;
   }
 }
 
-/* Другие стили для компонентов */
+/* Safe area insets for iPhone X and newer */
+@supports (padding: max(0px)) {
+  .app-container {
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+  }
+  
+  .budget-summary,
+  .shopping-list-summary,
+  .daily-menu,
+  .generated-menu,
+  .family-members-list,
+  .chart-container,
+  .calendar-container {
+    margin-left: max(20px, env(safe-area-inset-left));
+    margin-right: max(20px, env(safe-area-inset-right));
+  }
+  
+  .shopping-list-controls,
+  .menu-controls,
+  .budget-charts {
+    margin-left: max(20px, env(safe-area-inset-left));
+    margin-right: max(20px, env(safe-area-inset-right));
+  }
+  
+  h1, h2 {
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+  }
+  
+  .error, .warning, .success {
+    margin-left: max(20px, env(safe-area-inset-left));
+    margin-right: max(20px, env(safe-area-inset-right));
+  }
+}

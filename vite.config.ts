@@ -30,7 +30,7 @@ export default defineConfig({
       },
     }),
   ],
-  base: '/aimenu/',  // Для корректной работы на GH Pages (относительные пути)
+  base: '/aimenu/',  // Базовый путь для GitHub Pages
   build: {
     outDir: 'dist',  // Директория для билда
     chunkSizeWarningLimit: 1000,  // Оптимизация для code splitting

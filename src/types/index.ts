@@ -1,28 +1,66 @@
-// Комментарий: Интерфейсы и типы для строгой типизации. Используются везде для props, state и API-ответов.
+// Комментарий: Типы данных приложения. Определяет структуры для членов семьи, элементов меню, списка покупок, бюджета и других сущностей. Используется для строгой типизации и предотвращения ошибок.
 
 export interface FamilyMember {
+  id: string;
   name: string;
   age: number;
-  gender: 'male' | 'female';
   weight: number;
-  activityLevel: 'low' | 'medium' | 'high';
+  height: number;
+  activityLevel: 'sedentary' | 'light' | 'moderate' | 'active' | 'veryActive';
+  goal: 'maintain' | 'lose' | 'gain';
   allergies: string[];
   preferences: string[];
 }
 
 export interface MenuItem {
+  id: string;
   day: string;
-  meal: 'breakfast' | 'lunch' | 'dinner';
+  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   dish: string;
-  ingredients: { name: string; quantity: number; unit: string }[];
   calories: number;
-  recipe: string;  // Шаги приготовления
+  ingredients: string[];
+  cooked: boolean;
 }
 
-export interface AppState {
-  family: FamilyMember[];
-  menu: MenuItem[];
-  budget: number;
-  shoppingList: { name: string; quantity: number; price: number; checked: boolean }[];
-  // ... другие поля
+export interface ShoppingListItem {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  price: number;
+  category: string;
+  purchased: boolean;
+  partialQuantities: { [key: string]: number }; // Для частичных покупок
+}
+
+export interface Budget {
+  limit: number;
+  spent: number;
+  items: {
+    category: string;
+    allocated: number;
+    spent: number;
+  }[];
+}
+
+export interface Recipe {
+  id: string;
+  dish: string;
+  ingredients: {
+    name: string;
+    quantity: number;
+    unit: string;
+  }[];
+  steps: {
+    title: string;
+    description: string;
+    time?: number; // В минутах
+  }[];
+  totalTime: number;
+}
+
+export interface CalendarDay {
+  date: Date;
+  meals: MenuItem[];
+  calories: number;
 }
