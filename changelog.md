@@ -1,0 +1,24 @@
+# Лог изменений
+
+- **Добавлено**: Модульная структура (components/, hooks/ etc.) для масштабируемости.
+- **Добавлено**: Строгая типизация с TypeScript (types/, interfaces).
+- **Добавлено**: Глобальное состояние с Context API и reducer.
+- **Добавлено**: Persistent хранение с useLocalStorage и fallback.
+- **Добавлено**: Интеграция Firebase (Realtime DB, Auth, Cloud Messaging) для синхронизации и push-уведомлений.
+- **Добавлено**: PWA с vite-plugin-pwa для offline-поддержки.
+- **Добавлено**: Персонализация (Harris-Benedict для калорий, аллергии в промпте).
+- **Добавлено**: Drag-and-drop редактирование меню (react-dnd).
+- **Добавлено**: Список покупок с агрегацией, чекбоксами, PDF-экспортом (html2pdf.js).
+- **Добавлено**: Бюджет с графиками (recharts), модалями warnings.
+- **Добавлено**: Рецепты с модалками, таймерами, фото.
+- **Добавлено**: Календарь (react-calendar) с статистикой.
+- **Добавлено**: Error handling (try-catch, zod validation).
+- **Добавлено**: Тесты в __tests__/ для компонентов.
+- **Добавлено**: Responsive стили с media queries.
+- **Добавлено**: Deps в package.json (firebase, react-query и т.д.).
+- **Добавлено**: Base-path в vite.config.ts для GH Pages.
+- **Добавлено**: Workflow для auto-deploy.
+- **Исправлено**: Монолитный код разбит, избегнуты scoping conflicts.
+- **Исправлено**: Runtime-ошибки (types, validation).
+- **Исправлено**: Пути assets для GH Pages (относительные).
+- **Исправлено**: Нет обновлений без hooks (useEffect для realtime).
