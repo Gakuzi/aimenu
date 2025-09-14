@@ -27,6 +27,7 @@ export function cacheDom() {
         'notification', 'modal-overlay', 'modal-title', 'modal-body', 'modal-buttons', 'wizard-nav',
         'wizard-step-counter', 'progress-bar', 'progress-status', 'progress-details', 'shopping-progress-text',
         'shopping-progress', 'pie-products', 'budget-spent-total', 'budget-total', 'budget-remaining',
+        'feature-showcase-container', 'feature-image', 'feature-text',
         // Help Links
         'api-key-help-link', 'jsonbin-help-link', 'jsonbin-help-link-settings',
         // Audio

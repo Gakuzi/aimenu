@@ -1,4 +1,3 @@
-
 :root {
     --font-nunito: 'Nunito', sans-serif;
     --font-lato: 'Lato', sans-serif;
@@ -82,68 +81,70 @@ body::before {
     color: var(--accent-color);
     margin: 20px 0;
 }
-.splash-animation-container {
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    margin: 30px 0;
-    min-height: 80px;
-    opacity: 0;
-    animation: fadeIn 1s 0.5s forwards;
-}
-.splash-step {
+
+/* New Feature Showcase */
+#feature-showcase-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    opacity: 0;
-    animation: pop-in 0.6s var(--ease-out) forwards;
+    justify-content: center;
+    margin: 20px 0 30px;
+    min-height: 150px;
+    width: 100%;
+    max-width: 300px;
 }
-.splash-icon {
-    font-size: 32px;
+
+.feature-image-wrapper {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-.splash-text {
+
+#feature-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+}
+
+#feature-text {
     font-family: var(--font-nunito);
     font-weight: 600;
-    margin-top: 10px;
     color: var(--accent-color);
     font-size: 16px;
-    opacity: 0;
-    transform: translateY(10px);
-    animation: fadeInText 0.6s ease-out forwards;
+    min-height: 40px; /* Prevent layout shift */
+    transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+    line-height: 1.4;
 }
-.splash-step:nth-child(1) { animation-delay: 0.8s; }
-.splash-step:nth-child(1) .splash-text { animation-delay: 1.1s; }
-.splash-step:nth-child(3) { animation-delay: 1.2s; }
-.splash-step:nth-child(3) .splash-text { animation-delay: 1.5s; }
-.splash-step:nth-child(5) { animation-delay: 1.6s; }
-.splash-step:nth-child(5) .splash-text { animation-delay: 1.9s; }
 
-.splash-arrow {
-    font-size: 24px;
-    color: var(--secondary-color);
-    opacity: 0;
-    margin: 5px 15px 0;
-    animation: pop-in 0.5s var(--ease-out) forwards;
+.feature-fade-in {
+    opacity: 1 !important;
+    transform: translateY(0) scale(1) !important;
 }
-.splash-arrow:nth-child(2) { animation-delay: 1.0s; }
-.splash-arrow:nth-child(4) { animation-delay: 1.4s; }
+
+.feature-fade-out {
+    opacity: 0 !important;
+    transform: translateY(10px) scale(0.95) !important;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.author-info {
+    animation: fadeIn 1s 1.5s forwards;
+    opacity: 0;
+}
+
 
 #start-app-btn {
-    margin-top: 30px;
+    margin-top: 10px;
     opacity: 0;
     animation: fadeIn 1s 0.5s forwards;
-}
-
-@keyframes fadeInText {
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-@keyframes pop-in {
-    0% { transform: scale(0.5); opacity: 0; }
-    80% { transform: scale(1.1); opacity: 1; }
-    100% { transform: scale(1); opacity: 1; }
 }
 
 .screen {
@@ -347,6 +348,7 @@ body::before {
 .primary-button:disabled {
     background-color: #ccc;
     cursor: not-allowed;
+    transform: scale(1);
 }
 .primary-button.reveal {
     animation: reveal 0.5s var(--ease-out) forwards;
@@ -494,10 +496,6 @@ body::before {
 .main-content.active {
     display: block;
     animation: fadeIn 0.5s var(--ease-out);
-}
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
 }
 
 /* --- Menu Screen --- */

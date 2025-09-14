@@ -1,19 +1,36 @@
 import { GoogleGenAI } from "https://esm.run/@google/genai";
 import { dom } from './dom.js';
 import { state, wizardState, recipeState, saveStateToLocal, setState } from './state.js';
-import { ai, initializeAi, saveSyncSettings as apiSaveSyncSettings, syncDataUp } from './api.js';
+import { ai, initializeAi, syncDataUp } from './api.js';
 import { showScreen, renderAll, showNotification, renderMenu, renderFamilyMembers, renderRecipeStep, renderShoppingList, renderBudget, hideModal } from './ui.js';
-import { showWizard, startGenerationProcess, handleRegeneration } from './generation.js';
+import { showWizard, navigateWizard } from './generation.js';
 import { requestNotificationPermission, showSystemNotification } from './pwa.js';
 import { exportData, importData, showQrCode, startQrScanner, stopQrScanner } from './data.js';
-import { showApiKeyHelpModal, showJsonBinHelpModal, openFamilyMemberModal, openPurchaseModal, openUndoPurchaseModal, confirmRegenerateAll, showChangelogModal, openAskToBuyModal, handleAdminLoad, handleAdminDelete } from './modals.js';
+import { showApiKeyHelpModal, showJsonBinHelpModal, openFamilyMemberModal, openPurchaseModal, openUndoPurchaseModal, confirmRegenerateAll, showChangelogModal, openAskToBuyModal, handleAdminLoad, handleAdminDelete, showMissingIngredientsWarning } from './modals.js';
 import { toggleDevConsole, executeCommand } from './utils.js';
 import { continueInit } from './main.js';
+import { handleRegeneration, startGenerationProcess } from './generation.js';
 
 export async function saveState() {
     saveStateToLocal();
     await syncDataUp();
 }
+
+async function handleStartApp() {
+    dom.startAppBtn.disabled = true;
+    dom.startAppBtn.textContent = 'Загрузка...';
+
+    try {
+        await continueInit();
+    } catch (error) {
+        console.error("Initialization failed:", error);
+        showNotification("Произошла ошибка при загрузке. Попробуйте еще раз.", "error");
+        dom.startAppBtn.disabled = false;
+        dom.startAppBtn.textContent = 'Начать';
+    }
+    // Кнопка останется неактивной, так как произойдет переход на другой экран
+}
+
 
 function handleNav(e) {
     const button = e.target.closest('.nav-button');
@@ -91,10 +108,24 @@ async function saveApiKey() {
 async function saveSyncSettings() {
     const binId = dom.settings.jsonBinBinId.value.trim();
     const apiKey = dom.settings.jsonBinApiKey.value.trim();
-    await apiSaveSyncSettings(apiKey, binId);
+    
+    const { enabled, binId: oldBinId, apiKey: oldApiKey } = state.settings.jsonBin;
+    
+    state.settings.jsonBin.enabled = !!apiKey;
+    state.settings.jsonBin.apiKey = apiKey;
+    state.settings.jsonBin.binId = binId;
+
     if (state.settings.jsonBin.enabled) {
-        renderAll();
+        if (!binId) {
+            await startGenerationProcess(true); // This will create a new bin
+        } else {
+            await saveState();
+        }
+    } else {
+       await saveState();
     }
+
+    renderAll();
 }
 
 function toggleCookedStatus(dayName, mealKey) {
@@ -138,7 +169,7 @@ function checkIngredientsForRecipe(recipeId) {
     }
 }
 
-function showRecipe(recipeId) {
+export function showRecipe(recipeId) {
     recipeState.id = recipeId;
     recipeState.step = 0;
     const recipe = state.recipes[recipeId];
@@ -245,7 +276,7 @@ function updateTimerDisplay() {
 
 
 export function initializeEventListeners() {
-    dom.startAppBtn.addEventListener('click', continueInit);
+    dom.startAppBtn.addEventListener('click', handleStartApp);
     dom.startSetupWizardBtn.addEventListener('click', handleStartSetup);
     dom.loadFromFileBtn.addEventListener('click', () => dom.importFileInput.click());
     dom.scanQrBtn.addEventListener('click', startQrScanner);

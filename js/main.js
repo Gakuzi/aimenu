@@ -1,16 +1,20 @@
 import { cacheDom } from './dom.js';
 import { initializeEventListeners } from './handlers.js';
 import { registerServiceWorker } from './pwa.js';
-import { showScreen } from './ui.js';
+import { showScreen, startFeatureShowcaseAnimation } from './ui.js';
 import { loadState } from './state.js';
+import { dom } from './dom.js';
 
 async function init() {
     cacheDom();
     initializeEventListeners();
     registerServiceWorker();
     showScreen('splash-screen');
-    // Кнопка "Начать" теперь всегда активна, так как логика загрузки перенесена в continueInit
-    document.getElementById('start-app-btn').disabled = false;
+    startFeatureShowcaseAnimation();
+
+    // Кнопка "Начать" активируется после инициализации
+    dom.startAppBtn.disabled = false;
+    dom.startAppBtn.textContent = 'Начать';
 }
 
 export async function continueInit() {
