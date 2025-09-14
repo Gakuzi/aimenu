@@ -1,7 +1,6 @@
 import { dom } from './dom.js';
 import { state, recipeState } from './state.js';
 import { VERSION } from './config.js';
-import { features } from './features.js';
 import { generateStepImage } from './api.js';
 import { saveState } from './handlers.js';
 
@@ -18,44 +17,6 @@ export function showScreen(screenId) {
         renderAll();
     }
 }
-
-// --- Splash Screen Animation ---
-let featureInterval;
-export function startFeatureShowcaseAnimation() {
-    let currentIndex = 0;
-
-    const updateFeature = () => {
-        const { image, text } = features[currentIndex];
-        
-        // Add fade-out class, then after a short delay, update content and fade in
-        dom.featureImage.classList.add('feature-fade-out');
-        dom.featureText.classList.add('feature-fade-out');
-
-        setTimeout(() => {
-            dom.featureImage.src = image;
-            dom.featureText.textContent = text;
-            dom.featureImage.classList.remove('feature-fade-out');
-            dom.featureText.classList.remove('feature-fade-out');
-        }, 500); // This should match the animation duration
-
-        currentIndex = (currentIndex + 1) % features.length;
-    };
-
-    // Initial setup
-    const { image, text } = features[currentIndex];
-    dom.featureImage.src = image;
-    dom.featureText.textContent = text;
-    setTimeout(() => {
-        dom.featureImage.classList.add('feature-fade-in');
-        dom.featureText.classList.add('feature-fade-in');
-        currentIndex = (currentIndex + 1) % features.length;
-    }, 100);
-
-    // Start the loop
-    if (featureInterval) clearInterval(featureInterval);
-    featureInterval = setInterval(updateFeature, 4000);
-}
-
 
 // --- Notifications ---
 export function showNotification(message, type = 'success') {

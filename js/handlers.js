@@ -16,22 +16,6 @@ export async function saveState() {
     await syncDataUp();
 }
 
-async function handleStartApp() {
-    dom.startAppBtn.disabled = true;
-    dom.startAppBtn.textContent = 'Загрузка...';
-
-    try {
-        await continueInit();
-    } catch (error) {
-        console.error("Initialization failed:", error);
-        showNotification("Произошла ошибка при загрузке. Попробуйте еще раз.", "error");
-        dom.startAppBtn.disabled = false;
-        dom.startAppBtn.textContent = 'Начать';
-    }
-    // Кнопка останется неактивной, так как произойдет переход на другой экран
-}
-
-
 function handleNav(e) {
     const button = e.target.closest('.nav-button');
     if (!button) return;
@@ -276,7 +260,6 @@ function updateTimerDisplay() {
 
 
 export function initializeEventListeners() {
-    dom.startAppBtn.addEventListener('click', handleStartApp);
     dom.startSetupWizardBtn.addEventListener('click', handleStartSetup);
     dom.loadFromFileBtn.addEventListener('click', () => dom.importFileInput.click());
     dom.scanQrBtn.addEventListener('click', startQrScanner);

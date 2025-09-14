@@ -3,9 +3,9 @@ export const dom = {};
 export function cacheDom() {
     const ids = [
         // Screens
-        'splash-screen', 'welcome-screen', 'setup-screen', 'main-screen', 'recipe-screen',
+        'welcome-screen', 'setup-screen', 'main-screen', 'recipe-screen',
         // Buttons
-        'start-app-btn', 'start-setup-wizard-btn', 'load-from-file-btn', 'scan-qr-btn', 'back-to-welcome-btn',
+        'start-setup-wizard-btn', 'load-from-file-btn', 'scan-qr-btn', 'back-to-welcome-btn',
         'wizard-back-btn', 'wizard-next-btn', 'finish-setup-btn', 'back-to-menu-btn', 'prev-step-btn', 'next-step-btn',
         'start-timer-btn', 'pause-timer-btn', 'reset-timer-btn', 'save-settings-btn', 'add-family-member-btn',
         'wizard-add-family-member-btn', 'regenerate-all-btn', 'save-api-key-btn', 'save-sync-settings-btn',
@@ -27,7 +27,6 @@ export function cacheDom() {
         'notification', 'modal-overlay', 'modal-title', 'modal-body', 'modal-buttons', 'wizard-nav',
         'wizard-step-counter', 'progress-bar', 'progress-status', 'progress-details', 'shopping-progress-text',
         'shopping-progress', 'pie-products', 'budget-spent-total', 'budget-total', 'budget-remaining',
-        'feature-showcase-container', 'feature-image', 'feature-text',
         // Help Links
         'api-key-help-link', 'jsonbin-help-link', 'jsonbin-help-link-settings',
         // Audio

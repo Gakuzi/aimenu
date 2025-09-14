@@ -23,7 +23,15 @@
 :-ms-input-placeholder { color: #888; }
 ::-ms-input-placeholder { color: #888; }
 
-html, body {
+html {
+    height: 100%;
+}
+
+body.is-loading {
+    opacity: 0;
+}
+
+body {
     margin: 0;
     padding: 0;
     width: 100%;
@@ -34,6 +42,7 @@ html, body {
     color: var(--text-color);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: opacity 0.3s ease-in-out;
 }
 
 body::before {
@@ -51,100 +60,6 @@ body::before {
     height: 100%;
     position: relative;
     overflow: hidden;
-}
-
-/* --- Splash Screen --- */
-#splash-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--bg-color);
-    z-index: 10000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 20px;
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-}
-.splash-logo {
-    width: 100px;
-    height: 100px;
-}
-.splash-title {
-    font-family: var(--font-nunito);
-    font-weight: 800;
-    font-size: 28px;
-    color: var(--accent-color);
-    margin: 20px 0;
-}
-
-/* New Feature Showcase */
-#feature-showcase-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin: 20px 0 30px;
-    min-height: 150px;
-    width: 100%;
-    max-width: 300px;
-}
-
-.feature-image-wrapper {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-#feature-image {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
-}
-
-#feature-text {
-    font-family: var(--font-nunito);
-    font-weight: 600;
-    color: var(--accent-color);
-    font-size: 16px;
-    min-height: 40px; /* Prevent layout shift */
-    transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
-    line-height: 1.4;
-}
-
-.feature-fade-in {
-    opacity: 1 !important;
-    transform: translateY(0) scale(1) !important;
-}
-
-.feature-fade-out {
-    opacity: 0 !important;
-    transform: translateY(10px) scale(0.95) !important;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.author-info {
-    animation: fadeIn 1s 1.5s forwards;
-    opacity: 0;
-}
-
-
-#start-app-btn {
-    margin-top: 10px;
-    opacity: 0;
-    animation: fadeIn 1s 0.5s forwards;
 }
 
 .screen {
@@ -496,6 +411,10 @@ body::before {
 .main-content.active {
     display: block;
     animation: fadeIn 0.5s var(--ease-out);
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* --- Menu Screen --- */
