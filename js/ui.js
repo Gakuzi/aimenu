@@ -3,8 +3,6 @@ import { state, currentRecipe, timer } from './state.js';
 import { wizard, app } from './main.js';
 import { api } from './api.js';
 
-let featureAnimationInterval;
-
 const ui = {
     showScreen(screenId) {
         dom.screens.forEach(screen => {
@@ -533,35 +531,6 @@ const ui = {
     toggleDevConsole() {
         dom.devConsole.classList.toggle('visible');
     },
-
-    startFeatureShowcaseAnimation() {
-        const features = [
-            { icon: '🗓️', text: 'Планируйте меню на неделю' },
-            { icon: '🛒', text: 'Составляйте умный список покупок' },
-            { icon: '👩‍🍳', text: 'Готовьте легко по шагам' },
-        ];
-        let currentIndex = 0;
-        
-        const showcaseContainer = dom.featureShowcase;
-        if (!showcaseContainer) return;
-
-        showcaseContainer.innerHTML = features.map((f, index) => `
-            <div class="feature-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
-                <div class="feature-icon">${f.icon}</div>
-                <div class="feature-text">${f.text}</div>
-            </div>
-        `).join('');
-        
-        const slides = showcaseContainer.querySelectorAll('.feature-slide');
-
-        if (featureAnimationInterval) clearInterval(featureAnimationInterval);
-
-        featureAnimationInterval = setInterval(() => {
-            slides[currentIndex].classList.remove('active');
-            currentIndex = (currentIndex + 1) % features.length;
-            slides[currentIndex].classList.add('active');
-        }, 3000);
-    }
 };
 
 // Export the ui object to be used in other modules

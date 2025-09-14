@@ -129,11 +129,6 @@ async function handleGenerateImage() {
 }
 
 export function initEventHandlers() {
-    dom.startAppBtn.addEventListener('click', () => {
-        localStorage.setItem('hasSeenSplash', 'true');
-        ui.showScreen('welcome-screen');
-    });
-    
     dom.startSetupWizardBtn.addEventListener('click', () => app.handleStartSetup());
     dom.loadFromFileBtn.addEventListener('click', () => dom.importFileInput.click());
 

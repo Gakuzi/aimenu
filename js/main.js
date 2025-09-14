@@ -33,19 +33,14 @@ const app = {
         initEventHandlers();
         loadState();
 
-        ui.startFeatureShowcaseAnimation();
-
-        const hasSeenSplash = localStorage.getItem('hasSeenSplash');
         const hasData = state.get().settings.apiKey && state.get().menu.length > 0;
 
         if (hasData) {
             ui.showScreen('main-screen');
             ui.renderAll();
             api.initAi();
-        } else if (hasSeenSplash) {
-            ui.showScreen('welcome-screen');
         } else {
-            ui.showScreen('splash-screen');
+            ui.showScreen('welcome-screen');
         }
     },
     

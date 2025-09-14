@@ -2,9 +2,6 @@ export const dom = {};
 
 export function cacheDom() {
     Object.assign(dom, {
-        splashScreen: document.getElementById('splash-screen'),
-        featureShowcase: document.getElementById('feature-showcase-container'),
-        startAppBtn: document.getElementById('start-app-btn'),
         screens: document.querySelectorAll('.screen'),
         welcomeScreen: document.getElementById('welcome-screen'),
         startSetupWizardBtn: document.getElementById('start-setup-wizard-btn'),
