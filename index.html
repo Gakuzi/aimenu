@@ -81,6 +81,75 @@ body::before {
     overflow: hidden;
 }
 
+/* --- Splash Screen --- */
+#splash-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(160deg, #F9F7F4, #EDE0D4);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+#splash-screen.hidden {
+    opacity: 0;
+    transform: scale(1.05);
+    pointer-events: none;
+}
+.splash-logo {
+    width: 100px;
+    height: 100px;
+}
+.splash-title {
+    font-family: var(--font-nunito);
+    font-weight: 800;
+    font-size: 28px;
+    color: var(--accent-color);
+    margin: 10px 0;
+}
+.splash-features {
+    margin: 30px 0;
+    position: relative;
+    height: 60px;
+    width: 100%;
+    overflow: hidden;
+}
+.feature-slide {
+    position: absolute;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: slide-in-out 9s linear infinite;
+}
+.feature-slide:nth-child(1) { animation-delay: 0s; }
+.feature-slide:nth-child(2) { animation-delay: 3s; }
+.feature-slide:nth-child(3) { animation-delay: 6s; }
+.feature-icon { font-size: 24px; }
+.feature-text { font-family: var(--font-nunito); font-weight: 700; font-size: 18px; color: var(--soft-text); margin-top: 8px;}
+
+@keyframes slide-in-out {
+    0%, 33.33%, 100% { opacity: 0; transform: translateY(20px); }
+    5%, 28.33% { opacity: 1; transform: translateY(0); }
+}
+
+#start-app-btn {
+    position: absolute;
+    bottom: calc(40px + env(safe-area-inset-bottom));
+    width: 80%;
+    max-width: 300px;
+}
+
+
 .screen {
     position: absolute;
     top: 0;
@@ -574,6 +643,7 @@ body::before {
 #step-ingredients li {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 8px 0;
     font-size: 16px;
 }
@@ -584,6 +654,11 @@ body::before {
 .ingredient-status.completed { color: var(--success-color); }
 .ingredient-status.missing { color: var(--warning-color); }
 .ingredient-status.unknown { color: #ccc; }
+.ingredient-quantity {
+    font-family: var(--font-nunito);
+    font-weight: 600;
+    color: var(--soft-text);
+}
 
 .recipe-nav {
     display: flex;
@@ -829,13 +904,23 @@ body::before {
     font-family: var(--font-lato);
     background: #fff;
     -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
     color: var(--text-color);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
 }
 .settings-textarea {
     height: auto;
     padding-top: 10px;
     padding-bottom: 10px;
     resize: vertical;
+    background-image: none;
+}
+.wizard-step .settings-select {
+    height: 50px;
 }
 
 .family-member-card {
@@ -865,6 +950,17 @@ body::before {
 .install-text {
     font-size: 14px;
     line-height: 1.5;
+}
+.sync-info {
+    font-size: 14px;
+    line-height: 1.5;
+    background-color: var(--card-accent-bg);
+    padding: 15px;
+    border-radius: 12px;
+    color: var(--soft-text);
+}
+.sync-info strong {
+    color: var(--accent-color);
 }
 
 /* --- Dev Console --- */
@@ -974,6 +1070,7 @@ body::before {
     line-height: 1.6;
     color: var(--text-color);
     margin-bottom: 25px;
+    text-align: left;
 }
 .modal-body ul {
     padding-left: 20px;
@@ -1009,8 +1106,8 @@ body::before {
 }
 .modal-buttons {
     display: flex;
+    flex-direction: column;
     gap: 10px;
-    justify-content: flex-end;
 }
 .modal-button {
     border: none;
@@ -1019,6 +1116,7 @@ body::before {
     font-family: var(--font-nunito);
     font-weight: 700;
     cursor: pointer;
+    width: 100%;
 }
 .modal-button.secondary {
     background-color: #eee;
@@ -1033,8 +1131,30 @@ body::before {
 <body>
 
 <div id="app">
+    <!-- Экран-заставка -->
+    <div class="screen" id="splash-screen">
+        <svg class="splash-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="45" fill="#F0E7DD"/><path d="M50,10 A40,40 0 0,1 90,50" fill="none" stroke="#8B5E3C" stroke-width="8"/><path d="M50,90 A40,40 0 0,1 10,50" fill="none" stroke="#D4A373" stroke-width="8"/><circle cx="50" cy="50" r="20" fill="#fff"/><path d="M50 38 C 55 42, 55 48, 50 52 S 45 58, 50 62" stroke="#5E7A6E" stroke-width="4" fill="none" stroke-linecap="round"/></svg>
+        <h1 class="splash-title">СЕМЕЙНОЕ МЕНЮ</h1>
+        <div class="splash-features">
+            <div class="feature-slide">
+                <div class="feature-icon">🗓️</div>
+                <div class="feature-text">Планируйте меню на неделю</div>
+            </div>
+            <div class="feature-slide">
+                <div class="feature-icon">🛒</div>
+                <div class="feature-text">Составляйте умный список покупок</div>
+            </div>
+            <div class="feature-slide">
+                <div class="feature-icon">👩‍🍳</div>
+                <div class="feature-text">Готовьте легко по шагам</div>
+            </div>
+        </div>
+        <button class="primary-button" id="start-app-btn">Начать</button>
+    </div>
+
+
     <!-- Экран первоначальной настройки и генерации -->
-    <div class="screen" id="setup-screen">
+    <div class="screen hidden" id="setup-screen">
         <div class="setup-container">
             <svg class="setup-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="45" fill="#F0E7DD"/><path d="M50,10 A40,40 0 0,1 90,50" fill="none" stroke="#8B5E3C" stroke-width="8"/><path d="M50,90 A40,40 0 0,1 10,50" fill="none" stroke="#D4A373" stroke-width="8"/><circle cx="50" cy="50" r="20" fill="#fff"/><path d="M50 38 C 55 42, 55 48, 50 52 S 45 58, 50 62" stroke="#5E7A6E" stroke-width="4" fill="none" stroke-linecap="round"/></svg>
             <h1 class="setup-title">СЕМЕЙНОЕ МЕНЮ</h1>
@@ -1070,7 +1190,27 @@ body::before {
                     </div>
                     <div class="settings-form-group">
                         <label for="wizard-preferences">Предпочтения и аллергии</label>
-                        <textarea id="wizard-preferences" class="settings-textarea" rows="3" placeholder="Например: без рыбы, меньше жареного"></textarea>
+                        <textarea id="wizard-preferences" class="settings-textarea" rows="2" placeholder="Например: без рыбы, меньше жареного"></textarea>
+                    </div>
+                    <div class="settings-form-group">
+                        <label for="wizard-cuisine">Предпочитаемая кухня</label>
+                        <select id="wizard-cuisine" class="settings-select">
+                            <option value="Любая">Любая</option>
+                            <option value="Русская">Русская</option>
+                            <option value="Итальянская">Итальянская</option>
+                            <option value="Азиатская">Азиатская</option>
+                            <option value="Средиземноморская">Средиземноморская</option>
+                            <option value="Кавказская">Кавказская</option>
+                        </select>
+                    </div>
+                     <div class="settings-form-group">
+                        <label for="wizard-difficulty">Сложность блюд</label>
+                        <select id="wizard-difficulty" class="settings-select">
+                            <option value="Любая">Любая</option>
+                            <option value="Простая">Простая (быстро и легко)</option>
+                            <option value="Средняя">Средняя (стандартные рецепты)</option>
+                            <option value="Сложная">Сложная (для особых случаев)</option>
+                        </select>
                     </div>
                 </div>
 
@@ -1128,7 +1268,7 @@ body::before {
             </div>
             <div class="main-content" id="settings-content">
                 <div class="settings-section">
-                    <h3 class="settings-title">Основные настройки</h3>
+                    <h3 class="settings-title">Параметры меню</h3>
                     <div class="settings-form-group">
                         <label for="settings-menu-duration">Количество дней меню</label>
                         <input type="number" id="settings-menu-duration" class="settings-input" min="1" max="14">
@@ -1138,9 +1278,30 @@ body::before {
                         <input type="number" id="settings-total-budget" class="settings-input" step="500">
                     </div>
                     <div class="settings-form-group">
+                        <label for="settings-cuisine">Предпочитаемая кухня</label>
+                        <select id="settings-cuisine" class="settings-select">
+                            <option value="Любая">Любая</option>
+                            <option value="Русская">Русская</option>
+                            <option value="Итальянская">Итальянская</option>
+                            <option value="Азиатская">Азиатская</option>
+                            <option value="Средиземноморская">Средиземноморская</option>
+                            <option value="Кавказская">Кавказская</option>
+                        </select>
+                    </div>
+                     <div class="settings-form-group">
+                        <label for="settings-difficulty">Сложность блюд</label>
+                        <select id="settings-difficulty" class="settings-select">
+                            <option value="Любая">Любая</option>
+                            <option value="Простая">Простая (быстро и легко)</option>
+                            <option value="Средняя">Средняя (стандартные рецепты)</option>
+                            <option value="Сложная">Сложная (для особых случаев)</option>
+                        </select>
+                    </div>
+                    <div class="settings-form-group">
                         <label for="settings-preferences">Предпочтения и аллергии</label>
                         <textarea id="settings-preferences" class="settings-textarea" rows="3" placeholder="Например: без рыбы, меньше жареного"></textarea>
                     </div>
+                    <button class="primary-button" id="save-settings-btn">Сохранить и применить</button>
                 </div>
 
                 <div class="settings-section">
@@ -1149,7 +1310,23 @@ body::before {
                     <button class="secondary-button" id="add-family-member-btn">+ Добавить члена семьи</button>
                 </div>
                 
+                 <div class="settings-section">
+                    <h3 class="settings-title">Синхронизация</h3>
+                    <div class="sync-info">
+                        <strong>Внимание:</strong> Настоящая онлайн-синхронизация и PUSH-уведомления требуют серверной части. В качестве альтернативы используйте экспорт/импорт данных для переноса меню на другое устройство.
+                    </div>
+                </div>
+
                 <div class="settings-section">
+                    <h3 class="settings-title">Управление данными</h3>
+                    <button class="primary-button" id="export-btn">📤 Экспортировать данные</button>
+                    <input type="file" id="import-file-input" class="hidden" accept=".json">
+                    <button class="primary-button" id="import-btn" style="margin-top: 10px;">📥 Импортировать данные</button>
+                     <button class="secondary-button" id="run-wizard-btn" style="margin-top: 20px;">Запустить мастер настройки</button>
+                    <button class="primary-button danger-button" id="regenerate-all-btn" style="margin-top: 10px;">🔄 Перегенерировать всё меню</button>
+                </div>
+                
+                 <div class="settings-section">
                     <h3 class="settings-title">API-ключ</h3>
                     <div class="settings-form-group">
                         <label for="settings-api-key">Google Gemini API Key</label>
@@ -1158,13 +1335,6 @@ body::before {
                     <button class="primary-button" id="save-api-key-btn">Проверить и сохранить</button>
                 </div>
 
-                <div class="settings-section">
-                    <h3 class="settings-title">Управление данными</h3>
-                    <button class="primary-button" id="export-btn">📤 Экспортировать данные</button>
-                    <input type="file" id="import-file-input" class="hidden" accept=".json">
-                    <button class="primary-button" id="import-btn" style="margin-top: 10px;">📥 Импортировать данные</button>
-                    <button class="primary-button danger-button" id="regenerate-all-btn" style="margin-top: 20px;">🔄 Перегенерировать всё меню</button>
-                </div>
 
                 <div class="settings-section">
                     <h3 class="settings-title">Как установить приложение</h3>
@@ -1256,6 +1426,8 @@ const app = {
             preferences: "Без рыбы, без грибов",
             menuDuration: 7,
             totalBudget: 10000,
+            cuisine: "Любая",
+            difficulty: "Любая",
         },
         menu: [],
         recipes: {},
@@ -1285,7 +1457,10 @@ const app = {
         this.addEventListeners();
         this.loadState();
 
-        if (this.state.settings.apiKey && this.state.menu && this.state.menu.length > 0) {
+        const hasSeenSplash = localStorage.getItem('hasSeenSplash');
+        if (!hasSeenSplash) {
+            this.showScreen('splash-screen');
+        } else if (this.state.settings.apiKey && this.state.menu && this.state.menu.length > 0) {
             this.ai = new GoogleGenAI({ apiKey: this.state.settings.apiKey });
             this.showScreen('main-screen');
             this.renderAll();
@@ -1296,6 +1471,8 @@ const app = {
 
     cacheDom() {
         this.dom = {
+            splashScreen: document.getElementById('splash-screen'),
+            startAppBtn: document.getElementById('start-app-btn'),
             screens: document.querySelectorAll('.screen'),
             setupScreen: document.getElementById('setup-screen'),
             mainScreen: document.getElementById('main-screen'),
@@ -1314,6 +1491,8 @@ const app = {
             wizardDuration: document.getElementById('wizard-menu-duration'),
             wizardBudget: document.getElementById('wizard-total-budget'),
             wizardPreferences: document.getElementById('wizard-preferences'),
+            wizardCuisine: document.getElementById('wizard-cuisine'),
+            wizardDifficulty: document.getElementById('wizard-difficulty'),
 
             generationProgress: document.getElementById('generation-progress'),
             progressBar: document.getElementById('progress-bar'),
@@ -1357,11 +1536,15 @@ const app = {
                 duration: document.getElementById('settings-menu-duration'),
                 budget: document.getElementById('settings-total-budget'),
                 preferences: document.getElementById('settings-preferences'),
+                cuisine: document.getElementById('settings-cuisine'),
+                difficulty: document.getElementById('settings-difficulty'),
+                saveBtn: document.getElementById('save-settings-btn'),
                 familyContainer: document.getElementById('family-members-container'),
                 addMemberBtn: document.getElementById('add-family-member-btn'),
                 regenerateAllBtn: document.getElementById('regenerate-all-btn'),
                 apiKeyInput: document.getElementById('settings-api-key'),
                 saveApiKeyBtn: document.getElementById('save-api-key-btn'),
+                runWizardBtn: document.getElementById('run-wizard-btn'),
             },
             exportBtn: document.getElementById('export-btn'),
             importBtn: document.getElementById('import-btn'),
@@ -1382,6 +1565,16 @@ const app = {
     },
     
     addEventListeners() {
+        this.dom.startAppBtn.addEventListener('click', () => {
+            localStorage.setItem('hasSeenSplash', 'true');
+            this.dom.splashScreen.classList.add('hidden');
+             if (this.state.settings.apiKey && this.state.menu && this.state.menu.length > 0) {
+                this.showScreen('main-screen');
+             } else {
+                this.showWizard();
+             }
+        });
+        
         this.dom.wizardNextBtn.addEventListener('click', () => this.navigateWizard(1));
         this.dom.wizardBackBtn.addEventListener('click', () => this.navigateWizard(-1));
 
@@ -1402,13 +1595,12 @@ const app = {
         this.dom.resetTimerBtn.addEventListener('click', () => this.resetTimer());
 
         // Settings Listeners
-        this.dom.settings.duration.addEventListener('change', () => this.saveSettings());
-        this.dom.settings.budget.addEventListener('change', () => this.saveSettings());
-        this.dom.settings.preferences.addEventListener('change', () => this.saveSettings());
+        this.dom.settings.saveBtn.addEventListener('click', () => this.saveSettings());
         this.dom.settings.addMemberBtn.addEventListener('click', () => this.openFamilyMemberModal());
         this.dom.settings.regenerateAllBtn.addEventListener('click', () => this.confirmRegenerateAll());
         this.dom.settings.saveApiKeyBtn.addEventListener('click', () => this.saveApiKey());
         this.dom.wizardAddMemberBtn.addEventListener('click', () => this.openFamilyMemberModal(true));
+        this.dom.settings.runWizardBtn.addEventListener('click', () => this.showWizard());
 
         this.dom.exportBtn.addEventListener('click', () => this.exportData());
         this.dom.importBtn.addEventListener('click', () => this.dom.importFileInput.click());
@@ -1451,9 +1643,12 @@ const app = {
                      if (!this.state.settings.family) this.state.settings.family = [];
                      if (!this.state.settings.menuDuration) this.state.settings.menuDuration = 7;
                      if (!this.state.cookedMeals) this.state.cookedMeals = {};
+                     if (!this.state.settings.cuisine) this.state.settings.cuisine = "Любая";
+                     if (!this.state.settings.difficulty) this.state.settings.difficulty = "Любая";
+
                      this.state.shoppingList.forEach(cat => {
                         (cat.items || []).forEach(item => {
-                            if (item.purchases === undefined) item.purchases = item.completed ? [{ qty: item.needed?.qty || 1, price: item.actualPrice || item.price }] : [];
+                            if (item.purchases === undefined) item.purchases = item.completed ? [{ qty: item.shoppingSuggestion?.qty || 1, price: item.price }] : [];
                         });
                      });
                 } else {
@@ -1467,6 +1662,7 @@ const app = {
 
     resetState() {
         localStorage.removeItem('familyMenuState');
+        localStorage.removeItem('hasSeenSplash');
         window.location.reload();
     },
     
@@ -1474,7 +1670,7 @@ const app = {
         this.dom.screens.forEach(screen => {
             const isTarget = screen.id === screenId;
             screen.classList.toggle('hidden', !isTarget);
-            if (screen.id === 'recipe-screen') {
+            if (screen.id === 'recipe-screen' || screen.id === 'splash-screen') {
                 screen.classList.toggle('active', isTarget);
             }
         });
@@ -1500,6 +1696,8 @@ const app = {
         this.dom.wizardDuration.value = this.state.settings.menuDuration;
         this.dom.wizardBudget.value = this.state.settings.totalBudget;
         this.dom.wizardPreferences.value = this.state.settings.preferences;
+        this.dom.wizardCuisine.value = this.state.settings.cuisine;
+        this.dom.wizardDifficulty.value = this.state.settings.difficulty;
         
         this.dom.wizardNav.classList.remove('hidden');
         this.dom.wizardStepCounter.textContent = `Шаг ${currentStep} из ${totalSteps}`;
@@ -1536,6 +1734,8 @@ const app = {
                 this.state.settings.menuDuration = parseInt(this.dom.wizardDuration.value) || 7;
                 this.state.settings.totalBudget = parseInt(this.dom.wizardBudget.value) || 10000;
                 this.state.settings.preferences = this.dom.wizardPreferences.value;
+                this.state.settings.cuisine = this.dom.wizardCuisine.value;
+                this.state.settings.difficulty = this.dom.wizardDifficulty.value;
             } else if (currentStep === totalSteps) {
                 this.saveState();
                 await this.startGenerationProcess();
@@ -1568,7 +1768,6 @@ const app = {
             this.dom.progressDetails.innerHTML += '<br>✅ Ключ активен. Доступ к Gemini получен.';
             
             await this.generateMenu();
-            // Bug fix: Ensure menu generation was successful before proceeding
             if (!this.state.menu || this.state.menu.length === 0) {
                 throw new Error("Menu generation failed or returned empty data. Please check your prompt and settings.");
             }
@@ -1585,7 +1784,6 @@ const app = {
         } catch (error) {
             console.error("Generation failed:", error);
             this.updateProgress(0, 5, "Ошибка!", `Не удалось сгенерировать меню. ${error.message}`);
-            // Show back button to allow user to retry or change settings
             this.dom.finishSetupBtn.textContent = 'Назад к настройкам';
             this.dom.finishSetupBtn.classList.remove('hidden');
             this.dom.finishSetupBtn.onclick = () => window.location.reload();
@@ -1613,9 +1811,6 @@ const app = {
             try {
                 const result = await this.ai.models.generateContent({
                   model: "gemini-2.5-flash",
-                  // FIX: Pass the prompt in a structured format to avoid an SDK bug where non-ASCII 
-                  // characters in a raw string prompt can be incorrectly placed in HTTP headers,
-                  // causing a "non ISO-8859-1 code point" error.
                   contents: [{ parts: [{ text: prompt }] }],
                   config: {
                     responseMimeType: "application/json",
@@ -1636,10 +1831,15 @@ const app = {
     },
 
     async generateMenu() {
-        const { family, menuDuration, preferences } = this.state.settings;
+        const { family, menuDuration, preferences, cuisine, difficulty } = this.state.settings;
         await this.updateProgress(2, 5, "Генерация меню...", `Для вашей семьи на ${menuDuration} дней.`);
         const familyDescription = family.map(p => `${p.gender === 'male' ? 'Мужчина' : 'Женщина'}, ${p.age} лет, активность: ${p.activity}`).join('; ');
-        const prompt = `Сгенерируй разнообразное и сбалансированное меню на ${menuDuration} дней (с воскресенья по субботу) для семьи, состоящей из: ${familyDescription}. Учти их потребности в калориях. Предпочтения: ${preferences}. Каждый день должен включать: Завтрак, Перекус, Обед, Полдник, Ужин. Иногда используй остатки от ужина на обед следующего дня (помечай их как "Название блюда (остатки)").`;
+        const prompt = `Сгенерируй разнообразное и сбалансированное меню на ${menuDuration} дней (с воскресенья по субботу) для семьи: ${familyDescription}. 
+        Учти их потребности в калориях.
+        Общие предпочтения: ${preferences}.
+        Предпочитаемая кухня: ${cuisine}.
+        Желаемая сложность блюд: ${difficulty}.
+        Каждый день должен включать: Завтрак, Перекус, Обед, Полдник, Ужин. Иногда используй остатки от ужина на обед следующего дня (помечай их как "Название блюда (остатки)").`;
         const schema = {type: Type.ARRAY, items: {type: Type.OBJECT, properties: {day: {type: Type.STRING}, meals: {type: Type.OBJECT, properties: {breakfast: {type: Type.STRING}, snack1: {type: Type.STRING}, lunch: {type: Type.STRING}, snack2: {type: Type.STRING}, dinner: {type: Type.STRING}}, required: ["breakfast", "snack1", "lunch", "snack2", "dinner"]}}, required: ["day", "meals"]}};
         this.state.menu = await this.makeGeminiRequest(prompt, schema);
         this.dom.progressDetails.innerHTML += `<br>✅ Сгенерировано меню.`;
@@ -1653,12 +1853,12 @@ const app = {
              return;
         }
         const familySize = this.state.settings.family.length;
-        const schema = {type: Type.OBJECT, properties: {id: {type: Type.STRING}, name: {type: Type.STRING}, ingredients: {type: Type.ARRAY, items: {type: Type.OBJECT, properties: {name: {type: Type.STRING}, quantity: {type: Type.STRING}}, required: ["name", "quantity"]}}, steps: {type: Type.ARRAY, items: {type: Type.OBJECT, properties: {description: {type: Type.STRING}, time: {type: Type.NUMBER, description: "Время в минутах. 0 если таймер не нужен."}, ingredients: {type: Type.ARRAY, items: {type: Type.STRING }}}, required: ["description", "time", "ingredients"]}}}, required: ["id", "name", "ingredients", "steps"]};
+        const schema = {type: Type.OBJECT, properties: {id: {type: Type.STRING}, name: {type: Type.STRING}, ingredients: {type: Type.ARRAY, items: {type: Type.OBJECT, properties: {name: {type: Type.STRING}, quantity: {type: Type.STRING}}, required: ["name", "quantity"]}}, steps: {type: Type.ARRAY, items: {type: Type.OBJECT, properties: {description: {type: Type.STRING}, time: {type: Type.NUMBER, description: "Время в минутах. 0 если таймер не нужен."}, ingredients: {type: Type.ARRAY, items: {type: Type.OBJECT, properties: { name: {type: Type.STRING}, quantity: {type: Type.STRING, description: "Количество и единица измерения, например '200 г' или '1 шт'"} }, required: ["name", "quantity"] }}}, required: ["description", "time", "ingredients"]}}}, required: ["id", "name", "ingredients", "steps"]};
         
         this.state.recipes = {};
         for (const mealName of uniqueMeals) {
             this.dom.progressDetails.textContent = `Обрабатывается: "${mealName}"...`;
-            const prompt = `Создай детальный рецепт для блюда "${mealName}" для семьи из ${familySize} человек (${this.state.settings.family.length} порции).`;
+            const prompt = `Создай детальный рецепт для блюда "${mealName}" для семьи из ${familySize} человек (${this.state.settings.family.length} порции). В каждом шаге укажи конкретное количество ингредиентов, используемых на этом шаге.`;
             const recipeData = await this.makeGeminiRequest(prompt, schema);
             this.state.recipes[recipeData.id] = recipeData;
         }
@@ -1673,8 +1873,8 @@ const app = {
             return;
         }
         const allIngredients = Object.values(this.state.recipes).flatMap(r => r.ingredients);
-        const prompt = `Сгруппируй и суммируй этот список ингредиентов. Категории: "Мясо и птица", "Молочные и яйца", "Овощи и зелень", "Фрукты и орехи", "Бакалея", "Хлеб и выпечка", "Напитки", "Прочее". Для каждого ингредиента верни количество в виде числа и единицу измерения отдельно (например 'кг', 'г', 'шт', 'л', 'мл'). Укажи примерную цену в рублях. Ингредиенты: ${JSON.stringify(allIngredients)}`;
-        const schema = { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { category: { type: Type.STRING }, items: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, needed: { type: Type.OBJECT, properties: { qty: { type: Type.NUMBER }, unit: { type: Type.STRING }}}, price: { type: Type.NUMBER } }, required: ["name", "needed", "price"] } } }, required: ["category", "items"] } };
+        const prompt = `Сгруппируй и суммируй этот список ингредиентов. Категории: "Мясо и птица", "Молочные и яйца", "Овощи и зелень", "Фрукты и орехи", "Бакалея", "Хлеб и выпечка", "Напитки", "Прочее". Для каждого ингредиента верни общее необходимое количество (totalNeeded). Затем предложи разумное количество для покупки в магазине (shoppingSuggestion), округляя в большую сторону до стандартной упаковки (например, для 750г муки предложи купить 1кг). Укажи примерную цену в рублях за предложенное количество для покупки. Ингредиенты: ${JSON.stringify(allIngredients)}`;
+        const schema = { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { category: { type: Type.STRING }, items: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, totalNeeded: { type: Type.OBJECT, properties: { qty: { type: Type.NUMBER }, unit: { type: Type.STRING }}}, shoppingSuggestion: { type: Type.OBJECT, properties: { qty: { type: Type.NUMBER }, unit: { type: Type.STRING }}}, price: { type: Type.NUMBER } }, required: ["name", "totalNeeded", "shoppingSuggestion", "price"] } } }, required: ["category", "items"] } };
         const shoppingListData = await this.makeGeminiRequest(prompt, schema);
         
         shoppingListData.forEach(category => {
@@ -1801,8 +2001,8 @@ const app = {
             
             const itemsHtml = category.items.map((item, itemIndex) => {
                 const totalPurchased = item.purchases.reduce((sum, p) => sum + p.qty, 0);
-                const isCompleted = totalPurchased >= item.needed.qty;
-                const progressPercent = Math.min((totalPurchased / item.needed.qty) * 100, 100);
+                const isCompleted = totalPurchased >= item.shoppingSuggestion.qty;
+                const progressPercent = Math.min((totalPurchased / item.shoppingSuggestion.qty) * 100, 100);
 
                 const radius = 10;
                 const circumference = 2 * Math.PI * radius;
@@ -1819,7 +2019,7 @@ const app = {
                     </div>
                     <div class="item-details">
                         <span class="item-name">${item.name}</span>
-                        <div class="item-quantity">Куплено: ${totalPurchased.toLocaleString()}/${item.needed.qty.toLocaleString()} ${item.needed.unit}</div>
+                        <div class="item-quantity">Купить: ${item.shoppingSuggestion.qty.toLocaleString()} ${item.shoppingSuggestion.unit}</div>
                     </div>
                     <span class="item-price">${item.price} ₽</span>
                 </li>
@@ -1859,7 +2059,7 @@ const app = {
         const totalItems = allItems.length;
         const completedItems = allItems.filter(i => {
             const totalPurchased = i.purchases.reduce((sum, p) => sum + p.qty, 0);
-            return totalPurchased >= i.needed.qty;
+            return totalPurchased >= i.shoppingSuggestion.qty;
         }).length;
         const percent = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
         this.dom.shoppingProgress.style.width = `${percent}%`;
@@ -1897,11 +2097,11 @@ const app = {
             const shopItem = flatShoppingList.find(item => item.name.toLowerCase() === ing.name.toLowerCase());
             if (shopItem) {
                  const totalPurchased = shopItem.purchases.reduce((sum, p) => sum + p.qty, 0);
-                 if (totalPurchased < shopItem.needed.qty) {
-                     missingIngredients.push(ing.name);
+                 if (totalPurchased < shopItem.totalNeeded.qty) {
+                     missingIngredients.push(shopItem);
                  }
             } else {
-                missingIngredients.push(ing.name);
+                missingIngredients.push({name: ing.name, shoppingSuggestion: {qty: 1, unit: 'шт'}});
             }
         });
 
@@ -1940,19 +2140,17 @@ const app = {
         this.dom.stepIndicator.textContent = `Шаг ${step + 1}/${recipe.steps.length}`;
         this.dom.stepDescription.textContent = stepData.description;
 
-        // Image handling
         this.dom.stepImage.style.opacity = '0.5';
         if (stepData.imageUrl) {
             this.dom.stepImage.src = stepData.imageUrl;
             this.dom.stepImage.alt = stepData.description;
             this.dom.stepImage.style.opacity = '1';
         } else {
-            this.dom.stepImage.src = ''; // Placeholder
+            this.dom.stepImage.src = ''; 
             this.dom.stepImage.alt = 'Генерация изображения...';
             this.generateStepImage(id, step);
         }
 
-        // Timer handling
         this.stopTimer();
         if (stepData.time && stepData.time > 0) {
             this.timer.initialTime = stepData.time * 60;
@@ -1962,19 +2160,18 @@ const app = {
             this.dom.timerSection.classList.add('hidden');
         }
 
-        // Ingredients
         this.dom.stepIngredientsList.innerHTML = '';
         if (stepData.ingredients && stepData.ingredients.length > 0) {
             this.dom.stepIngredientsTitle.classList.remove('hidden');
             const flatShoppingList = this.state.shoppingList.flatMap(c => c.items);
-            stepData.ingredients.forEach(ingName => {
+            stepData.ingredients.forEach(ing => {
                 const li = document.createElement('li');
-                const shopItem = flatShoppingList.find(item => item.name.toLowerCase().includes(ingName.toLowerCase()) || ingName.toLowerCase().includes(item.name.toLowerCase()));
+                const shopItem = flatShoppingList.find(item => item.name.toLowerCase().includes(ing.name.toLowerCase()) || ing.name.toLowerCase().includes(item.name.toLowerCase()));
                 let statusClass = 'unknown';
                 let statusIcon = '❔';
                 if (shopItem) {
                     const totalPurchased = shopItem.purchases.reduce((sum, p) => sum + p.qty, 0);
-                    if (totalPurchased >= shopItem.needed.qty) {
+                    if (totalPurchased >= shopItem.totalNeeded.qty) {
                         statusClass = 'completed';
                         statusIcon = '✅';
                     } else {
@@ -1982,14 +2179,13 @@ const app = {
                         statusIcon = '⚠️';
                     }
                 }
-                li.innerHTML = `<span class="ingredient-status ${statusClass}">${statusIcon}</span> ${ingName}`;
+                li.innerHTML = `<span><span class="ingredient-status ${statusClass}">${statusIcon}</span> ${ing.name}</span> <span class="ingredient-quantity">${ing.quantity}</span>`;
                 this.dom.stepIngredientsList.appendChild(li);
             });
         } else {
             this.dom.stepIngredientsTitle.classList.add('hidden');
         }
 
-        // Navigation buttons
         this.dom.prevStepBtn.disabled = step === 0;
         this.dom.nextStepBtn.textContent = (step === recipe.steps.length - 1) ? 'Завершить ✅' : 'Далее →';
     },
@@ -2168,12 +2364,12 @@ const app = {
     openPurchaseModal(catIndex, itemIndex) {
         const item = this.state.shoppingList[catIndex].items[itemIndex];
         const totalPurchased = item.purchases.reduce((sum, p) => sum + p.qty, 0);
-        const remainingQty = item.needed.qty - totalPurchased;
+        const remainingQty = item.shoppingSuggestion.qty - totalPurchased;
 
         const bodyHtml = `
-            <p>Нужно: ${item.needed.qty} ${item.needed.unit}. Осталось купить: ${remainingQty} ${item.needed.unit}</p>
+            <p>Нужно купить: ${item.shoppingSuggestion.qty} ${item.shoppingSuggestion.unit}. Осталось: ${remainingQty > 0 ? remainingQty : 0} ${item.shoppingSuggestion.unit}</p>
             <div class="modal-form-group">
-                <label for="purchase-qty">Сколько купили (${item.needed.unit})</label>
+                <label for="purchase-qty">Сколько купили (${item.shoppingSuggestion.unit})</label>
                 <input type="number" id="purchase-qty" class="modal-input" value="${remainingQty > 0 ? remainingQty : ''}" placeholder="0">
             </div>
             <div class="modal-form-group">
@@ -2198,15 +2394,36 @@ const app = {
         this.showModal(`Покупка: ${item.name}`, bodyHtml, buttons);
     },
 
+    async shareMissingItems(missingItems) {
+        const text = "Привет! Пожалуйста, купи для ужина:\n" + 
+                     missingItems.map(item => `- ${item.name} (${item.shoppingSuggestion.qty} ${item.shoppingSuggestion.unit})`).join('\n');
+        
+        try {
+            if (navigator.share) {
+                await navigator.share({
+                    title: 'Список покупок',
+                    text: text,
+                });
+            } else {
+                await navigator.clipboard.writeText(text);
+                this.showNotification("Список скопирован в буфер обмена!");
+            }
+        } catch (err) {
+            console.error('Share/Copy failed:', err);
+            this.showNotification("Не удалось поделиться/скопировать.", 'error');
+        }
+    },
+
     showMissingIngredientsWarning(missingItems, recipeId) {
         const bodyHtml = `
             <p>Для приготовления этого блюда вам не хватает следующих продуктов:</p>
-            <ul>${missingItems.map(item => `<li>${item}</li>`).join('')}</ul>
-            <p>Хотите все равно продолжить?</p>
+            <ul>${missingItems.map(item => `<li>${item.name}</li>`).join('')}</ul>
+            <p>Хотите все равно продолжить или попросить кого-то сходить в магазин?</p>
         `;
         const buttons = [
-            { text: 'Назад', class: 'secondary', action: () => {} },
-            { text: 'Все равно готовить', class: 'primary', action: () => this.showRecipe(recipeId) },
+             { text: 'Все равно готовить', class: 'primary', action: () => this.showRecipe(recipeId) },
+             { text: '🛒 Попросить купить', class: 'secondary', action: () => this.shareMissingItems(missingItems) },
+             { text: 'Назад к меню', class: 'secondary', action: () => {} },
         ];
         this.showModal("Не хватает ингредиентов", bodyHtml, buttons);
     },
@@ -2217,6 +2434,8 @@ const app = {
         this.dom.settings.duration.value = s.menuDuration;
         this.dom.settings.budget.value = s.totalBudget;
         this.dom.settings.preferences.value = s.preferences;
+        this.dom.settings.cuisine.value = s.cuisine;
+        this.dom.settings.difficulty.value = s.difficulty;
         this.dom.settings.apiKeyInput.value = s.apiKey || '';
         this.renderFamilyMembers();
     },
@@ -2225,9 +2444,11 @@ const app = {
         s.menuDuration = parseInt(this.dom.settings.duration.value) || 7;
         s.totalBudget = parseInt(this.dom.settings.budget.value) || 10000;
         s.preferences = this.dom.settings.preferences.value;
+        s.cuisine = this.dom.settings.cuisine.value;
+        s.difficulty = this.dom.settings.difficulty.value;
         this.saveState();
-        this.renderBudget(); // Update budget display immediately
-        this.showNotification("Настройки сохранены");
+        this.renderBudget(); 
+        this.showNotification("Настройки сохранены. Чтобы они применились, перегенерируйте меню.");
     },
     async saveApiKey() {
         const newApiKey = this.dom.settings.apiKeyInput.value.trim();
@@ -2237,13 +2458,11 @@ const app = {
         }
         this.showNotification('Проверка ключа...', 'loading');
         try {
-            // Perform a test call to validate the key
             const testAI = new GoogleGenAI({ apiKey: newApiKey });
             await testAI.models.generateContent({model:'gemini-2.5-flash', contents: 'test'});
             
-            // If successful, save it
             this.state.settings.apiKey = newApiKey;
-            this.ai = testAI; // Update the main AI instance
+            this.ai = testAI; 
             this.saveState();
             this.showNotification('API ключ успешно сохранен и проверен!');
         } catch (error) {
@@ -2273,7 +2492,7 @@ const app = {
                 this.state.settings.family.splice(e.target.dataset.index, 1);
                 this.saveState();
                 this.renderFamilyMembers(isWizard);
-                if (!isWizard) this.renderFamilyMembers(false); // also update main settings
+                if (!isWizard) this.renderFamilyMembers(false);
             });
         });
     },
@@ -2311,7 +2530,7 @@ const app = {
                 this.state.settings.family.push(newMember);
                 this.saveState();
                 this.renderFamilyMembers(isWizard);
-                if (!isWizard) this.renderFamilyMembers(false); // also update main settings
+                if (!isWizard) this.renderFamilyMembers(false);
             }},
         ];
         this.showModal("Новый член семьи", bodyHtml, buttons);
@@ -2360,7 +2579,6 @@ const app = {
                 
                 if (originalDayIndex === -1) {
                     this.showNotification("Ошибка: не удалось найти день для обновления.", 'error');
-                    console.error("Could not find day for regeneration:", dayName);
                     return;
                 }
 
@@ -2374,12 +2592,10 @@ const app = {
                 
                 this.state.menu[originalDayIndex].meals[mealKey] = result.newMealName;
 
-            } else { // type === 'day'
-                // Regenerate the whole menu for simplicity and reliability.
+            } else { 
                 await this.generateMenu();
             }
             
-            // Full recalculation is needed after any change.
             await this.generateRecipes();
             await this.generateShoppingList();
 
@@ -2415,7 +2631,7 @@ const app = {
                     this.state = importedState;
                     this.saveState();
                     this.showNotification("Данные успешно импортированы!");
-                    this.renderAll();
+                    this.init();
                 } else {
                     throw new Error("Invalid file format");
                 }
@@ -2424,7 +2640,7 @@ const app = {
             }
         };
         reader.readAsText(file);
-        event.target.value = ''; // Reset input
+        event.target.value = '';
     },
     
     toggleDevConsole() {
