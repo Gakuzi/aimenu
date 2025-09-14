@@ -410,9 +410,11 @@ body::before {
 .meal-icon {
     margin-right: 15px;
     font-size: 20px;
+    transition: opacity 0.3s;
 }
 .meal-name {
     flex-grow: 1;
+    transition: opacity 0.3s;
 }
 .meal.placeholder {
     color: #ccc;
@@ -420,7 +422,7 @@ body::before {
 .meal.clickable {
     background-color: var(--card-accent-bg);
     border-radius: 12px;
-    padding: 12px 15px;
+    padding: 12px 10px;
     margin: 5px 0;
     cursor: pointer;
     font-family: var(--font-nunito);
@@ -441,6 +443,41 @@ body::before {
     margin-left: 8px;
     color: var(--secondary-color);
 }
+.cooked-toggle {
+    background: none; border: none; cursor: pointer;
+    width: 28px; height: 28px;
+    margin-right: 10px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    color: #ccc;
+    transition: all 0.3s var(--ease-out);
+}
+.cooked-toggle svg {
+    width: 18px; height: 18px;
+    fill: currentColor;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.3s var(--ease-out);
+}
+.meal.cooked .cooked-toggle {
+    border-color: var(--success-color);
+    background-color: var(--success-color);
+    color: white;
+}
+.meal.cooked .cooked-toggle svg {
+    opacity: 1;
+    transform: scale(1);
+}
+.meal.cooked .meal-name, .meal.cooked .meal-icon {
+    opacity: 0.6;
+    text-decoration: line-through;
+}
+.meal.cooked.clickable {
+    color: var(--soft-text);
+}
+
 
 /* --- Recipe Screen --- */
 #recipe-screen {
@@ -481,6 +518,7 @@ body::before {
     border-radius: 16px;
     box-shadow: 0 6px 16px rgba(0,0,0,0.08);
     background-color: #eee;
+    transition: opacity 0.3s;
 }
 #step-description {
     font-size: 18px;
@@ -567,6 +605,10 @@ body::before {
     opacity: 0.5;
     cursor: not-allowed;
 }
+#step-ingredients-title.hidden {
+    display: none;
+}
+
 
 /* --- Shopping List --- */
 #shopping-list-content { padding-bottom: 50px; }
@@ -1218,6 +1260,7 @@ const app = {
         menu: [],
         recipes: {},
         shoppingList: [],
+        cookedMeals: {},
         timestamp: null,
     },
     
@@ -1299,6 +1342,7 @@ const app = {
             pauseTimerBtn: document.getElementById('pause-timer-btn'),
             resetTimerBtn: document.getElementById('reset-timer-btn'),
             stepIngredientsList: document.getElementById('step-ingredients'),
+            stepIngredientsTitle: document.getElementById('step-ingredients-title'),
             prevStepBtn: document.getElementById('prev-step-btn'),
             nextStepBtn: document.getElementById('next-step-btn'),
             
@@ -1406,6 +1450,7 @@ const app = {
                      // Ensure new properties exist for backward compatibility
                      if (!this.state.settings.family) this.state.settings.family = [];
                      if (!this.state.settings.menuDuration) this.state.settings.menuDuration = 7;
+                     if (!this.state.cookedMeals) this.state.cookedMeals = {};
                      this.state.shoppingList.forEach(cat => {
                         (cat.items || []).forEach(item => {
                             if (item.purchases === undefined) item.purchases = item.completed ? [{ qty: item.needed?.qty || 1, price: item.actualPrice || item.price }] : [];
@@ -1669,9 +1714,13 @@ const app = {
                 const cleanName = (mealName || 'Не указано').replace(/\s*\(остатки\)/i, '');
                 const isLeftover = (mealName || '').includes('(остатки)');
                 const isClickable = !isLeftover && mealName && mealName.trim() !== '' && mealName.trim() !== 'Не указано';
+                const isCooked = this.state.cookedMeals[dayName] && this.state.cookedMeals[dayName].includes(mealKey);
                 
                 return `
-                <div class="meal ${isClickable ? 'clickable' : ''}" data-meal-name="${mealName || ''}" data-meal-key="${mealKey}" data-day-name="${dayName}">
+                <div class="meal ${isClickable ? 'clickable' : ''} ${isCooked ? 'cooked' : ''}" data-meal-name="${mealName || ''}" data-meal-key="${mealKey}" data-day-name="${dayName}">
+                    <button class="cooked-toggle" data-day-name="${dayName}" data-meal-key="${mealKey}" aria-label="Отметить как приготовленное">
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    </button>
                     <span class="meal-icon">${icon}</span>
                     <span class="meal-name">${cleanName}</span>
                     ${isLeftover ? '<span class="leftover-icon">🔄</span>' : ''}
@@ -1693,7 +1742,7 @@ const app = {
             
             dayCard.querySelectorAll('.clickable').forEach(el => {
                 el.addEventListener('click', (e) => {
-                    if (e.target.classList.contains('regenerate-btn')) return;
+                    if (e.target.classList.contains('regenerate-btn') || e.target.closest('.cooked-toggle')) return;
                     const mealName = e.currentTarget.dataset.mealName.replace(/\s*\(остатки\)/i, '').trim();
                     const recipe = Object.values(this.state.recipes).find(r => r.name === mealName);
                     if (recipe) {
@@ -1701,6 +1750,14 @@ const app = {
                     } else if (mealName) {
                         this.showNotification(`Рецепт для "${mealName}" не найден.`, 'error');
                     }
+                });
+            });
+
+            dayCard.querySelectorAll('.cooked-toggle').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent opening recipe view
+                    const { dayName, mealKey } = e.currentTarget.dataset;
+                    this.toggleCookedStatus(dayName, mealKey);
                 });
             });
 
@@ -1718,6 +1775,20 @@ const app = {
             });
             this.dom.dayScroller.appendChild(dayCard);
         });
+    },
+
+    toggleCookedStatus(dayName, mealKey) {
+        if (!this.state.cookedMeals[dayName]) {
+            this.state.cookedMeals[dayName] = [];
+        }
+        const mealIndex = this.state.cookedMeals[dayName].indexOf(mealKey);
+        if (mealIndex > -1) {
+            this.state.cookedMeals[dayName].splice(mealIndex, 1);
+        } else {
+            this.state.cookedMeals[dayName].push(mealKey);
+        }
+        this.saveState();
+        this.renderMenu(); // Re-render to update the view
     },
 
     renderShoppingList() {
@@ -1812,7 +1883,6 @@ const app = {
         this.dom.budget.remaining.className = `amount ${remaining >= 0 ? 'ok' : 'warning'}`;
     },
     
-    // ... recipe rendering (unchanged) ...
     checkIngredientsForRecipe(recipeId) {
         const recipe = this.state.recipes[recipeId];
         if (!recipe || !recipe.ingredients) {
@@ -1841,6 +1911,7 @@ const app = {
             this.showRecipe(recipeId);
         }
     },
+    
     showRecipe(recipeId) {
         this.currentRecipe.id = recipeId;
         this.currentRecipe.step = 0;
@@ -1852,14 +1923,195 @@ const app = {
         this.showScreen('recipe-screen');
         this.renderRecipeStep();
     },
-    renderRecipeStep() { /* ... unchanged ... */ },
-    navigateRecipeStep(direction) { /* ... unchanged ... */ },
-    finishCooking() { /* ... unchanged ... */ },
-    startTimer() { /* ... unchanged ... */ },
-    pauseTimer() { /* ... unchanged ... */ },
-    stopTimer(finished = false) { /* ... unchanged ... */ },
-    resetTimer() { /* ... unchanged ... */ },
-    updateTimerDisplay() { /* ... unchanged ... */ },
+
+    renderRecipeStep() {
+        const { id, step } = this.currentRecipe;
+        const recipe = this.state.recipes[id];
+        if (!recipe || !recipe.steps || !recipe.steps[step]) {
+            console.error('Invalid recipe or step:', id, step);
+            this.showNotification('Ошибка при загрузке рецепта.', 'error');
+            this.showScreen('main-screen');
+            return;
+        }
+
+        const stepData = recipe.steps[step];
+
+        this.dom.recipeTitle.textContent = recipe.name;
+        this.dom.stepIndicator.textContent = `Шаг ${step + 1}/${recipe.steps.length}`;
+        this.dom.stepDescription.textContent = stepData.description;
+
+        // Image handling
+        this.dom.stepImage.style.opacity = '0.5';
+        if (stepData.imageUrl) {
+            this.dom.stepImage.src = stepData.imageUrl;
+            this.dom.stepImage.alt = stepData.description;
+            this.dom.stepImage.style.opacity = '1';
+        } else {
+            this.dom.stepImage.src = ''; // Placeholder
+            this.dom.stepImage.alt = 'Генерация изображения...';
+            this.generateStepImage(id, step);
+        }
+
+        // Timer handling
+        this.stopTimer();
+        if (stepData.time && stepData.time > 0) {
+            this.timer.initialTime = stepData.time * 60;
+            this.resetTimer();
+            this.dom.timerSection.classList.remove('hidden');
+        } else {
+            this.dom.timerSection.classList.add('hidden');
+        }
+
+        // Ingredients
+        this.dom.stepIngredientsList.innerHTML = '';
+        if (stepData.ingredients && stepData.ingredients.length > 0) {
+            this.dom.stepIngredientsTitle.classList.remove('hidden');
+            const flatShoppingList = this.state.shoppingList.flatMap(c => c.items);
+            stepData.ingredients.forEach(ingName => {
+                const li = document.createElement('li');
+                const shopItem = flatShoppingList.find(item => item.name.toLowerCase().includes(ingName.toLowerCase()) || ingName.toLowerCase().includes(item.name.toLowerCase()));
+                let statusClass = 'unknown';
+                let statusIcon = '❔';
+                if (shopItem) {
+                    const totalPurchased = shopItem.purchases.reduce((sum, p) => sum + p.qty, 0);
+                    if (totalPurchased >= shopItem.needed.qty) {
+                        statusClass = 'completed';
+                        statusIcon = '✅';
+                    } else {
+                        statusClass = 'missing';
+                        statusIcon = '⚠️';
+                    }
+                }
+                li.innerHTML = `<span class="ingredient-status ${statusClass}">${statusIcon}</span> ${ingName}`;
+                this.dom.stepIngredientsList.appendChild(li);
+            });
+        } else {
+            this.dom.stepIngredientsTitle.classList.add('hidden');
+        }
+
+        // Navigation buttons
+        this.dom.prevStepBtn.disabled = step === 0;
+        this.dom.nextStepBtn.textContent = (step === recipe.steps.length - 1) ? 'Завершить ✅' : 'Далее →';
+    },
+
+    async generateStepImage(recipeId, stepIndex) {
+        if (!this.ai) return;
+        try {
+            const recipe = this.state.recipes[recipeId];
+            const stepDescription = recipe.steps[stepIndex].description;
+            const prompt = `Food photography, realistic, high-detail photo of a cooking step: "${stepDescription}"`;
+            
+            const response = await this.ai.models.generateImages({
+                model: 'imagen-4.0-generate-001',
+                prompt: prompt,
+                config: {
+                  numberOfImages: 1,
+                  outputMimeType: 'image/jpeg',
+                  aspectRatio: '4:3',
+                },
+            });
+
+            const base64ImageBytes = response.generatedImages[0].image.imageBytes;
+            const imageUrl = `data:image/jpeg;base64,${base64ImageBytes}`;
+
+            if (this.currentRecipe.id === recipeId && this.currentRecipe.step === stepIndex) {
+                this.dom.stepImage.src = imageUrl;
+                this.dom.stepImage.style.opacity = '1';
+            }
+            this.state.recipes[recipeId].steps[stepIndex].imageUrl = imageUrl;
+            this.saveState();
+        } catch (error) {
+            console.error("Image generation failed:", error);
+            if (this.currentRecipe.id === recipeId && this.currentRecipe.step === stepIndex) {
+               this.dom.stepImage.alt = 'Не удалось загрузить изображение';
+            }
+        }
+    },
+
+    navigateRecipeStep(direction) {
+        const { id, step } = this.currentRecipe;
+        const recipe = this.state.recipes[id];
+        
+        if (direction > 0 && step === recipe.steps.length - 1) {
+            this.finishCooking();
+            return;
+        }
+        
+        const newStep = step + direction;
+        if (newStep >= 0 && newStep < recipe.steps.length) {
+            this.currentRecipe.step = newStep;
+            this.renderRecipeStep();
+        }
+    },
+
+    finishCooking() {
+        const { id } = this.currentRecipe;
+        const recipe = this.state.recipes[id];
+
+        let mealInfo = null;
+        for (const day of this.state.menu) {
+            for (const mealKey in day.meals) {
+                const mealName = (day.meals[mealKey] || '').replace(/\s*\(остатки\)/i, '').trim();
+                if (mealName === recipe.name) {
+                    mealInfo = { dayName: day.day, mealKey: mealKey };
+                    break;
+                }
+            }
+            if (mealInfo) break;
+        }
+
+        if (mealInfo) {
+            const { dayName, mealKey } = mealInfo;
+            if (!this.state.cookedMeals[dayName]) {
+                this.state.cookedMeals[dayName] = [];
+            }
+            if (!this.state.cookedMeals[dayName].includes(mealKey)) {
+                this.state.cookedMeals[dayName].push(mealKey);
+                this.saveState();
+            }
+        }
+        
+        this.showNotification(`"${recipe.name}" приготовлено!`, 'success');
+        this.showScreen('main-screen');
+    },
+
+    startTimer() {
+        if (this.timer.isRunning || this.timer.timeLeft <= 0) return;
+        this.timer.isRunning = true;
+        this.timer.interval = setInterval(() => {
+            this.timer.timeLeft--;
+            this.updateTimerDisplay();
+            if (this.timer.timeLeft <= 0) {
+                this.stopTimer(true); // finished
+            }
+        }, 1000);
+    },
+
+    pauseTimer() {
+        this.timer.isRunning = false;
+        clearInterval(this.timer.interval);
+    },
+    
+    stopTimer(finished = false) {
+        this.pauseTimer();
+        if (finished) {
+            this.dom.timerDisplay.textContent = "Готово!";
+            this.showNotification("Таймер завершен!", "success");
+            this.dom.notificationSound.play().catch(e => console.log("Audio play failed", e));
+        }
+    },
+
+    resetTimer() {
+        this.stopTimer();
+        this.timer.timeLeft = this.timer.initialTime;
+        this.updateTimerDisplay();
+    },
+
+    updateTimerDisplay() {
+        const minutes = Math.floor(this.timer.timeLeft / 60);
+        const seconds = this.timer.timeLeft % 60;
+        this.dom.timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    },
     
     handleNav(e) {
         const button = e.target.closest('.nav-button');
@@ -1946,7 +2198,18 @@ const app = {
         this.showModal(`Покупка: ${item.name}`, bodyHtml, buttons);
     },
 
-    showMissingIngredientsWarning(missingItems, recipeId) { /* ... unchanged ... */ },
+    showMissingIngredientsWarning(missingItems, recipeId) {
+        const bodyHtml = `
+            <p>Для приготовления этого блюда вам не хватает следующих продуктов:</p>
+            <ul>${missingItems.map(item => `<li>${item}</li>`).join('')}</ul>
+            <p>Хотите все равно продолжить?</p>
+        `;
+        const buttons = [
+            { text: 'Назад', class: 'secondary', action: () => {} },
+            { text: 'Все равно готовить', class: 'primary', action: () => this.showRecipe(recipeId) },
+        ];
+        this.showModal("Не хватает ингредиентов", bodyHtml, buttons);
+    },
 
     // SETTINGS LOGIC
     renderSettings() {
@@ -2131,12 +2394,70 @@ const app = {
     },
 
 
-    exportData() { /* ... unchanged ... */ },
-    importData(event) { /* ... unchanged ... */ },
+    exportData() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", `family_menu_backup_${new Date().toISOString().split('T')[0]}.json`);
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+        this.showNotification("Данные экспортированы!");
+    },
+    importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const importedState = JSON.parse(e.target.result);
+                if (importedState.settings && importedState.menu && importedState.recipes) {
+                    this.state = importedState;
+                    this.saveState();
+                    this.showNotification("Данные успешно импортированы!");
+                    this.renderAll();
+                } else {
+                    throw new Error("Invalid file format");
+                }
+            } catch (error) {
+                this.showNotification("Ошибка импорта: неверный формат файла.", 'error');
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = ''; // Reset input
+    },
     
-    toggleDevConsole() { /* ... unchanged ... */ },
-    logToConsole(message) { /* ... unchanged ... */ },
-    executeCommand(commandStr) { /* ... unchanged ... */ }
+    toggleDevConsole() {
+        this.dom.devConsole.classList.toggle('visible');
+    },
+    logToConsole(message) {
+        const p = document.createElement('p');
+        p.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+        this.dom.logOutput.appendChild(p);
+        this.dom.logOutput.scrollTop = this.dom.logOutput.scrollHeight;
+    },
+    executeCommand(commandStr) {
+        this.logToConsole(`> ${commandStr}`);
+        try {
+            switch(commandStr.toLowerCase()) {
+                case 'clear':
+                    this.dom.logOutput.innerHTML = '';
+                    break;
+                case 'state':
+                    console.log(this.state);
+                    this.logToConsole('State logged to browser console.');
+                    break;
+                case 'reset':
+                    this.resetState();
+                    break;
+                default:
+                    this.logToConsole('Unknown command. Available: clear, state, reset');
+            }
+        } catch (e) {
+            this.logToConsole(`Error: ${e.message}`);
+        }
+        this.dom.commandInput.value = '';
+    }
 };
 
 document.addEventListener('DOMContentLoaded', () => app.init());
