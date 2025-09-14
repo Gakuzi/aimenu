@@ -190,7 +190,10 @@
                     <div id="shopping-progress"></div>
                 </div>
                 <div id="shopping-list-container"></div>
-                <div id="shopping-list-total"><span>Примерная сумма:</span> 0 ₽</div>
+                <div class="shopping-list-footer">
+                  <div id="shopping-list-total"><span>Примерная сумма:</span> 0 ₽</div>
+                  <button class="secondary-button" id="ask-to-buy-btn">🙋‍♂️ Попросить купить</button>
+                </div>
             </div>
             <div class="main-content" id="budget-content">
                 <div class="budget-container">
@@ -268,6 +271,7 @@
                 <div class="settings-section">
                     <h3 class="settings-title">Управление данными</h3>
                     <button class="secondary-button" id="share-qr-btn">📲 Поделиться через QR</button>
+                    <button class="secondary-button" id="scan-qr-from-settings-btn" style="margin-top: 10px;">📷 Сканировать QR</button>
                     <button class="primary-button" id="export-btn" style="margin-top: 10px;">📤 Экспортировать в файл</button>
                     <input type="file" id="import-file-input" class="hidden" accept=".json">
                     <button class="primary-button" id="import-btn" style="margin-top: 10px;">📥 Импортировать из файла</button>

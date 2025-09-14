@@ -870,9 +870,14 @@ body::before {
 .shopping-item.completed .item-details { color: #aaa; }
 .shopping-item.completed .item-name { text-decoration: line-through; }
 
+.shopping-list-footer {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
 
 #shopping-list-total {
-    margin-top: 20px;
     padding: 20px;
     background-color: var(--card-accent-bg);
     border-radius: 16px;
@@ -883,6 +888,11 @@ body::before {
     color: var(--accent-color);
 }
 #shopping-list-total span { font-weight: 400; font-size: 16px; }
+
+#ask-to-buy-btn {
+    height: 45px;
+    font-size: 16px;
+}
 
 /* --- Budget Screen --- */
 .budget-container {

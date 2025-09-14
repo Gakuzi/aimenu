@@ -3,8 +3,16 @@ import qrcode from 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/+esm'
 
 
 const app = {
-    version: '1.5.1',
+    version: '1.6.0',
     changelog: {
+        '1.6.0': [
+            'КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Восстановлена работа всех интерактивных элементов в меню и списке покупок.',
+            'ИСПРАВЛЕНО: Кнопка "Начать" на заставке теперь работает корректно.',
+            'ИСПРАВЛЕНО: Улучшена стабильность отправки Push-уведомлений и отображения статуса синхронизации.',
+            'НОВОЕ: Расширены настройки семьи. Теперь можно указать имя и контакт (Telegram/телефон).',
+            'НОВОЕ: Добавлена функция "Попросить купить" в списке покупок для быстрой отправки списка через мессенджер.',
+            'УЛУЧШЕНО: Кнопка "Сканировать QR" добавлена в раздел настроек для удобства.',
+        ],
         '1.5.1': [
             'КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Восстановлена работа всех основных функций.',
             'Исправлена ошибка, из-за которой не открывался экран с рецептом.',
@@ -18,19 +26,6 @@ const app = {
             'Исправлена кнопка "Начать" на заставке, теперь она активна сразу.',
             'Улучшена анимация заставки, теперь она наглядно показывает функции приложения.',
             'Исправлена кнопка "Сканировать QR" и добавлена возможность вернуться из мастера настройки.',
-        ],
-        '1.4.0': [
-            'Добавлена онлайн-синхронизация данных в реальном времени через JSONBin.',
-            'Обновлен QR-код для передачи настроек синхронизации.',
-            'Исправлена ошибка с отображением иконки PWA на iPhone.',
-            'Переработан дизайн и анимация заставки, добавлена кнопка "Начать".',
-            'Исправлена критическая ошибка, препятствовавшая запуску приложения.',
-        ],
-        '1.3.1': [
-            'Восстановлена и автоматизирована анимированная заставка при запуске.',
-            'Обновлены иконки "Меню" и "Настройки" на более стильные и интуитивные.',
-            'Добавлена функция отмены покупки товара с диалогом подтверждения.',
-            'Купленные товары теперь автоматически перемещаются в конец списка.',
         ],
     },
     state: {
@@ -78,26 +73,22 @@ const app = {
         timeout: null,
         status: 'idle' // idle, syncing, synced, error
     },
-    splashTimeout: null,
 
     async init() {
         this.cacheDom();
         this.addEventListeners();
         this.registerServiceWorker();
         this.showScreen('splash-screen');
-        // Make the start button immediately responsive
-        this.dom.startAppBtn.disabled = false; 
-        this.splashTimeout = setTimeout(this.continueInit.bind(this), 5000);
+        this.dom.startAppBtn.disabled = false;
     },
     
     async continueInit() {
-        if (this.splashTimeout) {
-            clearTimeout(this.splashTimeout);
-            this.splashTimeout = null;
-        }
-        
         await this.loadState();
         
+        if (!this.state.settings.jsonBin.enabled) {
+            this.setSyncStatus('idle');
+        }
+
         const isConfigured = this.state.settings.geminiApiKey && (this.state.menu.length > 0 || this.state.settings.jsonBin.enabled);
         
         if (isConfigured) {
@@ -158,6 +149,7 @@ const app = {
             shoppingProgressText: document.getElementById('shopping-progress-text'),
             shoppingProgress: document.getElementById('shopping-progress'),
             shoppingListTotal: document.getElementById('shopping-list-total'),
+            askToBuyBtn: document.getElementById('ask-to-buy-btn'),
 
             backToMenuBtn: document.getElementById('back-to-menu-btn'),
             recipeTitle: document.getElementById('recipe-title'),
@@ -201,6 +193,7 @@ const app = {
                 appVersionInfo: document.getElementById('app-version-info'),
                 showChangelogBtn: document.getElementById('show-changelog-btn'),
                 enableNotificationsBtn: document.getElementById('enable-notifications-btn'),
+                scanQrFromSettingsBtn: document.getElementById('scan-qr-from-settings-btn'),
                 adminPanel: document.getElementById('admin-panel'),
                 adminBinIdInput: document.getElementById('admin-bin-id'),
                 adminLoadBtn: document.getElementById('admin-load-bin-btn'),
@@ -232,28 +225,19 @@ const app = {
     },
     
     addEventListeners() {
+        // --- Core App Navigation ---
         this.dom.startAppBtn.addEventListener('click', () => this.continueInit());
         this.dom.startSetupWizardBtn.addEventListener('click', () => this.handleStartSetup());
         this.dom.loadFromFileBtn.addEventListener('click', () => this.dom.importFileInput.click());
         this.dom.scanQrBtn.addEventListener('click', () => this.startQrScanner());
         this.dom.cancelScanBtn.addEventListener('click', () => this.stopQrScanner());
         this.dom.backToWelcomeBtn.addEventListener('click', () => this.showScreen('welcome-screen'));
+        this.dom.bottomNav.addEventListener('click', (e) => this.handleNav(e));
+        this.dom.backToMenuBtn.addEventListener('click', () => this.showScreen('main-screen'));
 
+        // --- Wizard Navigation ---
         this.dom.wizardNextBtn.addEventListener('click', () => this.navigateWizard(1));
         this.dom.wizardBackBtn.addEventListener('click', () => this.navigateWizard(-1));
-        this.dom.apiKeyHelpLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.showApiKeyHelpModal();
-        });
-        this.dom.jsonBinHelpLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.showJsonBinHelpModal();
-        });
-        this.dom.settings.jsonBinHelpLinkSettings.addEventListener('click', (e) => {
-             e.preventDefault();
-             this.showJsonBinHelpModal();
-        });
-
         this.dom.finishSetupBtn.addEventListener('click', async () => {
             document.getElementById('generation-progress').classList.add('hidden');
             document.getElementById('finish-setup-btn').classList.add('hidden');
@@ -261,34 +245,125 @@ const app = {
             this.showScreen('main-screen');
             this.renderAll();
         });
-        this.dom.bottomNav.addEventListener('click', (e) => this.handleNav(e));
-        this.dom.backToMenuBtn.addEventListener('click', () => this.showScreen('main-screen'));
-        
+
+        // --- Help Modals ---
+        this.dom.apiKeyHelpLink.addEventListener('click', (e) => { e.preventDefault(); this.showApiKeyHelpModal(); });
+        this.dom.jsonBinHelpLink.addEventListener('click', (e) => { e.preventDefault(); this.showJsonBinHelpModal(); });
+        this.dom.settings.jsonBinHelpLinkSettings.addEventListener('click', (e) => { e.preventDefault(); this.showJsonBinHelpModal(); });
+
+        // --- Event Delegation for Dynamic Content ---
+        this.addMainContentListeners();
+
+        // --- Recipe Screen ---
         this.dom.prevStepBtn.addEventListener('click', () => this.navigateRecipeStep(-1));
         this.dom.nextStepBtn.addEventListener('click', () => this.navigateRecipeStep(1));
-
         this.dom.startTimerBtn.addEventListener('click', () => this.startTimer());
         this.dom.pauseTimerBtn.addEventListener('click', () => this.pauseTimer());
         this.dom.resetTimerBtn.addEventListener('click', () => this.resetTimer());
 
-        // Settings Listeners
+        // --- Settings Screen ---
         this.dom.settings.saveBtn.addEventListener('click', () => this.saveSettings());
         this.dom.settings.addMemberBtn.addEventListener('click', () => this.openFamilyMemberModal());
+        this.dom.wizardAddMemberBtn.addEventListener('click', () => this.openFamilyMemberModal(true));
         this.dom.settings.regenerateAllBtn.addEventListener('click', () => this.confirmRegenerateAll());
         this.dom.settings.saveApiKeyBtn.addEventListener('click', () => this.saveApiKey());
         this.dom.settings.saveSyncSettingsBtn.addEventListener('click', () => this.saveSyncSettings());
-        this.dom.wizardAddMemberBtn.addEventListener('click', () => this.openFamilyMemberModal(true));
         this.dom.settings.runWizardBtn.addEventListener('click', () => this.showWizard());
         this.dom.settings.showChangelogBtn.addEventListener('click', () => this.showChangelogModal());
         this.dom.settings.enableNotificationsBtn.addEventListener('click', () => this.requestNotificationPermission());
+        this.dom.settings.scanQrFromSettingsBtn.addEventListener('click', () => this.startQrScanner());
 
-        // Admin panel listeners
+        // --- Data Management ---
+        this.dom.exportBtn.addEventListener('click', () => this.exportData());
+        this.dom.importBtn.addEventListener('click', () => this.dom.importFileInput.click());
+        this.dom.importFileInput.addEventListener('change', (e) => this.importData(e));
+        this.dom.shareQrBtn.addEventListener('click', () => this.showQrCode());
+        this.dom.askToBuyBtn.addEventListener('click', () => this.openAskToBuyModal());
+
+        // --- Admin/Dev ---
+        this.addAdminListeners();
+        this.dom.modalOverlay.addEventListener('click', (e) => {
+            if (e.target === this.dom.modalOverlay) this.hideModal();
+        });
+    },
+
+    addMainContentListeners() {
+        // --- Menu Screen Clicks (Delegated) ---
+        this.dom.dayScroller.addEventListener('click', (e) => {
+            const mealElement = e.target.closest('.meal');
+            const dayRegenButton = e.target.closest('.day-title-container .regenerate-btn');
+    
+            if (mealElement) {
+                const { dayName, mealKey, mealName } = mealElement.dataset;
+    
+                if (e.target.closest('.cooked-toggle')) {
+                    this.toggleCookedStatus(dayName, mealKey);
+                    return;
+                }
+    
+                if (e.target.closest('.regenerate-btn')) {
+                    this.openRegenerateModal('meal', { dayName, mealKey });
+                    return;
+                }
+                
+                if (mealElement.classList.contains('clickable')) {
+                    const cleanMealName = mealName.replace(/\s*\(остатки\)/i, '').trim();
+                    const recipe = Object.values(this.state.recipes).find(r => r.name === cleanMealName);
+                    if (recipe) {
+                        this.checkIngredientsForRecipe(recipe.id);
+                    } else if (cleanMealName) {
+                        this.showNotification(`Рецепт для "${cleanMealName}" не найден.`, 'error');
+                    }
+                }
+            } else if (dayRegenButton) {
+                this.openRegenerateModal('day', { dayName: dayRegenButton.dataset.dayName });
+            }
+        });
+
+        // --- Shopping List Clicks (Delegated) ---
+        this.dom.shoppingListContainer.addEventListener('click', (e) => {
+            const itemElement = e.target.closest('.shopping-item');
+            if (itemElement) {
+                const { itemId } = itemElement.dataset;
+                let foundItem, catIndex, itemIndex;
+                for (let i = 0; i < this.state.shoppingList.length; i++) {
+                    const foundIdx = this.state.shoppingList[i].items.findIndex(it => it.id === itemId);
+                    if (foundIdx !== -1) {
+                        foundItem = this.state.shoppingList[i].items[foundIdx];
+                        catIndex = i;
+                        itemIndex = foundIdx;
+                        break;
+                    }
+                }
+                if (foundItem) {
+                    const totalPurchased = (foundItem.purchases || []).reduce((sum, p) => sum + p.qty, 0);
+                    const isCompleted = totalPurchased >= foundItem.shoppingSuggestion.qty;
+                    if (isCompleted) {
+                        this.openUndoPurchaseModal(catIndex, itemIndex);
+                    } else {
+                        this.openPurchaseModal(catIndex, itemIndex);
+                    }
+                }
+                return;
+            }
+            
+            const categoryToggle = e.target.closest('.category-toggle');
+            if(categoryToggle) {
+                const list = categoryToggle.nextElementSibling;
+                list.classList.toggle('collapsed');
+                categoryToggle.innerHTML = list.classList.contains('collapsed') ? categoryToggle.innerHTML.replace('▼', '▶') : categoryToggle.innerHTML.replace('▶', '▼');
+                return;
+            }
+        });
+    },
+
+    addAdminListeners() {
         let versionClickCount = 0;
         let versionClickTimer = null;
         this.dom.settings.appVersionInfo.addEventListener('click', () => {
             versionClickCount++;
             clearTimeout(versionClickTimer);
-            versionClickTimer = setTimeout(() => { versionClickCount = 0; }, 1000); // Reset after 1 second
+            versionClickTimer = setTimeout(() => { versionClickCount = 0; }, 1000);
             if (versionClickCount === 5) {
                 versionClickCount = 0;
                 this.dom.settings.adminPanel.classList.toggle('hidden');
@@ -297,12 +372,6 @@ const app = {
         });
         this.dom.settings.adminLoadBtn.addEventListener('click', () => this.loadAdminBin());
         this.dom.settings.adminDeleteBtn.addEventListener('click', () => this.deleteAdminBin());
-
-
-        this.dom.exportBtn.addEventListener('click', () => this.exportData());
-        this.dom.importBtn.addEventListener('click', () => this.dom.importFileInput.click());
-        this.dom.importFileInput.addEventListener('change', (e) => this.importData(e));
-        this.dom.shareQrBtn.addEventListener('click', () => this.showQrCode());
 
         let longPressTimer;
         document.body.addEventListener('touchstart', e => {
@@ -313,12 +382,6 @@ const app = {
         document.body.addEventListener('touchend', () => clearTimeout(longPressTimer));
         this.dom.commandInput.addEventListener('keydown', e => {
             if (e.key === 'Enter') this.executeCommand(e.target.value);
-        });
-
-        this.dom.modalOverlay.addEventListener('click', (e) => {
-            if (e.target === this.dom.modalOverlay) {
-                this.hideModal();
-            }
         });
     },
 
@@ -376,7 +439,15 @@ const app = {
             await this.syncDataDown();
         }
         
-        if (!this.state.settings.family) this.state.settings.family = [];
+        // Data migration and default values
+        this.state.settings.family = this.state.settings.family?.map(p => ({
+            name: p.name || 'Член семьи',
+            gender: p.gender || 'male',
+            age: p.age || 30,
+            activity: p.activity || 'средний',
+            contact: p.contact || ''
+        })) || [];
+
         if (!this.state.settings.menuDuration) this.state.settings.menuDuration = 7;
         if (!this.state.cookedMeals) this.state.cookedMeals = {};
         if (!this.state.settings.cuisine) this.state.settings.cuisine = "Любая";
@@ -583,7 +654,7 @@ const app = {
     async generateMenu(purchasedItems = '') {
         const { family, menuDuration, preferences, cuisine, difficulty } = this.state.settings;
         await this.updateProgress(2, 5, "Генерация меню...", `Для вашей семьи на ${menuDuration} дней.`);
-        const familyDescription = family.map(p => `${p.gender === 'male' ? 'Мужчина' : 'Женщина'}, ${p.age} лет, активность: ${p.activity}`).join('; ');
+        const familyDescription = family.map(p => `${p.name} (${p.gender === 'male' ? 'Мужчина' : 'Женщина'}, ${p.age} лет, активность: ${p.activity})`).join('; ');
         
         let prompt = `Сгенерируй разнообразное и сбалансированное меню на ${menuDuration} дней (с воскресенья по субботу) для семьи: ${familyDescription}. 
         Учти их потребности в калориях.
@@ -676,7 +747,7 @@ const app = {
                 
                 return `
                 <div class="meal ${hasRecipe ? 'clickable' : ''} ${isCooked ? 'cooked' : ''}" data-meal-name="${mealName || ''}" data-meal-key="${mealKey}" data-day-name="${dayName}">
-                    <button class="cooked-toggle" data-day-name="${dayName}" data-meal-key="${mealKey}" aria-label="Отметить как приготовленное">
+                    <button class="cooked-toggle" aria-label="Отметить как приготовленное">
                         <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                     </button>
                     <span class="meal-icon">${icon}</span>
@@ -697,41 +768,6 @@ const app = {
                 ${mealHtml('🥛', dayData.meals.snack2, 'snack2', dayData.day)}
                 ${mealHtml('🌙', dayData.meals.dinner, 'dinner', dayData.day)}
             `;
-            
-            dayCard.querySelectorAll('.meal.clickable').forEach(el => {
-                el.addEventListener('click', (e) => {
-                    if (e.target.closest('.regenerate-btn') || e.target.closest('.cooked-toggle')) return;
-                    const mealName = e.currentTarget.dataset.mealName.replace(/\s*\(остатки\)/i, '').trim();
-                    const recipe = Object.values(this.state.recipes).find(r => r.name === mealName);
-                    if (recipe) {
-                        this.checkIngredientsForRecipe(recipe.id);
-                    } else if (mealName) {
-                        this.showNotification(`Рецепт для "${mealName}" не найден.`, 'error');
-                    }
-                });
-            });
-
-            dayCard.querySelectorAll('.cooked-toggle').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Prevent opening recipe view
-                    const { dayName, mealKey } = e.currentTarget.dataset;
-                    this.toggleCookedStatus(dayName, mealKey);
-                });
-            });
-
-            dayCard.querySelectorAll('.regenerate-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const el = e.currentTarget;
-                    const dayName = el.dataset.dayName || el.closest('.meal')?.dataset.dayName;
-                    const mealKey = el.closest('.meal')?.dataset.mealKey;
-                    if (mealKey) {
-                        this.openRegenerateModal('meal', { dayName, mealKey });
-                    } else {
-                        this.openRegenerateModal('day', { dayName });
-                    }
-                });
-            });
             this.dom.dayScroller.appendChild(dayCard);
         });
     },
@@ -796,42 +832,6 @@ const app = {
                 <ul class="category-items">${itemsHtml}</ul>
             `;
             this.dom.shoppingListContainer.appendChild(categoryElement);
-        });
-        
-        this.dom.shoppingListContainer.querySelectorAll('.shopping-item').forEach(itemEl => {
-            itemEl.addEventListener('click', (e) => {
-                const { itemId } = e.currentTarget.dataset;
-                
-                let foundItem, catIndex, itemIndex;
-                for (let i = 0; i < this.state.shoppingList.length; i++) {
-                    const foundIdx = this.state.shoppingList[i].items.findIndex(it => it.id === itemId);
-                    if (foundIdx !== -1) {
-                        foundItem = this.state.shoppingList[i].items[foundIdx];
-                        catIndex = i;
-                        itemIndex = foundIdx;
-                        break;
-                    }
-                }
-
-                if (foundItem) {
-                    const totalPurchased = (foundItem.purchases || []).reduce((sum, p) => sum + p.qty, 0);
-                    const isCompleted = totalPurchased >= foundItem.shoppingSuggestion.qty;
-
-                    if (isCompleted) {
-                        this.openUndoPurchaseModal(catIndex, itemIndex);
-                    } else {
-                        this.openPurchaseModal(catIndex, itemIndex);
-                    }
-                }
-            });
-        });
-        
-        this.dom.shoppingListContainer.querySelectorAll('.category-toggle').forEach(button => {
-            button.addEventListener('click', e => {
-                const list = e.target.nextElementSibling;
-                list.classList.toggle('collapsed');
-                e.target.innerHTML = list.classList.contains('collapsed') ? e.target.innerHTML.replace('▼', '▶') : e.target.innerHTML.replace('▶', '▼');
-            });
         });
 
         this.updateShoppingProgress();
@@ -1268,7 +1268,7 @@ const app = {
             card.className = 'family-member-card';
             const genderText = person.gender === 'male' ? 'Мужчина' : 'Женщина';
             card.innerHTML = `
-                <span>${genderText}, ${person.age} лет (акт. ${person.activity})</span>
+                <span>${person.name} (${genderText}, ${person.age} лет)</span>
                 <button data-index="${index}">❌</button>
             `;
             card.querySelector('button').addEventListener('click', () => {
@@ -1285,6 +1285,10 @@ const app = {
     openFamilyMemberModal(isWizard = false, person = null, index = -1) {
         const title = person ? "Редактировать" : "Добавить члена семьи";
         const body = `
+            <div class="modal-form-group">
+                <label for="member-name">Имя</label>
+                <input type="text" id="member-name" class="modal-input" value="${person?.name || ''}" placeholder="Евгений">
+            </div>
             <div class="modal-form-group">
                 <label for="member-gender">Пол</label>
                 <select id="member-gender" class="modal-input">
@@ -1304,12 +1308,18 @@ const app = {
                     <option value="высокий" ${person?.activity === 'высокий' ? 'selected' : ''}>Высокий (физический труд)</option>
                 </select>
             </div>
+            <div class="modal-form-group">
+                <label for="member-contact">Контакт (Telegram username или номер телефона)</label>
+                <input type="text" id="member-contact" class="modal-input" value="${person?.contact || ''}" placeholder="eklimov или 79991234567">
+            </div>
         `;
         const action = () => {
             const newPerson = {
+                name: document.getElementById('member-name').value.trim() || 'Член семьи',
                 gender: document.getElementById('member-gender').value,
-                age: parseInt(document.getElementById('member-age').value),
+                age: parseInt(document.getElementById('member-age').value) || 30,
                 activity: document.getElementById('member-activity').value,
+                contact: document.getElementById('member-contact').value.trim(),
             };
             if (index > -1) {
                 this.state.settings.family[index] = newPerson;
@@ -1376,7 +1386,7 @@ const app = {
 
             let prompt;
             const mealTypes = { breakfast: 'завтрак', snack1: 'перекус', lunch: 'обед', snack2: 'полдник', dinner: 'ужин' };
-            const familyDescription = this.state.settings.family.map(p => `${p.gender === 'male' ? 'Мужчина' : 'Женщина'}, ${p.age} лет, активность: ${p.activity}`).join('; ');
+            const familyDescription = this.state.settings.family.map(p => `${p.name} (${p.gender === 'male' ? 'Мужчина' : 'Женщина'}, ${p.age} лет, активность: ${p.activity})`).join('; ');
             
             if (type === 'meal') {
                 const mealTypeStr = mealTypes[mealKey];
@@ -1619,11 +1629,9 @@ const app = {
     },
 
     showSystemNotification(title, body) {
-         if ("Notification" in window && Notification.permission === "granted") {
-            navigator.serviceWorker.getRegistration().then(reg => {
-                if (reg) {
-                    reg.showNotification(title, { body });
-                }
+        if ("Notification" in window && Notification.permission === "granted") {
+            navigator.serviceWorker.ready.then(reg => {
+                reg.showNotification(title, { body });
             });
         }
     },
@@ -1800,6 +1808,52 @@ const app = {
             <p style="font-size: 12px; color: var(--warning-color);"><b>Важно:</b> Храните ваш ключ в безопасности и не передавайте его третьим лицам.</p>
         `;
         this.showModal("Как получить API ключ?", bodyHtml, [{text: 'Понятно', class:'primary', action: ()=>{}}]);
+    },
+
+    // NEW "ASK TO BUY" FEATURE
+    openAskToBuyModal() {
+        const familyWithContacts = this.state.settings.family.filter(p => p.contact);
+        
+        const unpurchasedItems = this.state.shoppingList
+            .flatMap(c => c.items)
+            .filter(item => {
+                const totalPurchased = (item.purchases || []).reduce((sum, p) => sum + p.qty, 0);
+                return totalPurchased < item.shoppingSuggestion.qty;
+            });
+
+        if (unpurchasedItems.length === 0) {
+            this.showNotification("Все товары уже куплены!", "success");
+            return;
+        }
+
+        if (familyWithContacts.length === 0) {
+            this.showNotification("Сначала добавьте контакты членам семьи в настройках.", "warning");
+            return;
+        }
+
+        const shoppingListText = "Привет! Нужно купить продукты по списку:\n" + unpurchasedItems.map(item => `- ${item.name} (${item.shoppingSuggestion.qty} ${item.shoppingSuggestion.unit})`).join('\n');
+        
+        let familyButtonsHtml = familyWithContacts.map(person => {
+            let link = '#';
+            const encodedText = encodeURIComponent(shoppingListText);
+            const contact = person.contact.replace(/\s+/g, '');
+
+            if (/^\+?\d+$/.test(contact)) { // Phone number for WhatsApp
+                link = `https://wa.me/${contact}?text=${encodedText}`;
+            } else { // Assume Telegram username
+                link = `https://t.me/${contact.replace('@', '')}`; // A share link is more complex, this opens a chat
+            }
+            return `<a href="${link}" target="_blank" class="modal-button secondary" style="text-decoration: none;">Отправить ${person.name}</a>`;
+        }).join('');
+
+        const body = `
+            <p>Кому отправить список покупок?</p>
+            <div class="modal-buttons">${familyButtonsHtml}</div>
+        `;
+
+        this.showModal("Попросить купить", body, [
+            { text: "Отмена", class: "primary", action: () => {} }
+        ], false);
     },
 
     // ADMIN FUNCTIONS
