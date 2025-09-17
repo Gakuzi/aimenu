@@ -1894,7 +1894,7 @@ const app = {
         this.renderWizard();
     },
 
-    async startGenerationProcess(isRegenerating = false, purchasedItems = '') {
+    async startGenerationProcess(isRegenerating = false, purchasedItems = '', extraPrompt = '') {
         if (!this.state.settings.apiKey) {
             alert('API ключ не найден.');
             this.showWizard();
@@ -1909,19 +1909,19 @@ const app = {
         
         try {
             this.ai = new GoogleGenAI({ apiKey: this.state.settings.apiKey });
-            await this.updateProgress(1, 5, "Подключение к Google Gemini…", "Проверка ключа...");
+            await this.updateProgress(1, 3, "Подключение к Google Gemini…", "Проверка ключа...");
             await this.ai.models.generateContent({model:'gemini-2.5-flash', contents: 'test'});
             this.logToConsole('✅ API KEY VALIDATED');
             this.dom.progressDetails.innerHTML += '<br>✅ Ключ активен. Доступ к Gemini получен.';
             
-            await this.generateMenu(purchasedItems);
+            await this.updateProgress(2, 3, "Магия ИИ в действии…", "Создаем меню, рецепты и список покупок...");
+            await this.generateComprehensiveData(purchasedItems, extraPrompt);
+
             if (!this.state.menu || this.state.menu.length === 0) {
                 throw new Error("Menu generation failed or returned empty data. Please check your prompt and settings.");
             }
-            await this.generateRecipes();
-            await this.generateShoppingList();
             
-            await this.updateProgress(5, 5, "Готово!", "Добро пожаловать в 'СЕМЕЙНОЕ МЕНЮ'.");
+            await this.updateProgress(3, 3, "Готово!", "Добро пожаловать в 'СЕМЕЙНОЕ МЕНЮ'.");
             this.dom.finishSetupBtn.classList.remove('hidden');
             this.dom.finishSetupBtn.classList.add('reveal');
             
@@ -1930,7 +1930,7 @@ const app = {
 
         } catch (error) {
             console.error("Generation failed:", error);
-            this.updateProgress(0, 5, "Ошибка!", `Не удалось сгенерировать меню. ${error.message}`);
+            this.updateProgress(0, 3, "Ошибка!", `Не удалось сгенерировать меню. ${error.message}`);
             this.dom.finishSetupBtn.textContent = 'Назад к настройкам';
             this.dom.finishSetupBtn.classList.remove('hidden');
             this.dom.finishSetupBtn.onclick = () => window.location.reload();
@@ -1976,69 +1976,149 @@ const app = {
             }
         }
     },
-
-    async generateMenu(purchasedItems = '') {
-        const { family, menuDuration, preferences, cuisine, difficulty } = this.state.settings;
-        await this.updateProgress(2, 5, "Генерация меню...", `Для вашей семьи на ${menuDuration} дней.`);
+    
+    async generateComprehensiveData(purchasedItems = '', extraPrompt = '') {
+        const { family, menuDuration, preferences, cuisine, difficulty, totalBudget } = this.state.settings;
         const familyDescription = family.map(p => `${p.gender === 'male' ? 'Мужчина' : 'Женщина'}, ${p.age} лет, активность: ${p.activity}`).join('; ');
-        
-        let prompt = `Сгенерируй разнообразное и сбалансированное меню на ${menuDuration} дней (с воскресенья по субботу) для семьи: ${familyDescription}. 
-        Учти их потребности в калориях.
-        Общие предпочтения: ${preferences}.
-        Предпочитаемая кухня: ${cuisine}.
-        Желаемая сложность блюд: ${difficulty}.
-        Каждый день должен включать: Завтрак, Перекус, Обед, Полдник, Ужин. Иногда используй остатки от ужина на обед следующего дня (помечай их как "Название блюда (остатки)").`;
-        
+
+        let prompt = `Сгенерируй одним JSON-ответом полный план питания. Ответ должен содержать три ключа верхнего уровня: "menu", "recipes", "shoppingList".
+
+1.  **menu**: Разнообразное меню на ${menuDuration} дней (с воскресенья по субботу) для семьи: ${familyDescription}.
+    *   Учти их потребности в калориях.
+    *   Общие предпочтения: ${preferences}.
+    *   Предпочитаемая кухня: ${cuisine}.
+    *   Желаемая сложность блюд: ${difficulty}.
+    *   Каждый день должен включать: Завтрак, Перекус, Обед, Полдник, Ужин.
+    *   Иногда используй остатки от ужина на обед следующего дня (помечай их как "Название блюда (остатки)").
+
+2.  **recipes**: Массив с детальными рецептами для КАЖДОГО уникального блюда из сгенерированного меню (кроме блюд с пометкой "остатки").
+    *   Каждый рецепт должен иметь уникальный 'id' (например, 'borsch-s-govyadinoy').
+    *   Название 'name' рецепта должно ТОЧНО соответствовать названию в меню.
+    *   Включи полный список ингредиентов с количеством для семьи из ${family.length} человек.
+    *   Предоставь пошаговые инструкции 'steps'. В каждом шаге укажи используемые ингредиенты и их количество.
+
+3.  **shoppingList**: Сводный список покупок, сгруппированный по категориям.
+    *   Суммируй ВСЕ ингредиенты из ВСЕХ сгенерированных рецептов.
+    *   Категории: "Мясо и птица", "Молочные и яйца", "Овощи и зелень", "Фрукты и орехи", "Бакалея", "Хлеб и выпечка", "Напитки", "Прочее".
+    *   Для каждого продукта укажи общее необходимое количество 'totalNeeded', а затем предложи 'shoppingSuggestion' — разумное количество для покупки в магазине, округляя в большую сторону до стандартной упаковки (например, для 750г муки предложи купить 1кг).
+    *   Укажи примерную цену 'price' в рублях для 'shoppingSuggestion'. Общая стоимость всех продуктов не должна превышать бюджет ${totalBudget} рублей.
+`;
+
         if (purchasedItems) {
             prompt += `\nВАЖНО: При составлении меню отдай приоритет блюдам, в которых используются уже купленные продукты. Список купленных продуктов: ${purchasedItems}.`;
         }
-
-        const schema = {type: Type.ARRAY, items: {type: Type.OBJECT, properties: {day: {type: Type.STRING}, meals: {type: Type.OBJECT, properties: {breakfast: {type: Type.STRING}, snack1: {type: Type.STRING}, lunch: {type: Type.STRING}, snack2: {type: Type.STRING}, dinner: {type: Type.STRING}}, required: ["breakfast", "snack1", "lunch", "snack2", "dinner"]}}, required: ["day", "meals"]}};
-        this.state.menu = await this.makeGeminiRequest(prompt, schema);
-        this.dom.progressDetails.innerHTML += `<br>✅ Сгенерировано меню.`;
-    },
-    
-    async generateRecipes() {
-        await this.updateProgress(3, 5, "Генерация рецептов…", "Создаём пошаговые инструкции...");
-        const uniqueMeals = [...new Set(this.state.menu.flatMap(d => Object.values(d.meals)))].filter(name => name && !name.includes("(остатки)"));
-        if (uniqueMeals.length === 0) {
-             this.dom.progressDetails.innerHTML += `<br>⚠️ Не найдено новых блюд для генерации рецептов.`;
-             return;
+        if (extraPrompt) {
+             prompt += `\nОСОБОЕ УКАЗАНИЕ: ${extraPrompt}`;
         }
-        const familySize = this.state.settings.family.length;
-        const schema = {type: Type.OBJECT, properties: {id: {type: Type.STRING}, name: {type: Type.STRING}, ingredients: {type: Type.ARRAY, items: {type: Type.OBJECT, properties: {name: {type: Type.STRING}, quantity: {type: Type.STRING}}, required: ["name", "quantity"]}}, steps: {type: Type.ARRAY, items: {type: Type.OBJECT, properties: {description: {type: Type.STRING}, time: {type: Type.NUMBER, description: "Время в минутах. 0 если таймер не нужен."}, ingredients: {type: Type.ARRAY, items: {type: Type.OBJECT, properties: { name: {type: Type.STRING}, quantity: {type: Type.STRING, description: "Количество и единица измерения, например '200 г' или '1 шт'"} }, required: ["name", "quantity"] }}}, required: ["description", "time", "ingredients"]}}}, required: ["id", "name", "ingredients", "steps"]};
+
+        const ingredientsSchema = { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, quantity: { type: Type.STRING, description: "Количество и единица измерения, например '200 г' или '1 шт'" } }, required: ["name", "quantity"] } };
         
+        const schema = {
+            type: Type.OBJECT,
+            properties: {
+                menu: {
+                    type: Type.ARRAY,
+                    description: "Меню на неделю.",
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            day: { type: Type.STRING },
+                            meals: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    breakfast: { type: Type.STRING },
+                                    snack1: { type: Type.STRING },
+                                    lunch: { type: Type.STRING },
+                                    snack2: { type: Type.STRING },
+                                    dinner: { type: Type.STRING }
+                                },
+                                required: ["breakfast", "snack1", "lunch", "snack2", "dinner"]
+                            }
+                        },
+                        required: ["day", "meals"]
+                    }
+                },
+                recipes: {
+                    type: Type.ARRAY,
+                    description: "Рецепты для уникальных блюд из меню.",
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            id: { type: Type.STRING, description: "Уникальный идентификатор рецепта" },
+                            name: { type: Type.STRING, description: "Название, соответствующее меню" },
+                            ingredients: ingredientsSchema,
+                            steps: {
+                                type: Type.ARRAY,
+                                items: {
+                                    type: Type.OBJECT,
+                                    properties: {
+                                        description: { type: Type.STRING },
+                                        time: { type: Type.NUMBER, description: "Время в минутах. 0 если таймер не нужен." },
+                                        ingredients: ingredientsSchema
+                                    },
+                                    required: ["description", "time", "ingredients"]
+                                }
+                            }
+                        },
+                        required: ["id", "name", "ingredients", "steps"]
+                    }
+                },
+                shoppingList: {
+                    type: Type.ARRAY,
+                    description: "Список покупок, сгруппированный по категориям.",
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            category: { type: Type.STRING },
+                            items: {
+                                type: Type.ARRAY,
+                                items: {
+                                    type: Type.OBJECT,
+                                    properties: {
+                                        name: { type: Type.STRING },
+                                        totalNeeded: { type: Type.OBJECT, properties: { qty: { type: Type.NUMBER }, unit: { type: Type.STRING } } },
+                                        shoppingSuggestion: { type: Type.OBJECT, properties: { qty: { type: Type.NUMBER }, unit: { type: Type.STRING } } },
+                                        price: { type: Type.NUMBER }
+                                    },
+                                    required: ["name", "totalNeeded", "shoppingSuggestion", "price"]
+                                }
+                            }
+                        },
+                        required: ["category", "items"]
+                    }
+                }
+            },
+            required: ["menu", "recipes", "shoppingList"]
+        };
+
+        const comprehensiveData = await this.makeGeminiRequest(prompt, schema);
+
+        // 1. Set Menu
+        this.state.menu = comprehensiveData.menu || [];
+        
+        // 2. Process and set Recipes, converting array to object map
         this.state.recipes = {};
-        for (const mealName of uniqueMeals) {
-            this.dom.progressDetails.textContent = `Обрабатывается: "${mealName}"...`;
-            const prompt = `Создай детальный рецепт для блюда "${mealName}" для семьи из ${familySize} человек (${this.state.settings.family.length} порции). В каждом шаге укажи конкретное количество ингредиентов, используемых на этом шаге.`;
-            const recipeData = await this.makeGeminiRequest(prompt, schema);
-            this.state.recipes[recipeData.id] = recipeData;
-        }
-        this.dom.progressDetails.innerHTML += `<br>✅ Все ${uniqueMeals.length} рецептов сгенерированы.`;
-    },
-
-    async generateShoppingList() {
-        await this.updateProgress(4, 5, "Формирование списка покупок…", "Собираем все ингредиенты...");
-        if (Object.keys(this.state.recipes).length === 0) {
-            this.dom.progressDetails.innerHTML += `<br>⚠️ Нет рецептов для создания списка покупок.`;
-            this.state.shoppingList = [];
-            return;
-        }
-        const allIngredients = Object.values(this.state.recipes).flatMap(r => r.ingredients);
-        const prompt = `Сгруппируй и суммируй этот список ингредиентов. Категории: "Мясо и птица", "Молочные и яйца", "Овощи и зелень", "Фрукты и орехи", "Бакалея", "Хлеб и выпечка", "Напитки", "Прочее". Для каждого ингредиента верни общее необходимое количество (totalNeeded). Затем предложи разумное количество для покупки в магазине (shoppingSuggestion), округляя в большую сторону до стандартной упаковки (например, для 750г муки предложи купить 1кг). Укажи примерную цену в рублях за предложенное количество для покупки. Ингредиенты: ${JSON.stringify(allIngredients)}`;
-        const schema = { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { category: { type: Type.STRING }, items: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, totalNeeded: { type: Type.OBJECT, properties: { qty: { type: Type.NUMBER }, unit: { type: Type.STRING }}}, shoppingSuggestion: { type: Type.OBJECT, properties: { qty: { type: Type.NUMBER }, unit: { type: Type.STRING }}}, price: { type: Type.NUMBER } }, required: ["name", "totalNeeded", "shoppingSuggestion", "price"] } } }, required: ["category", "items"] } };
-        const shoppingListData = await this.makeGeminiRequest(prompt, schema);
-        
-        shoppingListData.forEach(category => {
-            category.items.forEach(item => {
-                item.purchases = []; // New property for partial purchases
+        if (comprehensiveData.recipes) {
+            comprehensiveData.recipes.forEach(recipe => {
+                this.state.recipes[recipe.id] = recipe;
             });
-        });
-        
-        this.state.shoppingList = shoppingListData;
-        const totalCost = shoppingListData.flatMap(c => c.items).reduce((sum, item) => sum + item.price, 0);
-        this.dom.progressDetails.innerHTML += `<br>✅ Список из ${shoppingListData.flatMap(c => c.items).length} продуктов сгруппирован. Итого: ${totalCost} ₽`;
+        }
+        this.dom.progressDetails.innerHTML += `<br>✅ Сгенерировано меню и ${Object.keys(this.state.recipes).length} рецептов.`;
+
+        // 3. Process and set Shopping List
+        if (comprehensiveData.shoppingList) {
+            comprehensiveData.shoppingList.forEach(category => {
+                (category.items || []).forEach(item => {
+                    item.purchases = []; // Add the necessary property for tracking purchases
+                });
+            });
+            this.state.shoppingList = comprehensiveData.shoppingList;
+             const totalCost = (comprehensiveData.shoppingList || []).flatMap(c => c.items || []).reduce((sum, item) => sum + (item.price || 0), 0);
+             this.dom.progressDetails.innerHTML += `<br>✅ Список покупок готов. Итого: ${totalCost.toLocaleString('ru-RU')} ₽`;
+        } else {
+            this.state.shoppingList = [];
+            this.dom.progressDetails.innerHTML += `<br>⚠️ Не удалось создать список покупок.`;
+        }
     },
     
     renderAll() {
@@ -2818,10 +2898,7 @@ const app = {
                 const { dayName, mealKey } = data;
                 const originalDayIndex = this.state.menu.findIndex(d => d && d.day === dayName);
                 
-                if (originalDayIndex === -1) {
-                    this.showNotification("Ошибка: не удалось найти день для обновления.", 'error');
-                    return;
-                }
+                if (originalDayIndex === -1) throw new Error("Could not find day to update.");
 
                 const oldMealName = this.state.menu[originalDayIndex].meals[mealKey];
                 const customPrompt = document.getElementById('regen-prompt').value;
@@ -2832,14 +2909,32 @@ const app = {
                 const result = await this.makeGeminiRequest(prompt, schema);
                 
                 this.state.menu[originalDayIndex].meals[mealKey] = result.newMealName;
+                
+                // After changing a meal, we need new recipes and a new shopping list.
+                // Re-running the full generation is the most robust way to ensure data consistency.
+                const purchasedItems = this.state.shoppingList
+                    .flatMap(c => c.items || [])
+                    .filter(item => (item.purchases || []).length > 0)
+                    .map(item => `${item.name}`)
+                    .join(', ');
+                
+                // Re-use the new single-call function, passing the updated menu as context
+                await this.generateComprehensiveData(purchasedItems, `Меню уже составлено, но нужно обновить рецепты и список покупок для него: ${JSON.stringify(this.state.menu)}`);
+                
+            } else { // type === 'day'
+                const customPrompt = document.getElementById('regen-prompt').value;
+                const { dayName } = data;
+                const extraPrompt = `Приоритетно измени меню для дня: ${dayName}. Дополнительное пожелание: ${customPrompt}`;
+                
+                const purchasedItems = this.state.shoppingList
+                    .flatMap(c => c.items || [])
+                    .filter(item => (item.purchases || []).length > 0)
+                    .map(item => item.name)
+                    .join(', ');
 
-            } else { 
-                await this.generateMenu();
+                await this.generateComprehensiveData(purchasedItems, extraPrompt);
             }
             
-            await this.generateRecipes();
-            await this.generateShoppingList();
-
             this.saveState();
             this.renderAll();
             this.showNotification("Меню успешно обновлено!");
