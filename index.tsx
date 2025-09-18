@@ -343,7 +343,6 @@ const app = {
         });
         if (screenId === 'main-screen') {
             document.getElementById('main-screen').classList.remove('hidden');
-            this.renderAll();
         } else if (['setup-screen', 'preview-screen'].includes(screenId)) {
              document.getElementById(screenId).classList.remove('hidden');
         }
@@ -1626,8 +1625,10 @@ const app = {
 
         container.querySelectorAll('.regenerate-btn').forEach(btn => {
             btn.addEventListener('click', e => {
-                const mealDiv = (e.target as HTMLElement).closest('.preview-meal');
-                const { dayName, mealKey } = (mealDiv as HTMLElement).dataset;
+                // FIX: Cast the result of closest() to HTMLElement and add a null check to safely access dataset.
+                const mealDiv = (e.target as HTMLElement).closest('.preview-meal') as HTMLElement;
+                if (!mealDiv) return;
+                const { dayName, mealKey } = mealDiv.dataset;
                 const mealName = this.tempState.menu.find(d=>d.day===dayName).meals[mealKey];
                 this.showModal(
                     "Изменить блюдо",
@@ -1752,4 +1753,4 @@ const app = {
     }
 };
 
-document.addEventListener('DOMContentLoaded', () => app.init());
+app.init();
