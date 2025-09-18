@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 
 const app = {
@@ -201,7 +202,7 @@ const app = {
             this.handleStartSetup();
         });
         
-        this.dom.wizardLoadFromFileBtn.addEventListener('click', () => this.dom.importFileInput.click());
+        this.dom.wizardLoadFromFileBtn.addEventListener('click', () => (this.dom.importFileInput as HTMLElement).click());
 
         this.dom.wizardNextBtn.addEventListener('click', () => this.navigateWizard(1));
         this.dom.wizardBackBtn.addEventListener('click', () => this.navigateWizard(-1));
@@ -242,7 +243,7 @@ const app = {
         this.dom.settings.showChangelogBtn.addEventListener('click', () => this.showChangelogModal());
 
         this.dom.exportBtn.addEventListener('click', () => this.exportData());
-        this.dom.importBtn.addEventListener('click', () => this.dom.importFileInput.click());
+        this.dom.importBtn.addEventListener('click', () => (this.dom.importFileInput as HTMLElement).click());
         this.dom.importFileInput.addEventListener('change', (e) => this.importData(e));
 
         let longPressTimer;
@@ -253,7 +254,7 @@ const app = {
         });
         document.body.addEventListener('touchend', () => clearTimeout(longPressTimer));
         this.dom.commandInput.addEventListener('keydown', e => {
-            if (e.key === 'Enter') this.executeCommand(e.target.value);
+            if (e.key === 'Enter') this.executeCommand((e.target as HTMLInputElement).value);
         });
 
         this.dom.modalOverlay.addEventListener('click', (e) => {
@@ -358,12 +359,12 @@ const app = {
         const { currentStep, totalSteps } = this.wizard;
         
         // Populate inputs from state
-        this.dom.apiKeyInput.value = this.state.settings.apiKey || '';
-        this.dom.wizardDuration.value = this.state.settings.menuDuration;
-        this.dom.wizardBudget.value = this.state.settings.totalBudget;
-        this.dom.wizardPreferences.value = this.state.settings.preferences;
-        this.dom.wizardCuisine.value = this.state.settings.cuisine;
-        this.dom.wizardDifficulty.value = this.state.settings.difficulty;
+        (this.dom.apiKeyInput as HTMLInputElement).value = this.state.settings.apiKey || '';
+        (this.dom.wizardDuration as HTMLInputElement).value = this.state.settings.menuDuration;
+        (this.dom.wizardBudget as HTMLInputElement).value = this.state.settings.totalBudget;
+        (this.dom.wizardPreferences as HTMLInputElement).value = this.state.settings.preferences;
+        (this.dom.wizardCuisine as HTMLInputElement).value = this.state.settings.cuisine;
+        (this.dom.wizardDifficulty as HTMLInputElement).value = this.state.settings.difficulty;
         
         this.dom.wizardNav.classList.remove('hidden');
         this.dom.generationProgress.classList.add('hidden');
@@ -373,7 +374,7 @@ const app = {
         this.dom.wizardStepCounter.textContent = `Шаг ${currentStep} из ${totalSteps}`;
 
         this.dom.wizardSteps.forEach(step => {
-            step.classList.toggle('active', parseInt(step.dataset.step) === currentStep);
+            step.classList.toggle('active', parseInt((step as HTMLElement).dataset.step) === currentStep);
         });
 
         this.dom.wizardBackBtn.classList.toggle('hidden', currentStep === 1);
@@ -382,11 +383,11 @@ const app = {
         // Validation for 'Next' button
         let isStepValid = false;
         switch(currentStep) {
-            case 1: isStepValid = this.dom.apiKeyInput.value.trim().length > 0; break;
+            case 1: isStepValid = (this.dom.apiKeyInput as HTMLInputElement).value.trim().length > 0; break;
             case 2: isStepValid = this.state.settings.family.length > 0; break;
             default: isStepValid = true;
         }
-        this.dom.wizardNextBtn.disabled = !isStepValid;
+        (this.dom.wizardNextBtn as HTMLButtonElement).disabled = !isStepValid;
 
         if (currentStep === 2) {
             this.renderFamilyMembers(true);
@@ -398,13 +399,13 @@ const app = {
         // Validation & State saving for current step before navigating
         if (direction > 0) {
             if (currentStep === 1) {
-                this.state.settings.apiKey = this.dom.apiKeyInput.value.trim();
+                this.state.settings.apiKey = (this.dom.apiKeyInput as HTMLInputElement).value.trim();
             } else if (currentStep === 3) {
-                this.state.settings.menuDuration = parseInt(this.dom.wizardDuration.value) || 7;
-                this.state.settings.totalBudget = parseInt(this.dom.wizardBudget.value) || 10000;
-                this.state.settings.preferences = this.dom.wizardPreferences.value;
-                this.state.settings.cuisine = this.dom.wizardCuisine.value;
-                this.state.settings.difficulty = this.dom.wizardDifficulty.value;
+                this.state.settings.menuDuration = parseInt((this.dom.wizardDuration as HTMLInputElement).value) || 7;
+                this.state.settings.totalBudget = parseInt((this.dom.wizardBudget as HTMLInputElement).value) || 10000;
+                this.state.settings.preferences = (this.dom.wizardPreferences as HTMLInputElement).value;
+                this.state.settings.cuisine = (this.dom.wizardCuisine as HTMLInputElement).value;
+                this.state.settings.difficulty = (this.dom.wizardDifficulty as HTMLInputElement).value;
             } else if (currentStep === totalSteps) {
                 this.saveState();
                 await this.startGenerationProcess();
@@ -462,7 +463,7 @@ const app = {
     async updateProgress(step, totalSteps, status, details) {
         return new Promise(resolve => {
             const percent = (step / totalSteps) * 100;
-            this.dom.progressBar.style.width = `${percent}%`;
+            (this.dom.progressBar as HTMLElement).style.width = `${percent}%`;
             this.dom.progressStatus.textContent = `Шаг ${step}/${totalSteps}: ${status}`;
             this.dom.progressDetails.innerHTML = details;
             setTimeout(resolve, 300);
@@ -703,9 +704,10 @@ const app = {
         // Re-attach listeners
         this.dom.dailyMenuContainer.querySelectorAll('.meal.clickable').forEach(el => {
             el.addEventListener('click', (e) => {
-                if (e.target.closest('.regenerate-btn') || e.target.closest('.cooked-toggle')) return;
-                const mealName = e.currentTarget.dataset.mealName.replace(/\s*\(остатки\)/i, '').trim();
-                const recipe = Object.values(this.state.recipes).find(r => r.name === mealName);
+                if ((e.target as HTMLElement).closest('.regenerate-btn') || (e.target as HTMLElement).closest('.cooked-toggle')) return;
+                const mealName = (e.currentTarget as HTMLElement).dataset.mealName.replace(/\s*\(остатки\)/i, '').trim();
+                // FIX: Cast recipe to 'any' to access properties like 'name' and 'id'.
+                const recipe: any = Object.values(this.state.recipes).find((r: any) => r.name === mealName);
                 if (recipe) {
                     this.checkIngredientsForRecipe(recipe.id);
                 } else if (mealName) {
@@ -717,7 +719,7 @@ const app = {
         this.dom.dailyMenuContainer.querySelectorAll('.cooked-toggle').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation(); // Prevent opening recipe view
-                const { dayName, mealKey } = e.currentTarget.dataset;
+                const { dayName, mealKey } = (e.currentTarget as HTMLElement).dataset;
                 this.toggleCookedStatus(dayName, mealKey);
             });
         });
@@ -725,9 +727,9 @@ const app = {
         this.dom.dailyMenuContainer.querySelectorAll('.regenerate-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const el = e.currentTarget;
+                const el = e.currentTarget as HTMLElement;
                 const mealDiv = el.closest('.meal');
-                const {dayName, mealKey} = mealDiv.dataset;
+                const {dayName, mealKey} = (mealDiv as HTMLElement).dataset;
                 this.openRegenerateModal('meal', { dayName, mealKey });
             });
         });
@@ -758,10 +760,11 @@ const app = {
         const factor = isCooking ? 1 : -1;
 
         const mealName = (this.state.menu.find(d => d.day === dayName)?.meals[mealKey] || '').replace(/\s*\(остатки\)/i, '').trim();
-        const recipe = Object.values(this.state.recipes).find(r => r.name === mealName);
+        // FIX: Cast recipe to 'any' to access properties like 'name' and 'ingredients'.
+        const recipe: any = Object.values(this.state.recipes).find((r: any) => r.name === mealName);
         
         if (recipe && recipe.ingredients) {
-            recipe.ingredients.forEach(ing => {
+            recipe.ingredients.forEach((ing: any) => {
                 const shopItem = this.findShopItemByName(ing.name);
                 const parsedIng = this.parseQuantity(ing.quantity);
                 if (shopItem && parsedIng) {
@@ -863,16 +866,17 @@ const app = {
         
         this.dom.shoppingListContainer.querySelectorAll('.shopping-item').forEach(itemEl => {
             itemEl.addEventListener('click', (e) => {
-                const { catIndex, itemIndex } = e.currentTarget.dataset;
+                const { catIndex, itemIndex } = (e.currentTarget as HTMLElement).dataset;
                 this.openPurchaseModal(parseInt(catIndex), parseInt(itemIndex));
             });
         });
         
         this.dom.shoppingListContainer.querySelectorAll('.category-toggle').forEach(button => {
             button.addEventListener('click', e => {
-                const list = e.target.nextElementSibling;
+                const target = e.target as HTMLElement;
+                const list = target.nextElementSibling;
                 list.classList.toggle('collapsed');
-                e.target.innerHTML = list.classList.contains('collapsed') ? e.target.innerHTML.replace('▼', '▶') : e.target.innerHTML.replace('▶', '▼');
+                target.innerHTML = list.classList.contains('collapsed') ? target.innerHTML.replace('▼', '▶') : target.innerHTML.replace('▶', '▼');
             });
         });
 
@@ -889,7 +893,7 @@ const app = {
             return totalPurchased >= i.shoppingSuggestion.qty;
         }).length;
         const percent = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
-        this.dom.shoppingProgress.style.width = `${percent}%`;
+        (this.dom.shoppingProgress as HTMLElement).style.width = `${percent}%`;
         this.dom.shoppingProgressText.textContent = `${completedItems}/${totalItems} куплено`;
     },
 
@@ -903,7 +907,7 @@ const app = {
         const remaining = totalBudget - spentOnProducts;
         const spentPercent = totalBudget > 0 ? Math.min((spentOnProducts / totalBudget) * 100, 100) : 0;
         
-        this.dom.budget.pieProducts.style.strokeDasharray = `${spentPercent} 100`;
+        (this.dom.budget.pieProducts as HTMLElement).style.strokeDasharray = `${spentPercent} 100`;
         this.dom.budget.spentTotal.innerHTML = `${spentOnProducts.toLocaleString('ru-RU')} ₽ <span>потрачено</span>`;
         this.dom.budget.total.textContent = `${totalBudget.toLocaleString('ru-RU')} ₽`;
         this.dom.budget.remaining.textContent = `${remaining.toLocaleString('ru-RU')} ₽`;
@@ -914,7 +918,8 @@ const app = {
     
     renderBudgetChart() {
         const purchases = this.state.shoppingList.flatMap(c => c.items || []).flatMap(i => i.purchases || []);
-        const spendingByDay = {};
+        // FIX: Define the type for spendingByDay to resolve property access errors.
+        const spendingByDay: { [key: string]: { amount: number, label: string } } = {};
         
         for (let i = 6; i >= 0; i--) {
             const d = new Date();
@@ -1007,14 +1012,14 @@ const app = {
         this.dom.stepIndicator.textContent = `Шаг ${step + 1}/${recipe.steps.length}`;
         this.dom.stepDescription.textContent = stepData.description;
 
-        this.dom.stepImage.style.opacity = '0.5';
+        (this.dom.stepImage as HTMLImageElement).style.opacity = '0.5';
         if (stepData.imageUrl) {
-            this.dom.stepImage.src = stepData.imageUrl;
-            this.dom.stepImage.alt = stepData.description;
-            this.dom.stepImage.style.opacity = '1';
+            (this.dom.stepImage as HTMLImageElement).src = stepData.imageUrl;
+            (this.dom.stepImage as HTMLImageElement).alt = stepData.description;
+            (this.dom.stepImage as HTMLImageElement).style.opacity = '1';
         } else {
-            this.dom.stepImage.src = ''; 
-            this.dom.stepImage.alt = 'Генерация изображения...';
+            (this.dom.stepImage as HTMLImageElement).src = ''; 
+            (this.dom.stepImage as HTMLImageElement).alt = 'Генерация изображения...';
             this.generateStepImage(id, step);
         }
 
@@ -1055,7 +1060,7 @@ const app = {
             this.dom.stepIngredientsTitle.classList.add('hidden');
         }
 
-        this.dom.prevStepBtn.disabled = step === 0;
+        (this.dom.prevStepBtn as HTMLButtonElement).disabled = step === 0;
         this.dom.nextStepBtn.textContent = (step === recipe.steps.length - 1) ? 'Завершить ✅' : 'Далее →';
     },
 
@@ -1086,15 +1091,15 @@ const app = {
             const imageUrl = `data:image/jpeg;base64,${base64ImageBytes}`;
 
             if (this.currentRecipe.id === recipeId && this.currentRecipe.step === stepIndex) {
-                this.dom.stepImage.src = imageUrl;
-                this.dom.stepImage.style.opacity = '1';
+                (this.dom.stepImage as HTMLImageElement).src = imageUrl;
+                (this.dom.stepImage as HTMLImageElement).style.opacity = '1';
             }
             this.state.recipes[recipeId].steps[stepIndex].imageUrl = imageUrl;
             this.saveState();
         } catch (error) {
             console.error("Image generation failed:", error);
             if (this.currentRecipe.id === recipeId && this.currentRecipe.step === stepIndex) {
-               this.dom.stepImage.alt = 'Не удалось загрузить изображение';
+               (this.dom.stepImage as HTMLImageElement).alt = 'Не удалось загрузить изображение';
             }
         }
     },
@@ -1161,7 +1166,7 @@ const app = {
         if (finished) {
             this.dom.timerDisplay.textContent = "Готово!";
             this.showNotification("Таймер завершен!", "success");
-            this.dom.notificationSound.play().catch(e => console.log("Audio play failed", e));
+            (this.dom.notificationSound as HTMLAudioElement).play().catch(e => console.log("Audio play failed", e));
         }
     },
 
@@ -1178,7 +1183,7 @@ const app = {
     },
     
     handleNav(e) {
-        const button = e.target.closest('.nav-button');
+        const button = (e.target as HTMLElement).closest('.nav-button');
         if (!button) return;
         
         this.dom.bottomNav.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
@@ -1271,7 +1276,8 @@ const app = {
         );
 
         document.getElementById('check-connection-btn').addEventListener('click', async (e) => {
-            const btn = e.target;
+            // FIX: Cast event target to HTMLButtonElement to access the 'disabled' property.
+            const btn = e.target as HTMLButtonElement;
             const statusDiv = document.getElementById('connection-status');
             const troubleshootingDiv = document.getElementById('troubleshooting-step');
             
@@ -1318,8 +1324,10 @@ const app = {
         const buttons = [
             { text: 'Отмена', class: 'secondary', action: () => {} },
             { text: 'Сохранить', class: 'primary', action: () => {
-                const qty = parseFloat(document.getElementById('purchase-qty').value) || 0;
-                const price = parseFloat(document.getElementById('purchase-price').value) || 0;
+                // FIX: Cast HTMLElement to HTMLInputElement to access the 'value' property.
+                const qty = parseFloat((document.getElementById('purchase-qty') as HTMLInputElement).value) || 0;
+                // FIX: Cast HTMLElement to HTMLInputElement to access the 'value' property.
+                const price = parseFloat((document.getElementById('purchase-price') as HTMLInputElement).value) || 0;
                 if (qty > 0) {
                     if (!item.purchases) item.purchases = [];
                     item.purchases.push({ qty, price, date: new Date().toISOString() });
@@ -1382,28 +1390,28 @@ const app = {
     },
     renderSettings() {
         const s = this.state.settings;
-        this.dom.settings.duration.value = s.menuDuration;
-        this.dom.settings.budget.value = s.totalBudget;
-        this.dom.settings.preferences.value = s.preferences;
-        this.dom.settings.cuisine.value = s.cuisine;
-        this.dom.settings.difficulty.value = s.difficulty;
-        this.dom.settings.apiKeyInput.value = s.apiKey || '';
+        (this.dom.settings.duration as HTMLInputElement).value = s.menuDuration;
+        (this.dom.settings.budget as HTMLInputElement).value = s.totalBudget;
+        (this.dom.settings.preferences as HTMLInputElement).value = s.preferences;
+        (this.dom.settings.cuisine as HTMLInputElement).value = s.cuisine;
+        (this.dom.settings.difficulty as HTMLInputElement).value = s.difficulty;
+        (this.dom.settings.apiKeyInput as HTMLInputElement).value = s.apiKey || '';
         this.dom.settings.appVersionInfo.textContent = `Версия приложения: ${this.version}`;
         this.renderFamilyMembers();
     },
     saveSettings() {
         const s = this.state.settings;
-        s.menuDuration = parseInt(this.dom.settings.duration.value) || 7;
-        s.totalBudget = parseInt(this.dom.settings.budget.value) || 10000;
-        s.preferences = this.dom.settings.preferences.value;
-        s.cuisine = this.dom.settings.cuisine.value;
-        s.difficulty = this.dom.settings.difficulty.value;
+        s.menuDuration = parseInt((this.dom.settings.duration as HTMLInputElement).value) || 7;
+        s.totalBudget = parseInt((this.dom.settings.budget as HTMLInputElement).value) || 10000;
+        s.preferences = (this.dom.settings.preferences as HTMLInputElement).value;
+        s.cuisine = (this.dom.settings.cuisine as HTMLInputElement).value;
+        s.difficulty = (this.dom.settings.difficulty as HTMLInputElement).value;
         this.saveState();
         this.renderBudget(); 
         this.showNotification("Настройки сохранены. Чтобы они применились, перегенерируйте меню.");
     },
     async saveApiKey() {
-        const newApiKey = this.dom.settings.apiKeyInput.value.trim();
+        const newApiKey = (this.dom.settings.apiKeyInput as HTMLInputElement).value.trim();
         if (!newApiKey) {
             this.showNotification('API ключ не может быть пустым', 'error');
             return;
@@ -1441,7 +1449,7 @@ const app = {
         });
         container.querySelectorAll('.delete-member-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                this.state.settings.family.splice(e.target.dataset.index, 1);
+                this.state.settings.family.splice((e.target as HTMLElement).dataset.index, 1);
                 this.saveState();
                 this.renderFamilyMembers(isWizard);
                 if (!isWizard) this.renderFamilyMembers(false);
@@ -1476,9 +1484,12 @@ const app = {
             { text: 'Отмена', class: 'secondary', action: () => {} },
             { text: 'Добавить', class: 'primary', action: () => {
                 const newMember = {
-                    age: parseInt(document.getElementById('member-age').value) || 30,
-                    gender: document.getElementById('member-gender').value,
-                    activity: document.getElementById('member-activity').value,
+                    // FIX: Cast HTMLElement to HTMLInputElement to access the 'value' property.
+                    age: parseInt((document.getElementById('member-age') as HTMLInputElement).value) || 30,
+                    // FIX: Cast HTMLElement to HTMLSelectElement to access the 'value' property.
+                    gender: (document.getElementById('member-gender') as HTMLSelectElement).value,
+                    // FIX: Cast HTMLElement to HTMLSelectElement to access the 'value' property.
+                    activity: (document.getElementById('member-activity') as HTMLSelectElement).value,
                 };
                 this.state.settings.family.push(newMember);
                 this.saveState();
@@ -1531,7 +1542,8 @@ const app = {
         const buttons = [
             { text: 'Отмена', class: 'secondary', action: () => {} },
             { text: 'Перегенерировать', class: 'primary', action: () => {
-                const customPrompt = document.getElementById('regen-prompt')?.value || '';
+                // FIX: Cast HTMLElement to HTMLTextAreaElement to access the 'value' property.
+                const customPrompt = (document.getElementById('regen-prompt') as HTMLTextAreaElement)?.value || '';
                 this.handleRegeneration(type, data, false, customPrompt);
             }}
         ];
@@ -1614,8 +1626,8 @@ const app = {
 
         container.querySelectorAll('.regenerate-btn').forEach(btn => {
             btn.addEventListener('click', e => {
-                const mealDiv = e.target.closest('.preview-meal');
-                const { dayName, mealKey } = mealDiv.dataset;
+                const mealDiv = (e.target as HTMLElement).closest('.preview-meal');
+                const { dayName, mealKey } = (mealDiv as HTMLElement).dataset;
                 const mealName = this.tempState.menu.find(d=>d.day===dayName).meals[mealKey];
                 this.showModal(
                     "Изменить блюдо",
@@ -1624,7 +1636,8 @@ const app = {
                     [
                         { text: 'Отмена', class: 'secondary', action: () => {} },
                         { text: 'Изменить', class: 'primary', action: () => {
-                            const customPrompt = document.getElementById('regen-prompt')?.value || '';
+                            // FIX: Cast HTMLElement to HTMLTextAreaElement to access the 'value' property.
+                            const customPrompt = (document.getElementById('regen-prompt') as HTMLTextAreaElement)?.value || '';
                             this.handleRegeneration('meal', { dayName, mealKey }, true, customPrompt);
                         }}
                     ]
@@ -1683,12 +1696,13 @@ const app = {
         }
     },
     importData(event) {
-        const file = event.target.files[0];
+        const file = (event.target as HTMLInputElement).files[0];
         if (!file) return;
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
-                const importedState = JSON.parse(e.target.result);
+                // FIX: Ensure result is a string before parsing JSON.
+                const importedState = JSON.parse(e.target.result as string);
                 if (importedState.settings) {
                     this.state = importedState;
                     this.saveState();
@@ -1702,7 +1716,7 @@ const app = {
             }
         };
         reader.readAsText(file);
-        event.target.value = '';
+        (event.target as HTMLInputElement).value = '';
     },
     
     toggleDevConsole() {
@@ -1734,7 +1748,7 @@ const app = {
         } catch (e) {
             this.logToConsole(`Error: ${e.message}`);
         }
-        this.dom.commandInput.value = '';
+        (this.dom.commandInput as HTMLInputElement).value = '';
     }
 };
 
