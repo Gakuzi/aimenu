@@ -1376,8 +1376,8 @@ const app = {
     },
     renderSettings() {
         const s = this.state.settings;
-        (this.dom.settings.duration as HTMLInputElement).value = s.menuDuration;
-        (this.dom.settings.budget as HTMLInputElement).value = s.totalBudget;
+        (this.dom.settings.duration as HTMLInputElement).value = String(s.menuDuration);
+        (this.dom.settings.budget as HTMLInputElement).value = String(s.totalBudget);
         (this.dom.settings.preferences as HTMLInputElement).value = s.preferences;
         (this.dom.settings.cuisine as HTMLInputElement).value = s.cuisine;
         (this.dom.settings.difficulty as HTMLInputElement).value = s.difficulty;
