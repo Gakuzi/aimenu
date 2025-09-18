@@ -81,90 +81,6 @@ body::before {
     overflow: hidden;
 }
 
-/* --- Splash Screen --- */
-#splash-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(160deg, #F9F7F4, #EDE0D4);
-    z-index: 10000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 20px;
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-}
-#splash-screen.hidden {
-    opacity: 0;
-    transform: scale(1.05);
-    pointer-events: none;
-}
-.splash-logo {
-    width: 100px;
-    height: 100px;
-}
-.splash-title {
-    font-family: var(--font-nunito);
-    font-weight: 800;
-    font-size: 28px;
-    color: var(--accent-color);
-    margin: 10px 0;
-}
-.splash-features {
-    margin: 30px 0;
-    position: relative;
-    height: 60px;
-    width: 100%;
-    overflow: hidden;
-}
-.feature-slide {
-    position: absolute;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    opacity: 0;
-    transform: translateY(20px);
-    animation: slide-in-out 9s linear infinite;
-}
-.feature-slide:nth-child(1) { animation-delay: 0s; }
-.feature-slide:nth-child(2) { animation-delay: 3s; }
-.feature-slide:nth-child(3) { animation-delay: 6s; }
-.feature-icon { font-size: 24px; }
-.feature-text { font-family: var(--font-nunito); font-weight: 700; font-size: 18px; color: var(--soft-text); margin-top: 8px;}
-
-@keyframes slide-in-out {
-    0%, 33.33%, 100% { opacity: 0; transform: translateY(20px); }
-    5%, 28.33% { opacity: 1; transform: translateY(0); }
-}
-
-.splash-author {
-    position: absolute;
-    bottom: calc(100px + env(safe-area-inset-bottom));
-    font-size: 14px;
-    color: var(--soft-text);
-    text-align: center;
-    line-height: 1.5;
-}
-.splash-author a {
-    color: var(--accent-color);
-    text-decoration: none;
-    font-weight: 600;
-}
-
-
-#start-app-btn {
-    position: absolute;
-    bottom: calc(40px + env(safe-area-inset-bottom));
-    width: 80%;
-    max-width: 300px;
-}
-
-
 .screen {
     position: absolute;
     top: 0;
@@ -187,8 +103,6 @@ body::before {
     pointer-events: none;
 }
 .hidden { display: none !important; }
-
-/* --- Welcome Screen (Removed) --- */
 
 /* --- Setup & Preview Screens --- */
 #setup-screen, #preview-screen {
@@ -1334,31 +1248,6 @@ body::before {
 <body>
 
 <div id="app">
-    <!-- Экран-заставка -->
-    <div class="screen" id="splash-screen">
-        <svg class="splash-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="45" fill="#F0E7DD"/><path d="M50,10 A40,40 0 0,1 90,50" fill="none" stroke="#8B5E3C" stroke-width="8"/><path d="M50,90 A40,40 0 0,1 10,50" fill="none" stroke="#D4A373" stroke-width="8"/><circle cx="50" cy="50" r="20" fill="#fff"/><path d="M50 38 C 55 42, 55 48, 50 52 S 45 58, 50 62" stroke="#5E7A6E" stroke-width="4" fill="none" stroke-linecap="round"/></svg>
-        <h1 class="splash-title">СЕМЕЙНОЕ МЕНЮ</h1>
-        <div class="splash-features">
-            <div class="feature-slide">
-                <div class="feature-icon">🗓️</div>
-                <div class="feature-text">Планируйте меню на неделю</div>
-            </div>
-            <div class="feature-slide">
-                <div class="feature-icon">🛒</div>
-                <div class="feature-text">Составляйте умный список покупок</div>
-            </div>
-            <div class="feature-slide">
-                <div class="feature-icon">👩‍🍳</div>
-                <div class="feature-text">Готовьте легко по шагам</div>
-            </div>
-        </div>
-        <div class="splash-author">
-          Автор: Климов Евгений<br>
-          <a href="https://t.me/eklimov" target="_blank">Telegram: @eklimov</a>
-        </div>
-        <button class="primary-button" id="start-app-btn">Начать</button>
-    </div>
-
     <!-- Экран первоначальной настройки и генерации -->
     <div class="screen hidden" id="setup-screen">
         <div class="setup-container">

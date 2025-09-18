@@ -72,19 +72,11 @@ const app = {
         this.cacheDom();
         this.addEventListeners();
         this.loadState();
-
-        const hasSeenSplash = localStorage.getItem('hasSeenSplash') === 'true';
-        if (!hasSeenSplash) {
-            this.showScreen('splash-screen');
-        } else {
-            this.handleStartSetup();
-        }
+        this.handleStartSetup();
     },
 
     cacheDom() {
         this.dom = {
-            splashScreen: document.getElementById('splash-screen'),
-            startAppBtn: document.getElementById('start-app-btn'),
             screens: document.querySelectorAll('.screen'),
             setupScreen: document.getElementById('setup-screen'),
             mainScreen: document.getElementById('main-screen'),
@@ -197,11 +189,6 @@ const app = {
     },
     
     addEventListeners() {
-        this.dom.startAppBtn.addEventListener('click', () => {
-            localStorage.setItem('hasSeenSplash', 'true');
-            this.handleStartSetup();
-        });
-        
         this.dom.wizardLoadFromFileBtn.addEventListener('click', () => (this.dom.importFileInput as HTMLElement).click());
 
         this.dom.wizardNextBtn.addEventListener('click', () => this.navigateWizard(1));
@@ -329,7 +316,6 @@ const app = {
 
     resetState() {
         localStorage.removeItem('familyMenuState');
-        localStorage.removeItem('hasSeenSplash');
         window.location.reload();
     },
     
@@ -337,7 +323,7 @@ const app = {
         this.dom.screens.forEach(screen => {
             const isTarget = screen.id === screenId;
             screen.classList.toggle('hidden', !isTarget);
-            if (['recipe-screen', 'splash-screen', 'settings-screen'].includes(screen.id)) {
+            if (['recipe-screen', 'settings-screen'].includes(screen.id)) {
                 screen.classList.toggle('active', isTarget);
             }
         });
@@ -1182,7 +1168,8 @@ const app = {
     },
     
     handleNav(e) {
-        const button = (e.target as HTMLElement).closest('.nav-button');
+        // FIX: Cast the result of closest() to HTMLElement to safely access dataset properties.
+        const button = (e.target as HTMLElement).closest('.nav-button') as HTMLElement;
         if (!button) return;
         
         this.dom.bottomNav.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
