@@ -468,12 +468,31 @@ body::before {
 }
 .main-header {
     padding: 15px 20px;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+#main-header-title {
     font-family: var(--font-nunito);
     font-size: 24px;
     font-weight: 800;
     color: var(--accent-color);
-    flex-shrink: 0;
+    margin: 0;
 }
+#open-settings-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    line-height: 0;
+}
+#open-settings-btn svg {
+    stroke: var(--accent-color);
+    width: 28px;
+    height: 28px;
+}
+
 .content-area {
     flex-grow: 1;
     overflow-y: auto;
@@ -501,7 +520,7 @@ body::before {
     align-items: center;
     gap: 4px;
     transition: color 0.2s;
-    width: 20%;
+    flex-grow: 1;
 }
 .nav-button svg {
     width: 24px;
@@ -1033,9 +1052,32 @@ body::before {
 
 
 /* --- Settings Screen --- */
-#settings-content {
-    padding-bottom: 50px;
+#settings-screen {
+    background-color: var(--bg-color);
+    transform: translateX(100%);
+    z-index: 10;
+    padding: 0;
+    padding-top: env(safe-area-inset-top);
 }
+#settings-screen.active {
+    transform: translateX(0);
+}
+#settings-content {
+    padding: 20px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+    height: calc(100% - 56px - env(safe-area-inset-top)); /* Adjust based on header height */
+    overflow-y: auto;
+}
+#settings-title {
+    font-family: var(--font-nunito);
+    font-weight: 800;
+    font-size: 22px;
+    color: var(--accent-color);
+    text-align: center;
+    flex-grow: 1;
+    margin: 0;
+}
+
 .settings-section {
     background: var(--card-bg);
     border-radius: 16px;
@@ -1449,7 +1491,12 @@ body::before {
 
     <!-- Основной экран приложения с навигацией -->
     <div class="screen hidden" id="main-screen">
-        <header class="main-header" id="main-header-title">Меню на неделю</header>
+        <header class="main-header">
+            <h1 id="main-header-title">Меню на неделю</h1>
+            <button id="open-settings-btn" aria-label="Настройки">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </button>
+        </header>
         <div class="content-area">
             <div class="main-content active" id="menu-content">
                 <div class="day-scroller" id="day-scroller-container"></div>
@@ -1481,89 +1528,6 @@ body::before {
                     <div id="bar-chart"></div>
                 </div>
             </div>
-            <div class="main-content" id="settings-content">
-                <div class="settings-section">
-                    <h3 class="settings-title">Параметры меню</h3>
-                    <div class="settings-form-group">
-                        <label for="settings-menu-duration">Количество дней меню</label>
-                        <input type="number" id="settings-menu-duration" class="settings-input" min="1" max="14">
-                    </div>
-                    <div class="settings-form-group">
-                        <label for="settings-total-budget">Общий бюджет, ₽</label>
-                        <input type="number" id="settings-total-budget" class="settings-input" step="500">
-                    </div>
-                    <div class="settings-form-group">
-                        <label for="settings-cuisine">Предпочитаемая кухня</label>
-                        <select id="settings-cuisine" class="settings-select">
-                            <option value="Любая">Любая</option>
-                            <option value="Русская">Русская</option>
-                            <option value="Итальянская">Итальянская</option>
-                            <option value="Азиатская">Азиатская</option>
-                            <option value="Средиземноморская">Средиземноморская</option>
-                            <option value="Кавказская">Кавказская</option>
-                        </select>
-                    </div>
-                     <div class="settings-form-group">
-                        <label for="settings-difficulty">Сложность блюд</label>
-                        <select id="settings-difficulty" class="settings-select">
-                            <option value="Любая">Любая</option>
-                            <option value="Простая">Простая (быстро и легко)</option>
-                            <option value="Средняя">Средняя (стандартные рецепты)</option>
-                            <option value="Сложная">Сложная (для особых случаев)</option>
-                        </select>
-                    </div>
-                    <div class="settings-form-group">
-                        <label for="settings-preferences">Предпочтения и аллергии</label>
-                        <textarea id="settings-preferences" class="settings-textarea" rows="3" placeholder="Например: без рыбы, меньше жареного"></textarea>
-                    </div>
-                    <button class="primary-button" id="save-settings-btn">Сохранить и применить</button>
-                </div>
-
-                <div class="settings-section">
-                    <h3 class="settings-title">Состав семьи</h3>
-                    <div id="family-members-container"></div>
-                    <button class="secondary-button" id="add-family-member-btn" style="height: 45px; font-size: 16px;">+ Добавить члена семьи</button>
-                </div>
-                
-                <div class="settings-section">
-                    <h3 class="settings-title">Управление данными</h3>
-                    <button class="primary-button" id="export-btn">📤 Экспортировать данные</button>
-                    <input type="file" id="import-file-input" class="hidden" accept=".json">
-                    <button class="primary-button" id="import-btn" style="margin-top: 10px;">📥 Импортировать данные</button>
-                     <button class="secondary-button" id="run-wizard-btn" style="margin-top: 20px; height: 45px; font-size: 16px;">Запустить мастер настройки</button>
-                    <button class="primary-button" id="regenerate-all-btn" style="margin-top: 10px;">🔄 Перегенерировать всё меню</button>
-                </div>
-                
-                 <div class="settings-section">
-                    <h3 class="settings-title">API-ключ</h3>
-                    <div class="settings-form-group">
-                        <label for="settings-api-key">Google Gemini API Key</label>
-                        <input type="password" id="settings-api-key" class="settings-input" placeholder="Введите ваш ключ">
-                    </div>
-                    <button class="primary-button" id="save-api-key-btn">Проверить и сохранить</button>
-                </div>
-
-
-                <div class="settings-section">
-                    <h3 class="settings-title">Как установить приложение</h3>
-                    <div class="install-instructions">
-                        <span class="install-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17.5V3M7.5 7.5L12 3l4.5 4.5M18 13.5v5.25c0 .93-.75 1.68-1.68 1.68H7.68c-.93 0-1.68-.75-1.68-1.68v-5.25"/></svg>
-                        </span>
-                        <div class="install-text">Нажмите "Поделиться" в браузере, а затем выберите "На экран 'Домой'", чтобы использовать приложение как нативное.</div>
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <h3 class="settings-title">О приложении</h3>
-                    <p id="app-version-info" style="color: var(--soft-text); font-size: 14px; margin-bottom: 15px;"></p>
-                    <button class="secondary-button" id="show-changelog-btn" style="height: 45px; font-size: 16px;">История изменений</button>
-                    <div class="sync-info" style="margin-top: 15px;">
-                        Автор: Климов Евгений<br>
-                        <a href="https://t.me/eklimov" target="_blank">Связаться в Telegram</a>
-                    </div>
-                </div>
-            </div>
         </div>
         <nav class="bottom-nav">
             <button class="nav-button active" data-content="menu-content" data-title="Меню на неделю">
@@ -1577,10 +1541,6 @@ body::before {
             <button class="nav-button" data-content="budget-content" data-title="Бюджет">
                  <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25-2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 3a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 12m15 0a2.25 2.25 0 01-2.25 2.25H9.75a2.25 2.25 0 01-2.25-2.25M15 12a2.25 2.25 0 00-2.25-2.25H9.75A2.25 2.25 0 007.5 12m7.5 0v6M7.5 12v6m7.5-6H9.75" /></svg>
                 Бюджет
-            </button>
-            <button class="nav-button" data-content="settings-content" data-title="Настройки">
-                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-1.008 1.11-1.226a2.25 2.25 0 012.58 1.226c.27.653.81 1.1 1.48 1.194.67.093 1.28-.29 1.63-.873a2.25 2.25 0 012.92 2.92c-.583.35-1.04.96-1.226 1.63-.194.67.194 1.28.873 1.63a2.25 2.25 0 01-2.92 2.92c-.35-.583-.96-1.04-1.63-1.226a2.25 2.25 0 00-1.48-1.194 2.25 2.25 0 00-2.58 1.226c-.09.542-.56 1.008-1.11 1.226a2.25 2.25 0 01-2.58-1.226c-.27-.653-.81-1.1-1.48-1.194-.67-.093-1.28.29-1.63.873a2.25 2.25 0 01-2.92-2.92c.583.35 1.04-.96 1.226-1.63.194-.67-.194-1.28-.873-1.63a2.25 2.25 0 012.92-2.92c.35.583.96 1.04 1.63 1.226.67.093 1.28-.29 1.48-1.194z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                Настройки
             </button>
         </nav>
     </div>
@@ -1608,6 +1568,98 @@ body::before {
             <div class="recipe-nav">
                 <button class="nav-btn-recipe" id="prev-step-btn">← Назад</button>
                 <button class="nav-btn-recipe" id="next-step-btn">Далее →</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Экран Настроек -->
+    <div class="screen hidden" id="settings-screen">
+        <header class="recipe-header" style="padding: 15px 20px; border-bottom: 1px solid #eee;">
+            <button class="back-button" id="close-settings-btn">◀︎ Назад</button>
+            <h2 id="settings-title">Настройки</h2>
+            <span style="width: 50px;"></span> <!-- Spacer -->
+        </header>
+        <div id="settings-content">
+            <div class="settings-section">
+                <h3 class="settings-title">Параметры меню</h3>
+                <div class="settings-form-group">
+                    <label for="settings-menu-duration">Количество дней меню</label>
+                    <input type="number" id="settings-menu-duration" class="settings-input" min="1" max="14">
+                </div>
+                <div class="settings-form-group">
+                    <label for="settings-total-budget">Общий бюджет, ₽</label>
+                    <input type="number" id="settings-total-budget" class="settings-input" step="500">
+                </div>
+                <div class="settings-form-group">
+                    <label for="settings-cuisine">Предпочитаемая кухня</label>
+                    <select id="settings-cuisine" class="settings-select">
+                        <option value="Любая">Любая</option>
+                        <option value="Русская">Русская</option>
+                        <option value="Итальянская">Итальянская</option>
+                        <option value="Азиатская">Азиатская</option>
+                        <option value="Средиземноморская">Средиземноморская</option>
+                        <option value="Кавказская">Кавказская</option>
+                    </select>
+                </div>
+                 <div class="settings-form-group">
+                    <label for="settings-difficulty">Сложность блюд</label>
+                    <select id="settings-difficulty" class="settings-select">
+                        <option value="Любая">Любая</option>
+                        <option value="Простая">Простая (быстро и легко)</option>
+                        <option value="Средняя">Средняя (стандартные рецепты)</option>
+                        <option value="Сложная">Сложная (для особых случаев)</option>
+                    </select>
+                </div>
+                <div class="settings-form-group">
+                    <label for="settings-preferences">Предпочтения и аллергии</label>
+                    <textarea id="settings-preferences" class="settings-textarea" rows="3" placeholder="Например: без рыбы, меньше жареного"></textarea>
+                </div>
+                <button class="primary-button" id="save-settings-btn">Сохранить и применить</button>
+            </div>
+
+            <div class="settings-section">
+                <h3 class="settings-title">Состав семьи</h3>
+                <div id="family-members-container"></div>
+                <button class="secondary-button" id="add-family-member-btn" style="height: 45px; font-size: 16px;">+ Добавить члена семьи</button>
+            </div>
+            
+            <div class="settings-section">
+                <h3 class="settings-title">Управление данными</h3>
+                <button class="primary-button" id="export-btn">📤 Экспортировать данные</button>
+                <input type="file" id="import-file-input" class="hidden" accept=".json">
+                <button class="primary-button" id="import-btn" style="margin-top: 10px;">📥 Импортировать данные</button>
+                 <button class="secondary-button" id="run-wizard-btn" style="margin-top: 20px; height: 45px; font-size: 16px;">Запустить мастер настройки</button>
+                <button class="primary-button" id="regenerate-all-btn" style="margin-top: 10px;">🔄 Перегенерировать всё меню</button>
+            </div>
+            
+             <div class="settings-section">
+                <h3 class="settings-title">API-ключ</h3>
+                <div class="settings-form-group">
+                    <label for="settings-api-key">Google Gemini API Key</label>
+                    <input type="password" id="settings-api-key" class="settings-input" placeholder="Введите ваш ключ">
+                </div>
+                <button class="primary-button" id="save-api-key-btn">Проверить и сохранить</button>
+            </div>
+
+
+            <div class="settings-section">
+                <h3 class="settings-title">Как установить приложение</h3>
+                <div class="install-instructions">
+                    <span class="install-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17.5V3M7.5 7.5L12 3l4.5 4.5M18 13.5v5.25c0 .93-.75 1.68-1.68 1.68H7.68c-.93 0-1.68-.75-1.68-1.68v-5.25"/></svg>
+                    </span>
+                    <div class="install-text">Нажмите "Поделиться" в браузере, а затем выберите "На экран 'Домой'", чтобы использовать приложение как нативное.</div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3 class="settings-title">О приложении</h3>
+                <p id="app-version-info" style="color: var(--soft-text); font-size: 14px; margin-bottom: 15px;"></p>
+                <button class="secondary-button" id="show-changelog-btn" style="height: 45px; font-size: 16px;">История изменений</button>
+                <div class="sync-info" style="margin-top: 15px;">
+                    Автор: Климов Евгений<br>
+                    <a href="https://t.me/eklimov" target="_blank">Связаться в Telegram</a>
+                </div>
             </div>
         </div>
     </div>
@@ -1702,7 +1754,7 @@ const app = {
         this.addEventListeners();
         this.loadState();
 
-        const hasSeenSplash = localStorage.getItem('hasSeenSplash');
+        const hasSeenSplash = localStorage.getItem('hasSeenSplash') === 'true';
         if (!hasSeenSplash) {
             this.showScreen('splash-screen');
         } else {
@@ -1721,6 +1773,7 @@ const app = {
             setupScreen: document.getElementById('setup-screen'),
             mainScreen: document.getElementById('main-screen'),
             recipeScreen: document.getElementById('recipe-screen'),
+            settingsScreen: document.getElementById('settings-screen'),
             previewScreen: document.getElementById('preview-screen'),
             
             // Wizard
@@ -1750,9 +1803,12 @@ const app = {
             previewRegenerateAllBtn: document.getElementById('preview-regenerate-all-btn'),
             previewAcceptBtn: document.getElementById('preview-accept-btn'),
 
+            // Main UI
+            mainHeaderTitle: document.getElementById('main-header-title'),
+            openSettingsBtn: document.getElementById('open-settings-btn'),
+            closeSettingsBtn: document.getElementById('close-settings-btn'),
             bottomNav: document.querySelector('.bottom-nav'),
             mainContents: document.querySelectorAll('.main-content'),
-            mainHeaderTitle: document.getElementById('main-header-title'),
             
             dayScroller: document.getElementById('day-scroller-container'),
             shoppingListContainer: document.getElementById('shopping-list-container'),
@@ -1784,6 +1840,7 @@ const app = {
             },
 
             settings: {
+                content: document.getElementById('settings-content'),
                 duration: document.getElementById('settings-menu-duration'),
                 budget: document.getElementById('settings-total-budget'),
                 preferences: document.getElementById('settings-preferences'),
@@ -1828,6 +1885,7 @@ const app = {
 
         this.dom.wizardNextBtn.addEventListener('click', () => this.navigateWizard(1));
         this.dom.wizardBackBtn.addEventListener('click', () => this.navigateWizard(-1));
+        this.dom.apiKeyInput.addEventListener('input', () => this.updateWizardView());
         this.dom.apiKeyHelpLink.addEventListener('click', (e) => {
             e.preventDefault();
             this.showApiKeyHelpModal();
@@ -1847,12 +1905,17 @@ const app = {
         this.dom.resetTimerBtn.addEventListener('click', () => this.resetTimer());
 
         // Settings Listeners
+        this.dom.openSettingsBtn.addEventListener('click', () => this.showSettingsPanel());
+        this.dom.closeSettingsBtn.addEventListener('click', () => this.hideSettingsPanel());
         this.dom.settings.saveBtn.addEventListener('click', () => this.saveSettings());
         this.dom.settings.addMemberBtn.addEventListener('click', () => this.openFamilyMemberModal());
         this.dom.settings.regenerateAllBtn.addEventListener('click', () => this.confirmRegenerateAll());
         this.dom.settings.saveApiKeyBtn.addEventListener('click', () => this.saveApiKey());
         this.dom.wizardAddMemberBtn.addEventListener('click', () => this.openFamilyMemberModal(true));
-        this.dom.settings.runWizardBtn.addEventListener('click', () => this.showWizard());
+        this.dom.settings.runWizardBtn.addEventListener('click', () => {
+            this.hideSettingsPanel();
+            this.showWizard();
+        });
         this.dom.settings.showChangelogBtn.addEventListener('click', () => this.showChangelogModal());
 
         this.dom.exportBtn.addEventListener('click', () => this.exportData());
@@ -1894,7 +1957,7 @@ const app = {
                 this.hideNotification();
                 this.wizard.currentStep = 2; 
                 this.showWizard();
-                this.renderWizard();
+                this.updateWizardView();
             } catch (e) {
                 this.showNotification('API ключ недействителен. Введите новый.', 'error');
                 this.state.settings.apiKey = null; 
@@ -1954,7 +2017,7 @@ const app = {
         this.dom.screens.forEach(screen => {
             const isTarget = screen.id === screenId;
             screen.classList.toggle('hidden', !isTarget);
-            if (screen.id === 'recipe-screen' || screen.id === 'splash-screen') {
+            if (['recipe-screen', 'splash-screen', 'settings-screen'].includes(screen.id)) {
                 screen.classList.toggle('active', isTarget);
             }
         });
@@ -1969,10 +2032,10 @@ const app = {
     showWizard() {
         this.showScreen('setup-screen');
         this.wizard.currentStep = 1;
-        this.renderWizard();
+        this.updateWizardView();
     },
 
-    renderWizard() {
+    updateWizardView() {
         const { currentStep, totalSteps } = this.wizard;
         
         // Populate inputs from state
@@ -1997,6 +2060,15 @@ const app = {
         this.dom.wizardBackBtn.classList.toggle('hidden', currentStep === 1);
         this.dom.wizardNextBtn.textContent = currentStep === totalSteps ? 'Начать генерацию' : 'Далее';
         
+        // Validation for 'Next' button
+        let isStepValid = false;
+        switch(currentStep) {
+            case 1: isStepValid = this.dom.apiKeyInput.value.trim().length > 0; break;
+            case 2: isStepValid = this.state.settings.family.length > 0; break;
+            default: isStepValid = true;
+        }
+        this.dom.wizardNextBtn.disabled = !isStepValid;
+
         if (currentStep === 2) {
             this.renderFamilyMembers(true);
         }
@@ -2007,17 +2079,7 @@ const app = {
         // Validation & State saving for current step before navigating
         if (direction > 0) {
             if (currentStep === 1) {
-                const apiKey = this.dom.apiKeyInput.value.trim();
-                if (!apiKey) {
-                    this.showNotification('Пожалуйста, введите API ключ.', 'error');
-                    return;
-                }
-                this.state.settings.apiKey = apiKey;
-            } else if (currentStep === 2) {
-                if (this.state.settings.family.length === 0) {
-                    this.showNotification('Пожалуйста, добавьте хотя бы одного члена семьи.', 'error');
-                    return;
-                }
+                this.state.settings.apiKey = this.dom.apiKeyInput.value.trim();
             } else if (currentStep === 3) {
                 this.state.settings.menuDuration = parseInt(this.dom.wizardDuration.value) || 7;
                 this.state.settings.totalBudget = parseInt(this.dom.wizardBudget.value) || 10000;
@@ -2032,7 +2094,7 @@ const app = {
         }
         
         this.wizard.currentStep += direction;
-        this.renderWizard();
+        this.updateWizardView();
     },
 
     async startGenerationProcess(isRegenerating = false, purchasedItems = '', extraPrompt = '') {
@@ -2255,7 +2317,6 @@ const app = {
     },
 
     renderAll() {
-        this.renderSettings();
         this.renderMenu();
         this.renderShoppingList();
         this.renderBudget();
@@ -2655,7 +2716,13 @@ const app = {
     },
 
     async generateStepImage(recipeId, stepIndex) {
-        if (!this.ai) return;
+        if (!this.ai) {
+             if (this.state.settings.apiKey) {
+                this.ai = new GoogleGenAI({ apiKey: this.state.settings.apiKey });
+            } else {
+                return;
+            }
+        }
         try {
             const recipe = this.state.recipes[recipeId];
             const stepDescription = recipe.steps[stepIndex].description;
@@ -2778,7 +2845,6 @@ const app = {
         this.dom.mainContents.forEach(content => {
             content.classList.toggle('active', content.id === contentId);
         });
-        if (contentId === 'settings-content') this.renderSettings();
         if (contentId === 'budget-content') this.renderBudget();
     },
 
@@ -2957,6 +3023,19 @@ const app = {
     },
 
     // SETTINGS LOGIC
+    showSettingsPanel() {
+        this.renderSettings();
+        this.dom.settingsScreen.classList.remove('hidden');
+        // A short delay ensures the transition is applied correctly after changing display property
+        setTimeout(() => this.dom.settingsScreen.classList.add('active'), 10);
+    },
+    hideSettingsPanel() {
+        this.dom.settingsScreen.classList.remove('active');
+        // Add the 'hidden' class back after the transition completes (0.5s duration)
+        setTimeout(() => {
+            this.dom.settingsScreen.classList.add('hidden');
+        }, 500);
+    },
     renderSettings() {
         const s = this.state.settings;
         this.dom.settings.duration.value = s.menuDuration;
@@ -3022,6 +3101,7 @@ const app = {
                 this.saveState();
                 this.renderFamilyMembers(isWizard);
                 if (!isWizard) this.renderFamilyMembers(false);
+                this.updateWizardView();
             });
         });
     },
@@ -3060,6 +3140,7 @@ const app = {
                 this.saveState();
                 this.renderFamilyMembers(isWizard);
                 if (!isWizard) this.renderFamilyMembers(false);
+                this.updateWizardView();
             }},
         ];
         this.showModal("Новый член семьи", bodyHtml, buttons);
@@ -3076,6 +3157,7 @@ const app = {
                         .filter(item => (item.purchases || []).length > 0)
                         .map(item => `${item.name} (${item.purchases.reduce((sum, p) => sum + p.qty, 0)} ${item.shoppingSuggestion.unit})`)
                         .join(', ');
+                    this.hideSettingsPanel();
                     this.startGenerationProcess(true, purchasedItems);
                 }}
             ]
@@ -3115,6 +3197,15 @@ const app = {
         
         const sourceState = isPreview ? this.tempState : this.state;
         if (!sourceState) return;
+
+        if (!this.ai) {
+            if (this.state.settings.apiKey) {
+                this.ai = new GoogleGenAI({ apiKey: this.state.settings.apiKey });
+            } else {
+                this.showNotification("API ключ не настроен.", "error");
+                return;
+            }
+        }
 
         try {
             let extraPrompt = '';
