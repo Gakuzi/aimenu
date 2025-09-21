@@ -1377,14 +1377,12 @@ body::before {
         <div class="setup-container">
             <svg class="setup-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="45" fill="#F0E7DD"/><path d="M50,10 A40,40 0 0,1 90,50" fill="none" stroke="#8B5E3C" stroke-width="8"/><path d="M50,90 A40,40 0 0,1 10,50" fill="none" stroke="#D4A373" stroke-width="8"/><circle cx="50" cy="50" r="20" fill="#fff"/><path d="M50 38 C 55 42, 55 48, 50 52 S 45 58, 50 62" stroke="#5E7A6E" stroke-width="4" fill="none" stroke-linecap="round"/></svg>
             <h1 class="setup-title">Добро пожаловать!</h1>
-            <p class="setup-subtitle">Войдите, чтобы синхронизировать ваши данные и начать планировать меню.</p>
+            <p class="setup-subtitle">Как вы хотите начать?</p>
             <div class="welcome-buttons">
-                <button class="primary-button" id="google-signin-btn" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                    <svg width="20" height="20" viewBox="0 0 533.5 544.3"><path d="M533.5 278.4c0-18.5-1.5-37.1-4.7-55.3H272.1v104.8h147c-6.1 33.8-25.7 63.7-54.4 82.7v68h87.7c51.5-47.4 81.1-117.4 81.1-200.2z" fill="#4285f4"/><path d="M272.1 544.3c73.4 0 135.3-24.1 180.4-65.7l-87.7-68c-24.4 16.6-55.9 26-92.6 26-71 0-131.2-47.9-152.8-112.3H28.9v70.1c46.2 91.9 140.3 149.9 243.2 149.9z" fill="#34a853"/><path d="M119.3 324.3c-11.4-33.8-11.4-70.4 0-104.2V150H28.9c-38.6 76.9-38.6 167.5 0 244.4l90.4-70.1z" fill="#fbbc04"/><path d="M272.1 107.7c38.8-.6 76.3 14 104.4 40.8l77.7-77.7C405 24.6 340.1 0 272.1 0 169.2 0 75.1 58 28.9 150l90.4 70.1c21.5-64.5 81.8-112.4 152.8-112.4z" fill="#ea4335"/></svg>
-                    Войти через Google
-                </button>
+                <button class="primary-button" id="start-setup-wizard-btn">🚀 Начать настройку</button>
+                <button class="secondary-button" id="load-from-file-btn">📥 Загрузить из файла</button>
             </div>
-            <p class="welcome-info">Ваши данные будут надежно сохранены и доступны на всех ваших устройствах.</p>
+            <p class="welcome-info">Если у вас есть файл конфигурации с другого устройства, вы можете загрузить его, чтобы пропустить настройку.</p>
         </div>
     </div>
 
@@ -1399,7 +1397,16 @@ body::before {
             
             <div id="setup-wizard">
                 <div class="wizard-step" data-step="1">
-                    <h3 class="wizard-step-title">Шаг 1: Расскажите о вашей семье</h3>
+                    <h3 class="wizard-step-title">Шаг 1: Подключение к ИИ</h3>
+                    <p class="wizard-step-description">Для начала работы укажите ваш API ключ для Google Gemini.</p>
+                    <a href="#" id="api-key-help-link" class="api-key-help-link">Где взять ключ? Пошаговая инструкция</a>
+                    <div class="input-group">
+                        <input type="password" id="api-key-input" placeholder="Ваш Google Gemini API ключ">
+                    </div>
+                </div>
+
+                <div class="wizard-step" data-step="2">
+                    <h3 class="wizard-step-title">Шаг 2: Расскажите о вашей семье</h3>
                     <p class="wizard-step-description">Эта информация поможет ИИ рассчитать калорийность и размер порций. Добавьте каждого члена семьи.</p>
                     <div id="wizard-family-members-container"></div>
                     <button class="secondary-button" id="wizard-add-family-member-btn" style="height: 45px; font-size: 16px;">+ Добавить члена семьи</button>
@@ -1628,12 +1635,14 @@ body::before {
             </div>
             
              <div class="settings-section">
-                <h3 class="settings-title">Аккаунт</h3>
-                 <div class="sync-info" style="margin-top: 15px;">
-                    Вы вошли как <strong></strong>.
+                <h3 class="settings-title">API-ключ</h3>
+                <div class="settings-form-group">
+                    <label for="settings-api-key">Google Gemini API Key</label>
+                    <input type="password" id="settings-api-key" class="settings-input" placeholder="Введите ваш ключ">
                 </div>
-                <button class="danger-button" id="sign-out-btn" style="margin-top: 10px; background-color: var(--danger-color);">Выйти из аккаунта</button>
+                <button class="primary-button" id="save-api-key-btn">Проверить и сохранить</button>
             </div>
+
 
             <div class="settings-section">
                 <h3 class="settings-title">Как установить приложение</h3>
@@ -1679,23 +1688,7 @@ body::before {
 <audio id="notification-sound" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YU9vT18="></audio>
 
 <script type="module">
-import firebase from "firebase/compat/app";
-import "firebase/compat/auth";
-import "firebase/compat/firestore";
 import { GoogleGenAI, Type } from "https://esm.run/@google/genai";
-
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_API_KEY,
-  authDomain: import.meta.env.VITE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_APP_ID,
-  measurementId: import.meta.env.VITE_MEASUREMENT_ID
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
 
 const app = {
     version: '1.4.0',
@@ -1730,8 +1723,8 @@ const app = {
         '1.0.0': ['Первоначальный выпуск.'],
     },
     state: {
-        user: null,
         settings: {
+            apiKey: null,
             family: [],
             preferences: "Без рыбы, без грибов",
             menuDuration: 7,
@@ -1751,7 +1744,7 @@ const app = {
     dom: {},
     wizard: {
         currentStep: 1,
-        totalSteps: 3,
+        totalSteps: 4,
     },
     currentRecipe: {
         id: null,
@@ -1767,92 +1760,13 @@ const app = {
     async init() {
         this.cacheDom();
         this.addEventListeners();
+        this.loadState();
 
         const hasSeenSplash = localStorage.getItem('hasSeenSplash') === 'true';
         if (!hasSeenSplash) {
             this.showScreen('splash-screen');
         } else {
-            this.handleAuth();
-        }
-    },
-
-    handleAuth() {
-        firebase.auth().onAuthStateChanged(user => {
-            if (user) {
-                this.state.user = {
-                    uid: user.uid,
-                    displayName: user.displayName,
-                    email: user.email,
-                    photoURL: user.photoURL
-                };
-                // User is signed in, now check for data
-                this.loadDataFromFirestore();
-            } else {
-                // User is signed out
-                this.state.user = null;
-                this.showScreen('welcome-screen');
-            }
-        });
-    },
-
-    signIn() {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        firebase.auth().signInWithPopup(provider).catch(error => {
-            console.error("Authentication failed:", error);
-            this.showNotification("Не удалось войти. Попробуйте еще раз.", "error");
-        });
-    },
-
-    signOut() {
-        firebase.auth().signOut();
-    },
-
-    async loadDataFromFirestore() {
-        if (!this.state.user) return;
-        this.showNotification("Загрузка данных...", "loading");
-        try {
-            const docRef = db.collection('users').doc(this.state.user.uid);
-            const doc = await docRef.get();
-
-            if (doc.exists) {
-                const loadedData = doc.data();
-                // Merge loaded data with default state structure
-                this.state = {
-                    ...this.state, // keeps user object
-                    ...loadedData
-                };
-                this.hideNotification();
-                this.showScreen('main-screen');
-                this.renderAll();
-            } else {
-                // New user
-                this.hideNotification();
-                this.showNotification("Добро пожаловать! Давайте настроим ваш профиль.");
-                this.showWizard();
-            }
-        } catch (e) {
-            this.hideNotification();
-            console.error("Failed to load data from Firestore:", e);
-            this.showNotification("Ошибка: не удалось загрузить данные.", "error");
-            this.showWizard(); // Fallback to wizard on error
-        }
-    },
-
-    async saveState() {
-        if (!this.state.user) {
-            console.warn("Attempted to save state without a user.");
-            return;
-        }
-        const uid = this.state.user.uid;
-        try {
-            // Create a deep copy of the state to avoid modifying the original object
-            const stateToSave = JSON.parse(JSON.stringify(this.state));
-            delete stateToSave.user; // Don't save the user object back to the database
-
-            await db.collection('users').doc(uid).set(stateToSave, { merge: true });
-        } catch (e) {
-            console.error("Failed to save state to Firestore:", e);
-            this.showNotification("Ошибка: не удалось сохранить данные.", "error");
+            this.handleStartSetup();
         }
     },
 
@@ -1862,7 +1776,8 @@ const app = {
             startAppBtn: document.getElementById('start-app-btn'),
             screens: document.querySelectorAll('.screen'),
             welcomeScreen: document.getElementById('welcome-screen'),
-            googleSigninBtn: document.getElementById('google-signin-btn'),
+            startSetupWizardBtn: document.getElementById('start-setup-wizard-btn'),
+            loadFromFileBtn: document.getElementById('load-from-file-btn'),
             setupScreen: document.getElementById('setup-screen'),
             mainScreen: document.getElementById('main-screen'),
             recipeScreen: document.getElementById('recipe-screen'),
@@ -1976,15 +1891,19 @@ const app = {
     addEventListeners() {
         this.dom.startAppBtn.addEventListener('click', () => {
             localStorage.setItem('hasSeenSplash', 'true');
-            this.dom.splashScreen.classList.add('hidden');
-            // Give the animation time to finish before starting auth
-            setTimeout(() => this.handleAuth(), 500);
+            this.handleStartSetup();
         });
 
-        this.dom.googleSigninBtn.addEventListener('click', () => this.signIn());
+        this.dom.startSetupWizardBtn.addEventListener('click', () => this.handleStartSetup(true));
+        this.dom.loadFromFileBtn.addEventListener('click', () => this.dom.importFileInput.click());
 
         this.dom.wizardNextBtn.addEventListener('click', () => this.navigateWizard(1));
         this.dom.wizardBackBtn.addEventListener('click', () => this.navigateWizard(-1));
+        this.dom.apiKeyInput.addEventListener('input', () => this.updateWizardView());
+        this.dom.apiKeyHelpLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showApiKeyHelpModal();
+        });
 
         this.dom.previewAcceptBtn.addEventListener('click', () => this.acceptPreview());
         this.dom.previewRegenerateAllBtn.addEventListener('click', () => this.startGenerationProcess(true));
@@ -2008,15 +1927,13 @@ const app = {
         this.dom.settings.saveBtn.addEventListener('click', () => this.saveSettings());
         this.dom.settings.addMemberBtn.addEventListener('click', () => this.openFamilyMemberModal());
         this.dom.settings.regenerateAllBtn.addEventListener('click', () => this.confirmRegenerateAll());
+        this.dom.settings.saveApiKeyBtn.addEventListener('click', () => this.saveApiKey());
         this.dom.wizardAddMemberBtn.addEventListener('click', () => this.openFamilyMemberModal(true));
         this.dom.settings.runWizardBtn.addEventListener('click', () => {
             this.hideSettingsPanel();
             this.showWizard();
         });
         this.dom.settings.showChangelogBtn.addEventListener('click', () => this.showChangelogModal());
-
-        const signOutBtn = document.getElementById('sign-out-btn');
-        if(signOutBtn) signOutBtn.addEventListener('click', () => this.signOut());
 
         this.dom.exportBtn.addEventListener('click', () => this.exportData());
         this.dom.importBtn.addEventListener('click', () => this.dom.importFileInput.click());
@@ -2040,22 +1957,80 @@ const app = {
         });
     },
 
-    resetState() {
-        // This function is for development and resets everything.
-        // For production, a more graceful "logout" or "reset profile" would be better.
-        if(this.state.user) {
-            db.collection('users').doc(this.state.user.uid).delete().then(() => {
-                this.signOut();
-                window.location.reload();
-            }).catch(error => {
-                console.error("Error removing document: ", error);
-                this.showNotification('Не удалось сбросить профиль.', 'error');
-            });
+    async handleStartSetup(forceWizard = false) {
+        if (forceWizard) {
+             this.showWizard();
+             return;
+        }
+
+        if (this.state.settings.apiKey && this.state.menu && this.state.menu.length > 0) {
+            this.showScreen('main-screen');
+            this.renderAll();
+        } else if (this.state.settings.apiKey) {
+             this.showNotification('Проверка API ключа...', 'loading');
+            try {
+                this.ai = new GoogleGenAI({ apiKey: this.state.settings.apiKey });
+                await this.ai.models.generateContent({model:'gemini-2.5-flash', contents: 'test'});
+                this.hideNotification();
+                this.wizard.currentStep = 2;
+                this.showWizard();
+                this.updateWizardView();
+            } catch (e) {
+                this.showNotification('API ключ недействителен. Введите новый.', 'error');
+                this.state.settings.apiKey = null;
+                this.saveState();
+                this.showWizard();
+            }
         } else {
-             window.location.reload();
+             this.showScreen('welcome-screen');
+        }
+    },
+
+    saveState() {
+        try {
+            localStorage.setItem('familyMenuState', JSON.stringify(this.state));
+        } catch (e) {
+            console.error("Failed to save state:", e);
         }
     },
     
+    loadState() {
+        const savedState = localStorage.getItem('familyMenuState');
+        if (savedState) {
+            try {
+                const loadedData = JSON.parse(savedState);
+                if (loadedData.settings) {
+                     this.state = loadedData;
+                     // Ensure new properties exist for backward compatibility
+                     if (!this.state.settings.family) this.state.settings.family = [];
+                     if (!this.state.settings.menuDuration) this.state.settings.menuDuration = 7;
+                     if (!this.state.cookedMeals) this.state.cookedMeals = {};
+                     if (!this.state.settings.cuisine) this.state.settings.cuisine = "Любая";
+                     if (!this.state.settings.difficulty) this.state.settings.difficulty = "Любая";
+                     if (this.state.currentDayIndex === undefined) this.state.currentDayIndex = 0;
+
+                     (this.state.shoppingList || []).forEach(cat => {
+                        (cat.items || []).forEach(item => {
+                            if (item.purchases === undefined) item.purchases = item.completed ? [{ qty: item.shoppingSuggestion?.qty || 1, price: item.price, date: new Date().toISOString() }] : [];
+                            item.purchases.forEach(p => { if (!p.date) p.date = new Date().toISOString() });
+                            if (item.consumedQty === undefined) item.consumedQty = 0;
+                        });
+                     });
+                } else {
+                    this.resetState();
+                }
+            } catch (e) {
+                this.resetState();
+            }
+        }
+    },
+
+    resetState() {
+        localStorage.removeItem('familyMenuState');
+        localStorage.removeItem('hasSeenSplash');
+        window.location.reload();
+    },
+
     showScreen(screenId) {
         this.dom.screens.forEach(screen => {
             const isTarget = screen.id === screenId;
@@ -2082,6 +2057,7 @@ const app = {
         const { currentStep, totalSteps } = this.wizard;
         
         // Populate inputs from state
+        this.dom.apiKeyInput.value = this.state.settings.apiKey || '';
         this.dom.wizardDuration.value = this.state.settings.menuDuration;
         this.dom.wizardBudget.value = this.state.settings.totalBudget;
         this.dom.wizardPreferences.value = this.state.settings.preferences;
@@ -2096,9 +2072,7 @@ const app = {
         this.dom.wizardStepCounter.textContent = `Шаг ${currentStep} из ${totalSteps}`;
 
         this.dom.wizardSteps.forEach(step => {
-            const stepNumber = parseInt(step.dataset.step);
-            // Adjust for removed first step
-            step.classList.toggle('active', stepNumber === (currentStep + 1));
+            step.classList.toggle('active', parseInt(step.dataset.step) === currentStep);
         });
 
         this.dom.wizardBackBtn.classList.toggle('hidden', currentStep === 1);
@@ -2107,12 +2081,13 @@ const app = {
         // Validation for 'Next' button
         let isStepValid = false;
         switch(currentStep) {
-            case 1: isStepValid = this.state.settings.family.length > 0; break;
+            case 1: isStepValid = this.dom.apiKeyInput.value.trim().length > 0; break;
+            case 2: isStepValid = this.state.settings.family.length > 0; break;
             default: isStepValid = true;
         }
         this.dom.wizardNextBtn.disabled = !isStepValid;
 
-        if (currentStep === 1) {
+        if (currentStep === 2) {
             this.renderFamilyMembers(true);
         }
     },
@@ -2121,14 +2096,16 @@ const app = {
         const { currentStep, totalSteps } = this.wizard;
         // Validation & State saving for current step before navigating
         if (direction > 0) {
-            if (currentStep === 2) {
+            if (currentStep === 1) {
+                this.state.settings.apiKey = this.dom.apiKeyInput.value.trim();
+            } else if (currentStep === 3) {
                 this.state.settings.menuDuration = parseInt(this.dom.wizardDuration.value) || 7;
                 this.state.settings.totalBudget = parseInt(this.dom.wizardBudget.value) || 10000;
                 this.state.settings.preferences = this.dom.wizardPreferences.value;
                 this.state.settings.cuisine = this.dom.wizardCuisine.value;
                 this.state.settings.difficulty = this.dom.wizardDifficulty.value;
             } else if (currentStep === totalSteps) {
-                await this.saveState();
+                this.saveState();
                 await this.startGenerationProcess();
                 return;
             }
@@ -2139,6 +2116,11 @@ const app = {
     },
 
     async startGenerationProcess(isRegenerating = false, purchasedItems = '', extraPrompt = '') {
+        if (!this.state.settings.apiKey) {
+            alert('API ключ не найден.');
+            this.showWizard();
+            return;
+        }
         
         this.dom.setupWizard.classList.add('hidden');
         this.dom.wizardNav.classList.add('hidden');
@@ -2214,7 +2196,7 @@ const app = {
     
     async generateComprehensiveData(purchasedItems = '', extraPrompt = '') {
         const { family, menuDuration, preferences, cuisine, difficulty, totalBudget } = this.state.settings;
-        const familyDescription = family.map(p => `${p.name}: ${p.gender === 'male' ? 'Мужчина' : 'Женщина'}, ${p.age} лет, ${p.weight}кг, ${p.height}см, активность: ${p.activity}, цель: ${p.goal}`).join('; ');
+        const familyDescription = family.map(p => `${p.gender === 'male' ? 'Мужчина' : 'Женщина'}, ${p.age} лет, активность: ${p.activity}`).join('; ');
 
         let promptText = `Сгенерируй одним JSON-ответом полный план питания. Ответ должен содержать три ключа верхнего уровня: "menu", "recipes", "shoppingList".
 
@@ -2451,7 +2433,7 @@ const app = {
         });
     },
 
-    async navigateMenuDay(direction) {
+    navigateMenuDay(direction) {
         if (!this.state.menu || this.state.menu.length === 0) return;
         const menuLength = this.state.menu.length;
         let newIndex = this.state.currentDayIndex + direction;
@@ -2463,11 +2445,11 @@ const app = {
         }
         
         this.state.currentDayIndex = newIndex;
-        await this.saveState();
+        this.saveState();
         this.renderMenu();
     },
 
-    async toggleCookedStatus(dayName, mealKey) {
+    toggleCookedStatus(dayName, mealKey) {
         if (!this.state.cookedMeals[dayName]) {
             this.state.cookedMeals[dayName] = [];
         }
@@ -2498,7 +2480,7 @@ const app = {
             this.state.cookedMeals[dayName].push(mealKey);
         }
 
-        await this.saveState();
+        this.saveState();
         this.renderMenu();
         this.showNotification(isCooking ? "Блюдо отмечено как приготовленное!" : "Отметка о приготовлении снята.", "success");
     },
@@ -3100,25 +3082,40 @@ const app = {
         this.dom.settings.preferences.value = s.preferences;
         this.dom.settings.cuisine.value = s.cuisine;
         this.dom.settings.difficulty.value = s.difficulty;
+        this.dom.settings.apiKeyInput.value = s.apiKey || '';
         this.dom.settings.appVersionInfo.textContent = `Версия приложения: ${this.version}`;
-
-        const accountInfo = document.querySelector('#settings-screen .sync-info strong');
-        if(accountInfo && this.state.user) {
-            accountInfo.textContent = this.state.user.displayName || this.state.user.email;
-        }
-
         this.renderFamilyMembers();
     },
-    async saveSettings() {
+    saveSettings() {
         const s = this.state.settings;
         s.menuDuration = parseInt(this.dom.settings.duration.value) || 7;
         s.totalBudget = parseInt(this.dom.settings.budget.value) || 10000;
         s.preferences = this.dom.settings.preferences.value;
         s.cuisine = this.dom.settings.cuisine.value;
         s.difficulty = this.dom.settings.difficulty.value;
-        await this.saveState();
+        this.saveState();
         this.renderBudget(); 
         this.showNotification("Настройки сохранены. Чтобы они применились, перегенерируйте меню.");
+    },
+    async saveApiKey() {
+        const newApiKey = this.dom.settings.apiKeyInput.value.trim();
+        if (!newApiKey) {
+            this.showNotification('API ключ не может быть пустым', 'error');
+            return;
+        }
+        this.showNotification('Проверка ключа...', 'loading');
+        try {
+            const testAI = new GoogleGenAI({ apiKey: newApiKey });
+            await testAI.models.generateContent({model:'gemini-2.5-flash', contents: 'test'});
+
+            this.state.settings.apiKey = newApiKey;
+            this.ai = testAI;
+            this.saveState();
+            this.showNotification('API ключ успешно сохранен и проверен!');
+        } catch (error) {
+            console.error("API Key validation failed:", error);
+            this.showNotification('Неверный API ключ. Проверьте его и попробуйте снова.', 'error');
+        }
     },
     renderFamilyMembers(isWizard = false) {
         const container = isWizard ? this.dom.wizardFamilyContainer : this.dom.settings.familyContainer;
@@ -3131,106 +3128,61 @@ const app = {
             card.className = 'family-member-card';
             const genderText = person.gender === 'male' ? 'муж.' : 'жен.';
             const activityMap = { sedentary: 'сидячий', light: 'легкая', moderate: 'умеренная', high: 'высокая' };
-            const goalMap = { lose: 'похудение', maintain: 'поддержание', gain: 'набор массы' };
-
             card.innerHTML = `
-                <div class="family-member-info" data-index="${index}" style="flex-grow: 1; cursor: pointer;">
-                    <strong>${person.name || 'Без имени'}</strong>, ${person.age || 'N/A'} лет (${genderText})<br>
-                    <small>${person.weight || 'N/A'}кг, ${person.height || 'N/A'}см, ${activityMap[person.activity]}, цель: ${goalMap[person.goal]}</small>
-                </div>
-                <button data-index="${index}" class="delete-member-btn" style="flex-shrink: 0;">✖</button>
+                <span>${person.age} лет, ${genderText}, ${activityMap[person.activity] || person.activity}</span>
+                <button data-index="${index}" class="delete-member-btn">✖</button>
             `;
             container.appendChild(card);
         });
-
-        container.querySelectorAll('.family-member-info').forEach(card => {
-            card.addEventListener('click', (e) => {
-                const index = e.currentTarget.dataset.index;
-                this.openFamilyMemberModal(isWizard, parseInt(index));
-            });
-        });
-
         container.querySelectorAll('.delete-member-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                e.stopPropagation();
+            btn.addEventListener('click', (e) => {
                 this.state.settings.family.splice(e.target.dataset.index, 1);
-                await this.saveState();
+                this.saveState();
                 this.renderFamilyMembers(isWizard);
                 if (!isWizard) this.renderFamilyMembers(false);
                 this.updateWizardView();
             });
         });
     },
-    openFamilyMemberModal(isWizard = false, memberIndex = -1) {
-        const isEditing = memberIndex !== -1;
-        const member = isEditing ? this.state.settings.family[memberIndex] : {};
-
+    openFamilyMemberModal(isWizard = false) {
         const bodyHtml = `
             <div class="modal-form-group">
-                <label for="member-name">Имя</label>
-                <input type="text" id="member-name" class="modal-input" placeholder="Например, Анна" value="${member.name || ''}">
-            </div>
-            <div class="modal-form-group">
                 <label for="member-age">Возраст</label>
-                <input type="number" id="member-age" class="modal-input" placeholder="30" value="${member.age || ''}">
-            </div>
-             <div class="modal-form-group">
-                <label for="member-weight">Вес (кг)</label>
-                <input type="number" id="member-weight" class="modal-input" placeholder="65" value="${member.weight || ''}">
-            </div>
-            <div class="modal-form-group">
-                <label for="member-height">Рост (см)</label>
-                <input type="number" id="member-height" class="modal-input" placeholder="170" value="${member.height || ''}">
+                <input type="number" id="member-age" class="modal-input" placeholder="30">
             </div>
             <div class="modal-form-group">
                 <label for="member-gender">Пол</label>
                 <select id="member-gender" class="settings-select" style="height: 45px;">
-                    <option value="female" ${member.gender === 'female' ? 'selected' : ''}>Женский</option>
-                    <option value="male" ${member.gender === 'male' ? 'selected' : ''}>Мужской</option>
+                    <option value="female">Женский</option>
+                    <option value="male">Мужской</option>
                 </select>
             </div>
             <div class="modal-form-group">
                 <label for="member-activity">Уровень активности</label>
                 <select id="member-activity" class="settings-select" style="height: 45px;">
-                    <option value="sedentary" ${member.activity === 'sedentary' ? 'selected' : ''}>Сидячий</option>
-                    <option value="light" ${member.activity === 'light' ? 'selected' : ''}>Легкая</option>
-                    <option value="moderate" ${member.activity === 'moderate' ? 'selected' : ''}>Умеренная</option>
-                    <option value="high" ${member.activity === 'high' ? 'selected' : ''}>Высокая</option>
-                </select>
-            </div>
-            <div class="modal-form-group">
-                <label for="member-goal">Цель</label>
-                <select id="member-goal" class="settings-select" style="height: 45px;">
-                    <option value="lose" ${member.goal === 'lose' ? 'selected' : ''}>Похудеть</option>
-                    <option value="maintain" ${member.goal === 'maintain' ? 'selected' : ''}>Поддерживать вес</option>
-                    <option value="gain" ${member.goal === 'gain' ? 'selected' : ''}>Набрать массу</option>
+                    <option value="sedentary">Сидячий</option>
+                    <option value="light">Легкая</option>
+                    <option value="moderate">Умеренная</option>
+                    <option value="high">Высокая</option>
                 </select>
             </div>
         `;
         const buttons = [
             { text: 'Отмена', class: 'secondary', action: () => {} },
-            { text: isEditing ? 'Сохранить' : 'Добавить', class: 'primary', action: async () => {
+            { text: 'Добавить', class: 'primary', action: () => {
                 const newMember = {
-                    name: document.getElementById('member-name').value || 'Человек',
                     age: parseInt(document.getElementById('member-age').value) || 30,
                     gender: document.getElementById('member-gender').value,
-                    weight: parseInt(document.getElementById('member-weight').value) || 65,
-                    height: parseInt(document.getElementById('member-height').value) || 170,
                     activity: document.getElementById('member-activity').value,
-                    goal: document.getElementById('member-goal').value,
                 };
-                if (isEditing) {
-                    this.state.settings.family[memberIndex] = newMember;
-                } else {
-                    this.state.settings.family.push(newMember);
-                }
-                await this.saveState();
+                this.state.settings.family.push(newMember);
+                this.saveState();
                 this.renderFamilyMembers(isWizard);
                 if (!isWizard) this.renderFamilyMembers(false);
                 this.updateWizardView();
             }},
         ];
-        this.showModal(isEditing ? "Редактировать члена семьи" : "Новый член семьи", bodyHtml, buttons);
+        this.showModal("Новый член семьи", bodyHtml, buttons);
     },
     confirmRegenerateAll() {
         this.showModal(
@@ -3286,6 +3238,15 @@ const app = {
         
         const sourceState = isPreview ? this.tempState : this.state;
         if (!sourceState) return;
+
+        if (!this.ai) {
+            if (this.state.settings.apiKey) {
+                this.ai = new GoogleGenAI({ apiKey: this.state.settings.apiKey });
+            } else {
+                this.showNotification("API ключ не настроен.", "error");
+                return;
+            }
+        }
 
         try {
             let extraPrompt = '';
@@ -3367,12 +3328,12 @@ const app = {
         });
     },
 
-    async acceptPreview() {
+    acceptPreview() {
         if (this.tempState) {
             Object.assign(this.state, this.tempState);
             this.state.timestamp = new Date().toISOString();
             this.state.currentDayIndex = 0;
-            await this.saveState();
+            this.saveState();
             this.tempState = null;
             this.showScreen('main-screen');
             this.renderAll();
@@ -3420,20 +3381,14 @@ const app = {
         const file = event.target.files[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = async (e) => {
+        reader.onload = (e) => {
             try {
                 const importedState = JSON.parse(e.target.result);
                 if (importedState.settings) {
-                    // Don't overwrite the user object
-                    const user = this.state.user;
                     this.state = importedState;
-                    this.state.user = user;
-
-                    await this.saveState();
+                    this.saveState();
                     this.showNotification("Данные успешно импортированы!");
-                    this.renderAll();
-                    this.showScreen('main-screen');
-
+                    this.handleStartSetup();
                 } else {
                     throw new Error("Invalid file format");
                 }
