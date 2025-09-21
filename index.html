@@ -1724,6 +1724,8 @@ body::before {
 
 <script type="module">
 import { GoogleGenAI, Type } from "https://esm.run/@google/genai";
+import { db } from './src/firebase-config.js';
+import { getDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
 const app = {
     version: '1.4.0',
@@ -1794,6 +1796,8 @@ const app = {
 
     async init() {
         this.cacheDom();
+        this.addEventListeners();
+        await this.loadState();
 
         // Wait for Firebase services to be initialized by the other script
         await new Promise(resolve => {
@@ -2019,41 +2023,46 @@ const app = {
     },
 
     async saveState() {
-        if (!this.currentUser) return;
-        this.showNotification('Сохранение...', 'loading');
-        const { firestore, doc, setDoc } = window.firebaseServices;
         try {
-            const stateToSave = JSON.parse(JSON.stringify(this.state));
-            await setDoc(doc(firestore, "users", this.currentUser.uid), { data: stateToSave });
-            this.showNotification('Данные сохранены в облаке!', 'success');
-        } catch (error) {
-            console.error("Error saving state to Firestore:", error);
+            await setDoc(doc(db, "user-data", "main-config"), this.state);
+        } catch (e) {
+            console.error("Error saving state to Firestore:", e);
             this.showNotification('Ошибка сохранения данных.', 'error');
         }
     },
     
     async loadState() {
-        if (!this.currentUser) return;
-        this.showNotification('Загрузка данных...', 'loading');
-        const { firestore, doc, getDoc } = window.firebaseServices;
-        const docRef = doc(firestore, "users", this.currentUser.uid);
-        const docSnap = await getDoc(docRef);
+        try {
+            const docRef = doc(db, "user-data", "main-config");
+            const docSnap = await getDoc(docRef);
 
-        if (docSnap.exists()) {
-            const loadedData = docSnap.data().data;
-            if (loadedData && loadedData.settings) {
-                this.state = loadedData;
-                // Backward compatibility checks
-                if (!this.state.settings.family) this.state.settings.family = [];
-                if (!this.state.cookedMeals) this.state.cookedMeals = {};
-                this.showScreen('main-screen');
-                this.renderAll();
+            if (docSnap.exists()) {
+                const loadedData = docSnap.data();
+                if (loadedData.settings) {
+                     this.state = loadedData;
+                     // Ensure new properties exist for backward compatibility
+                     if (!this.state.settings.family) this.state.settings.family = [];
+                     if (!this.state.settings.menuDuration) this.state.settings.menuDuration = 7;
+                     if (!this.state.cookedMeals) this.state.cookedMeals = {};
+                     if (!this.state.settings.cuisine) this.state.settings.cuisine = "Любая";
+                     if (!this.state.settings.difficulty) this.state.settings.difficulty = "Любая";
+                     if (this.state.currentDayIndex === undefined) this.state.currentDayIndex = 0;
+
+                     (this.state.shoppingList || []).forEach(cat => {
+                        (cat.items || []).forEach(item => {
+                            if (item.purchases === undefined) item.purchases = item.completed ? [{ qty: item.shoppingSuggestion?.qty || 1, price: item.price, date: new Date().toISOString() }] : [];
+                            item.purchases.forEach(p => { if (!p.date) p.date = new Date().toISOString() });
+                            if (item.consumedQty === undefined) item.consumedQty = 0;
+                        });
+                     });
+                }
             } else {
-                 this.showWizard();
+                // No document found, probably a new user.
+                console.log("No saved state found in Firestore.");
             }
-        } else {
-            console.log("New user or no data. Starting wizard.");
-            this.showWizard();
+        } catch (e) {
+            console.error("Error loading state from Firestore:", e);
+            this.showNotification('Ошибка загрузки данных.', 'error');
         }
         this.hideNotification();
     },
