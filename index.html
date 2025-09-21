@@ -7,6 +7,7 @@
     
     <!-- PWA Manifest & Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="СЕМЕЙНОЕ МЕНЮ">
     <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiB2aWV3Qm94PSIwIDAgMTAyNCAxMDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiByeD0iMjMyIiBmaWxsPSIjRjlGN0Y0Ii8+CjxwYXRoIGQ9Ik01MTIgNzM5QzQ1ologi0OSA3MzkgNDE3IDcyMC4wOSA0MTcgNjY1QzQxNyA2MDkuOTEgNDU2LjkxIDU5MSA1MTIgNTkxQzU2Ny4wOSA1OTEgNjA3IDYwOS45MSA2MDcgNjY1QzYwNyA3MjAuMDkgNTY3LjA5IDczOSA1MTIgNzM5WiIgZmlsbD0iIzhCNUUzQyIvPgo8cGF0aCBkPSJNNTEyIDcxOEM0NjguNDMgNzE4IDQzMyA2OTYuNTcgNDMzIDY2NUM0MzMgNjMzLjQzIDQ2OC44MyA2MTIgNTEyIDYxMkM1NTUuNTcgNjEyIDU5MSA2MzMuNDMgNTkxIDY2NUM1OTEgNjk2LjU3IDU1NS41NyA3MTggNTEyIDcxOFoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik01MTIgMzQ0QzUxMiAzNDQgNTM2IDM4NSA1MTIgNDA5QzQ4OCAzODUgNTEyIDM0NCA1MTIgMzQ0WiIgZmlsbD0iI0Q0QTM3MyIgb3BhY2l0eT0iMC41Ii8+CjxwYXRoIGQ9Ik00ODQgMzI2QzQ4NCAzMjYgNTAzIDM1NBC42IDQ4NCAzNzZDNA2NSAzNTguNiA0ODQgMzI2IDQ4NCAzMjZaIiBmaWxsPSIjRDRBMzcyIiBvcGFjaXR5PSIwLjUiLz4KPHBhdGggZD0iTTU0MCAzMjZDNTAxIDMyNiA1OTcgMzU4LjYgNTQwIDM3NkM1NzMgMzU4LjYgNTQwIDMyNiA1NDAgMzI2WiIgZmlsbD0iI0Q0QTM3MyIgb3BhY2l0eT0iMC41Ii8+Cjwvc3ZnPgo=">
@@ -1343,13 +1344,8 @@ body::before {
     color: white;
 }
 </style>
-    <!-- Firebase SDKs -->
-    <script type="module" src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js"></script>
-    <script type="module" src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js"></script>
-    <script type="module" src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js"></script>
-
     <!-- Firebase Init -->
-  <script type="module" crossorigin src="/aimenu/assets/index-CnO0RGlJ.js"></script>
+  <script type="module" crossorigin src="/aimenu/assets/index-B_BJjdG5.js"></script>
 </head>
 <body>
 
@@ -1636,11 +1632,13 @@ body::before {
             
              <div class="settings-section">
                 <h3 class="settings-title">API-ключ</h3>
-                <div class="settings-form-group">
-                    <label for="settings-api-key">Google Gemini API Key</label>
-                    <input type="password" id="settings-api-key" class="settings-input" placeholder="Введите ваш ключ">
-                </div>
-                <button class="primary-button" id="save-api-key-btn">Проверить и сохранить</button>
+                <form onsubmit="return false;">
+                    <div class="settings-form-group">
+                        <label for="settings-api-key">Google Gemini API Key</label>
+                        <input type="password" id="settings-api-key" class="settings-input" placeholder="Введите ваш ключ">
+                    </div>
+                    <button type="button" class="primary-button" id="save-api-key-btn">Проверить и сохранить</button>
+                </form>
             </div>
 
 
