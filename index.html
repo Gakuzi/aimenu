@@ -7,6 +7,7 @@
     
     <!-- PWA Manifest & Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="СЕМЕЙНОЕ МЕНЮ">
     <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiB2aWV3Qm94PSIwIDAgMTAyNCAxMDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiByeD0iMjMyIiBmaWxsPSIjRjlGN0Y0Ii8+CjxwYXRoIGQ9Ik01MTIgNzM5QzQ1ologi0OSA3MzkgNDE3IDcyMC4wOSA0MTcgNjY1QzQxNyA2MDkuOTEgNDU2LjkxIDU5MSA1MTIgNTkxQzU2Ny4wOSA1OTEgNjA3IDYwOS45MSA2MDcgNjY1QzYwNyA3MjAuMDkgNTY3LjA5IDczOSA1MTIgNzM5WiIgZmlsbD0iIzhCNUUzQyIvPgo8cGF0aCBkPSJNNTEyIDcxOEM0NjguNDMgNzE4IDQzMyA2OTYuNTcgNDMzIDY2NUM0MzMgNjMzLjQzIDQ2OC44MyA2MTIgNTEyIDYxMkM1NTUuNTcgNjEyIDU5MSA2MzMuNDMgNTkxIDY2NUM1OTEgNjk2LjU3IDU1NS41NyA3MTggNTEyIDcxOFoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik01MTIgMzQ0QzUxMiAzNDQgNTM2IDM4NSA1MTIgNDA5QzQ4OCAzODUgNTEyIDM0NCA1MTIgMzQ0WiIgZmlsbD0iI0Q0QTM3MyIgb3BhY2l0eT0iMC41Ii8+CjxwYXRoIGQ9Ik00ODQgMzI2QzQ4NCAzMjYgNTAzIDM1NBC42IDQ4NCAzNzZDNA2NSAzNTguNiA0ODQgMzI2IDQ4NCAzMjZaIiBmaWxsPSIjRDRBMzcyIiBvcGFjaXR5PSIwLjUiLz4KPHBhdGggZD0iTTU0MCAzMjZDNTAxIDMyNiA1OTcgMzU4LjYgNTQwIDM3NkM1NzMgMzU4LjYgNTQwIDMyNiA1NDAgMzI2WiIgZmlsbD0iI0Q0QTM3MyIgb3BhY2l0eT0iMC41Ii8+Cjwvc3ZnPgo=">
@@ -1343,36 +1344,21 @@ body::before {
     color: white;
 }
 </style>
-    <!-- Firebase SDKs -->
-    <script type="module" src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js"></script>
-    <script type="module" src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js"></script>
-    <script type="module" src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js"></script>
-
     <!-- Firebase Init -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+        // This script is now primarily for bootstrapping and setting up global services.
+        // The actual Firebase app instance is initialized in firebase-config.js
+        import { auth, db } from './src/firebase-config.js';
+        import { GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+        import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
         try {
-            const firebaseConfig = {
-              apiKey: "__FIREBASE_API_KEY__",
-              authDomain: "__FIREBASE_AUTH_DOMAIN__",
-              projectId: "__FIREBASE_PROJECT_ID__",
-              storageBucket: "__FIREBASE_STORAGE_BUCKET__",
-              messagingSenderId: "__FIREBASE_MESSAGING_SENDER_ID__",
-              appId: "__FIREBASE_APP_ID__"
-            };
-
-            const app = initializeApp(firebaseConfig);
-            const auth = getAuth(app);
-            const firestore = getFirestore(app);
             const provider = new GoogleAuthProvider();
 
             window.firebaseServices = {
                 auth,
                 provider,
-                firestore,
+                firestore: db, // Use 'db' as firestore instance
                 signInWithPopup,
                 onAuthStateChanged,
                 signOut,
@@ -1381,8 +1367,8 @@ body::before {
                 getDoc
             };
         } catch (error) {
-            console.error("Firebase initialization failed:", error);
-            document.body.innerHTML = '<h1>Ошибка инициализации Firebase. Проверьте конфигурацию.</h1>';
+            console.error("Firebase services setup failed:", error);
+            document.body.innerHTML = '<h1>Ошибка настройки сервисов Firebase.</h1>';
         }
     </script>
 </head>
@@ -1671,11 +1657,13 @@ body::before {
             
              <div class="settings-section">
                 <h3 class="settings-title">API-ключ</h3>
-                <div class="settings-form-group">
-                    <label for="settings-api-key">Google Gemini API Key</label>
-                    <input type="password" id="settings-api-key" class="settings-input" placeholder="Введите ваш ключ">
-                </div>
-                <button class="primary-button" id="save-api-key-btn">Проверить и сохранить</button>
+                <form onsubmit="return false;">
+                    <div class="settings-form-group">
+                        <label for="settings-api-key">Google Gemini API Key</label>
+                        <input type="password" id="settings-api-key" class="settings-input" placeholder="Введите ваш ключ">
+                    </div>
+                    <button type="button" class="primary-button" id="save-api-key-btn">Проверить и сохранить</button>
+                </form>
             </div>
 
 
@@ -1995,17 +1983,11 @@ const app = {
 
     setupAuthListener() {
         const { auth, onAuthStateChanged } = window.firebaseServices;
-        onAuthStateChanged(auth, async (user) => {
+        onAuthStateChanged(auth, user => {
             if (user) {
                 this.currentUser = user;
                 this.dom.openSettingsBtn.innerHTML = `<img src="${user.photoURL}" style="width: 32px; height: 32px; border-radius: 50%;" alt="User avatar">`;
-                await this.loadState();
-
-                if (this.state.menu && this.state.menu.length > 0) {
-                    this.showScreen('main-screen');
-                } else {
-                    this.showWizard();
-                }
+                this.loadState();
             } else {
                 this.currentUser = null;
                 this.dom.openSettingsBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
