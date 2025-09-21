@@ -1685,13 +1685,13 @@ import "firebase/compat/firestore";
 import { GoogleGenAI, Type } from "https://esm.run/@google/genai";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAhBuja9z5124TrA65M9agA8IEHobby0h4",
-  authDomain: "family-menu-563ef.firebaseapp.com",
-  projectId: "family-menu-563ef",
-  storageBucket: "family-menu-563ef.firebasestorage.app",
-  messagingSenderId: "1096564405600",
-  appId: "1:1096564405600:web:1fdb4e5e094396152ada05",
-  measurementId: "G-BVDV6ZWRHM"
+  apiKey: import.meta.env.VITE_API_KEY,
+  authDomain: import.meta.env.VITE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_APP_ID,
+  measurementId: import.meta.env.VITE_MEASUREMENT_ID
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -1767,7 +1767,13 @@ const app = {
     async init() {
         this.cacheDom();
         this.addEventListeners();
-        this.handleAuth(); // Firebase auth is the new entry point
+
+        const hasSeenSplash = localStorage.getItem('hasSeenSplash') === 'true';
+        if (!hasSeenSplash) {
+            this.showScreen('splash-screen');
+        } else {
+            this.handleAuth();
+        }
     },
 
     handleAuth() {
@@ -1968,8 +1974,15 @@ const app = {
     },
     
     addEventListeners() {
+        this.dom.startAppBtn.addEventListener('click', () => {
+            localStorage.setItem('hasSeenSplash', 'true');
+            this.dom.splashScreen.classList.add('hidden');
+            // Give the animation time to finish before starting auth
+            setTimeout(() => this.handleAuth(), 500);
+        });
+
         this.dom.googleSigninBtn.addEventListener('click', () => this.signIn());
-        
+
         this.dom.wizardNextBtn.addEventListener('click', () => this.navigateWizard(1));
         this.dom.wizardBackBtn.addEventListener('click', () => this.navigateWizard(-1));
 
