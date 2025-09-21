@@ -1689,6 +1689,8 @@ body::before {
 
 <script type="module">
 import { GoogleGenAI, Type } from "https://esm.run/@google/genai";
+import { db } from './src/firebase-config.js';
+import { getDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
 const app = {
     version: '1.4.0',
@@ -1760,7 +1762,7 @@ const app = {
     async init() {
         this.cacheDom();
         this.addEventListeners();
-        this.loadState();
+        await this.loadState();
 
         const hasSeenSplash = localStorage.getItem('hasSeenSplash') === 'true';
         if (!hasSeenSplash) {
@@ -1986,19 +1988,22 @@ const app = {
         }
     },
 
-    saveState() {
+    async saveState() {
         try {
-            localStorage.setItem('familyMenuState', JSON.stringify(this.state));
+            await setDoc(doc(db, "user-data", "main-config"), this.state);
         } catch (e) {
-            console.error("Failed to save state:", e);
+            console.error("Error saving state to Firestore:", e);
+            this.showNotification('Ошибка сохранения данных.', 'error');
         }
     },
     
-    loadState() {
-        const savedState = localStorage.getItem('familyMenuState');
-        if (savedState) {
-            try {
-                const loadedData = JSON.parse(savedState);
+    async loadState() {
+        try {
+            const docRef = doc(db, "user-data", "main-config");
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const loadedData = docSnap.data();
                 if (loadedData.settings) {
                      this.state = loadedData;
                      // Ensure new properties exist for backward compatibility
@@ -2016,12 +2021,14 @@ const app = {
                             if (item.consumedQty === undefined) item.consumedQty = 0;
                         });
                      });
-                } else {
-                    this.resetState();
                 }
-            } catch (e) {
-                this.resetState();
+            } else {
+                // No document found, probably a new user.
+                console.log("No saved state found in Firestore.");
             }
+        } catch (e) {
+            console.error("Error loading state from Firestore:", e);
+            this.showNotification('Ошибка загрузки данных.', 'error');
         }
     },
 
