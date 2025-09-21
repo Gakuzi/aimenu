@@ -1343,6 +1343,48 @@ body::before {
     color: white;
 }
 </style>
+    <!-- Firebase SDKs -->
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js"></script>
+
+    <!-- Firebase Init -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+
+        try {
+            const firebaseConfig = {
+              apiKey: "__FIREBASE_API_KEY__",
+              authDomain: "__FIREBASE_AUTH_DOMAIN__",
+              projectId: "__FIREBASE_PROJECT_ID__",
+              storageBucket: "__FIREBASE_STORAGE_BUCKET__",
+              messagingSenderId: "__FIREBASE_MESSAGING_SENDER_ID__",
+              appId: "__FIREBASE_APP_ID__"
+            };
+
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const firestore = getFirestore(app);
+            const provider = new GoogleAuthProvider();
+
+            window.firebaseServices = {
+                auth,
+                provider,
+                firestore,
+                signInWithPopup,
+                onAuthStateChanged,
+                signOut,
+                doc,
+                setDoc,
+                getDoc
+            };
+        } catch (error) {
+            console.error("Firebase initialization failed:", error);
+            document.body.innerHTML = '<h1>Ошибка инициализации Firebase. Проверьте конфигурацию.</h1>';
+        }
+    </script>
 </head>
 <body>
 
@@ -1377,12 +1419,14 @@ body::before {
         <div class="setup-container">
             <svg class="setup-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="45" fill="#F0E7DD"/><path d="M50,10 A40,40 0 0,1 90,50" fill="none" stroke="#8B5E3C" stroke-width="8"/><path d="M50,90 A40,40 0 0,1 10,50" fill="none" stroke="#D4A373" stroke-width="8"/><circle cx="50" cy="50" r="20" fill="#fff"/><path d="M50 38 C 55 42, 55 48, 50 52 S 45 58, 50 62" stroke="#5E7A6E" stroke-width="4" fill="none" stroke-linecap="round"/></svg>
             <h1 class="setup-title">Добро пожаловать!</h1>
-            <p class="setup-subtitle">Как вы хотите начать?</p>
+            <p class="setup-subtitle">Войдите, чтобы сохранять и синхронизировать ваше меню между устройствами.</p>
             <div class="welcome-buttons">
-                <button class="primary-button" id="start-setup-wizard-btn">🚀 Начать настройку</button>
-                <button class="secondary-button" id="load-from-file-btn">📥 Загрузить из файла</button>
+                <button class="primary-button" id="google-signin-btn">
+                    <svg style="width:20px;height:20px;vertical-align:middle;margin-right:10px" viewBox="0 0 24 24"><path fill="white" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#4A90E2" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#FBBC05" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/><path fill="none" d="M1 1h22v22H1z"/></svg>
+                    Войти через Google
+                </button>
             </div>
-            <p class="welcome-info">Если у вас есть файл конфигурации с другого устройства, вы можете загрузить его, чтобы пропустить настройку.</p>
+            <p class="welcome-info">Вход позволит вам безопасно хранить данные в облаке.</p>
         </div>
     </div>
 
@@ -1397,23 +1441,14 @@ body::before {
             
             <div id="setup-wizard">
                 <div class="wizard-step" data-step="1">
-                    <h3 class="wizard-step-title">Шаг 1: Подключение к ИИ</h3>
-                    <p class="wizard-step-description">Для начала работы укажите ваш API ключ для Google Gemini.</p>
-                    <a href="#" id="api-key-help-link" class="api-key-help-link">Где взять ключ? Пошаговая инструкция</a>
-                    <div class="input-group">
-                        <input type="password" id="api-key-input" placeholder="Ваш Google Gemini API ключ">
-                    </div>
-                </div>
-
-                <div class="wizard-step" data-step="2">
-                    <h3 class="wizard-step-title">Шаг 2: Расскажите о вашей семье</h3>
+                    <h3 class="wizard-step-title">Шаг 1: Расскажите о вашей семье</h3>
                     <p class="wizard-step-description">Эта информация поможет ИИ рассчитать калорийность и размер порций. Добавьте каждого члена семьи.</p>
                     <div id="wizard-family-members-container"></div>
                     <button class="secondary-button" id="wizard-add-family-member-btn" style="height: 45px; font-size: 16px;">+ Добавить члена семьи</button>
                 </div>
 
-                <div class="wizard-step" data-step="3">
-                    <h3 class="wizard-step-title">Шаг 3: Настройте ваше меню</h3>
+                <div class="wizard-step" data-step="2">
+                    <h3 class="wizard-step-title">Шаг 2: Настройте ваше меню</h3>
                     <p class="wizard-step-description">Укажите основные параметры для планирования.</p>
                     <div class="settings-form-group">
                         <label for="wizard-menu-duration">Количество дней меню</label>
@@ -1449,7 +1484,7 @@ body::before {
                     </div>
                 </div>
 
-                <div class="wizard-step" data-step="4">
+                <div class="wizard-step" data-step="3">
                     <h3 class="wizard-step-title">Всё готово к магии!</h3>
                     <p class="wizard-step-description">Мы собрали все необходимые данные. Нажмите кнопку ниже, чтобы наш ИИ создал ваше идеальное семейное меню на неделю.</p>
                 </div>
@@ -1744,7 +1779,7 @@ const app = {
     dom: {},
     wizard: {
         currentStep: 1,
-        totalSteps: 4,
+        totalSteps: 3, // Now 3 steps: Family, Preferences, Confirm
     },
     currentRecipe: {
         id: null,
@@ -1759,15 +1794,20 @@ const app = {
 
     async init() {
         this.cacheDom();
-        this.addEventListeners();
-        this.loadState();
 
-        const hasSeenSplash = localStorage.getItem('hasSeenSplash') === 'true';
-        if (!hasSeenSplash) {
-            this.showScreen('splash-screen');
-        } else {
-            this.handleStartSetup();
-        }
+        // Wait for Firebase services to be initialized by the other script
+        await new Promise(resolve => {
+            const interval = setInterval(() => {
+                if (window.firebaseServices) {
+                    clearInterval(interval);
+                    resolve();
+                }
+            }, 50);
+        });
+
+        // Firebase is ready, proceed with app logic
+        this.addEventListeners(); // Add listeners after firebase is ready
+        this.setupAuthListener();
     },
 
     cacheDom() {
@@ -1776,8 +1816,7 @@ const app = {
             startAppBtn: document.getElementById('start-app-btn'),
             screens: document.querySelectorAll('.screen'),
             welcomeScreen: document.getElementById('welcome-screen'),
-            startSetupWizardBtn: document.getElementById('start-setup-wizard-btn'),
-            loadFromFileBtn: document.getElementById('load-from-file-btn'),
+            googleSigninBtn: document.getElementById('google-signin-btn'), // New button
             setupScreen: document.getElementById('setup-screen'),
             mainScreen: document.getElementById('main-screen'),
             recipeScreen: document.getElementById('recipe-screen'),
@@ -1791,8 +1830,8 @@ const app = {
             wizardBackBtn: document.getElementById('wizard-back-btn'),
             wizardNextBtn: document.getElementById('wizard-next-btn'),
             wizardStepCounter: document.getElementById('wizard-step-counter'),
-            apiKeyInput: document.getElementById('api-key-input'),
-            apiKeyHelpLink: document.getElementById('api-key-help-link'),
+            // apiKeyInput: document.getElementById('api-key-input'), // Removed
+            // apiKeyHelpLink: document.getElementById('api-key-help-link'), // Removed
             wizardFamilyContainer: document.getElementById('wizard-family-members-container'),
             wizardAddMemberBtn: document.getElementById('wizard-add-family-member-btn'),
             wizardDuration: document.getElementById('wizard-menu-duration'),
@@ -1864,8 +1903,8 @@ const app = {
                 familyContainer: document.getElementById('family-members-container'),
                 addMemberBtn: document.getElementById('add-family-member-btn'),
                 regenerateAllBtn: document.getElementById('regenerate-all-btn'),
-                apiKeyInput: document.getElementById('settings-api-key'),
-                saveApiKeyBtn: document.getElementById('save-api-key-btn'),
+                apiKeyInput: document.getElementById('settings-api-key'), // This remains for settings
+                saveApiKeyBtn: document.getElementById('save-api-key-btn'), // This remains for settings
                 runWizardBtn: document.getElementById('run-wizard-btn'),
                 appVersionInfo: document.getElementById('app-version-info'),
                 showChangelogBtn: document.getElementById('show-changelog-btn'),
@@ -1891,20 +1930,13 @@ const app = {
     addEventListeners() {
         this.dom.startAppBtn.addEventListener('click', () => {
             localStorage.setItem('hasSeenSplash', 'true');
-            this.handleStartSetup();
+            this.showScreen('welcome-screen');
         });
 
-        this.dom.startSetupWizardBtn.addEventListener('click', () => this.handleStartSetup(true));
-        this.dom.loadFromFileBtn.addEventListener('click', () => this.dom.importFileInput.click());
+        this.dom.googleSigninBtn.addEventListener('click', () => this.signInWithGoogle());
 
         this.dom.wizardNextBtn.addEventListener('click', () => this.navigateWizard(1));
         this.dom.wizardBackBtn.addEventListener('click', () => this.navigateWizard(-1));
-        this.dom.apiKeyInput.addEventListener('input', () => this.updateWizardView());
-        this.dom.apiKeyHelpLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.showApiKeyHelpModal();
-        });
-
         this.dom.previewAcceptBtn.addEventListener('click', () => this.acceptPreview());
         this.dom.previewRegenerateAllBtn.addEventListener('click', () => this.startGenerationProcess(true));
 
@@ -1957,78 +1989,79 @@ const app = {
         });
     },
 
-    async handleStartSetup(forceWizard = false) {
-        if (forceWizard) {
-             this.showWizard();
-             return;
-        }
-
-        if (this.state.settings.apiKey && this.state.menu && this.state.menu.length > 0) {
-            this.showScreen('main-screen');
-            this.renderAll();
-        } else if (this.state.settings.apiKey) {
-             this.showNotification('Проверка API ключа...', 'loading');
-            try {
-                this.ai = new GoogleGenAI({ apiKey: this.state.settings.apiKey });
-                await this.ai.models.generateContent({model:'gemini-2.5-flash', contents: 'test'});
-                this.hideNotification();
-                this.wizard.currentStep = 2;
-                this.showWizard();
-                this.updateWizardView();
-            } catch (e) {
-                this.showNotification('API ключ недействителен. Введите новый.', 'error');
-                this.state.settings.apiKey = null;
-                this.saveState();
-                this.showWizard();
+    setupAuthListener() {
+        const { auth, onAuthStateChanged } = window.firebaseServices;
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                this.currentUser = user;
+                this.dom.openSettingsBtn.innerHTML = `<img src="${user.photoURL}" style="width: 32px; height: 32px; border-radius: 50%;" alt="User avatar">`;
+                this.loadState();
+            } else {
+                this.currentUser = null;
+                this.dom.openSettingsBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+                const hasSeenSplash = localStorage.getItem('hasSeenSplash') === 'true';
+                this.showScreen(hasSeenSplash ? 'welcome-screen' : 'splash-screen');
             }
-        } else {
-             this.showScreen('welcome-screen');
+        });
+    },
+
+    async signInWithGoogle() {
+        this.showNotification('Открываю окно входа...', 'loading');
+        const { auth, provider, signInWithPopup } = window.firebaseServices;
+        try {
+            await signInWithPopup(auth, provider);
+            // onAuthStateChanged will handle the rest
+            this.hideNotification();
+        } catch (error) {
+            console.error("Google Sign-in failed:", error);
+            this.showNotification(`Ошибка входа: ${error.message}`, 'error');
         }
     },
 
-    saveState() {
+    async saveState() {
+        if (!this.currentUser) return;
+        this.showNotification('Сохранение...', 'loading');
+        const { firestore, doc, setDoc } = window.firebaseServices;
         try {
-            localStorage.setItem('familyMenuState', JSON.stringify(this.state));
-        } catch (e) {
-            console.error("Failed to save state:", e);
+            const stateToSave = JSON.parse(JSON.stringify(this.state));
+            await setDoc(doc(firestore, "users", this.currentUser.uid), { data: stateToSave });
+            this.showNotification('Данные сохранены в облаке!', 'success');
+        } catch (error) {
+            console.error("Error saving state to Firestore:", error);
+            this.showNotification('Ошибка сохранения данных.', 'error');
         }
     },
     
-    loadState() {
-        const savedState = localStorage.getItem('familyMenuState');
-        if (savedState) {
-            try {
-                const loadedData = JSON.parse(savedState);
-                if (loadedData.settings) {
-                     this.state = loadedData;
-                     // Ensure new properties exist for backward compatibility
-                     if (!this.state.settings.family) this.state.settings.family = [];
-                     if (!this.state.settings.menuDuration) this.state.settings.menuDuration = 7;
-                     if (!this.state.cookedMeals) this.state.cookedMeals = {};
-                     if (!this.state.settings.cuisine) this.state.settings.cuisine = "Любая";
-                     if (!this.state.settings.difficulty) this.state.settings.difficulty = "Любая";
-                     if (this.state.currentDayIndex === undefined) this.state.currentDayIndex = 0;
+    async loadState() {
+        if (!this.currentUser) return;
+        this.showNotification('Загрузка данных...', 'loading');
+        const { firestore, doc, getDoc } = window.firebaseServices;
+        const docRef = doc(firestore, "users", this.currentUser.uid);
+        const docSnap = await getDoc(docRef);
 
-                     (this.state.shoppingList || []).forEach(cat => {
-                        (cat.items || []).forEach(item => {
-                            if (item.purchases === undefined) item.purchases = item.completed ? [{ qty: item.shoppingSuggestion?.qty || 1, price: item.price, date: new Date().toISOString() }] : [];
-                            item.purchases.forEach(p => { if (!p.date) p.date = new Date().toISOString() });
-                            if (item.consumedQty === undefined) item.consumedQty = 0;
-                        });
-                     });
-                } else {
-                    this.resetState();
-                }
-            } catch (e) {
-                this.resetState();
+        if (docSnap.exists()) {
+            const loadedData = docSnap.data().data;
+            if (loadedData && loadedData.settings) {
+                this.state = loadedData;
+                // Backward compatibility checks
+                if (!this.state.settings.family) this.state.settings.family = [];
+                if (!this.state.cookedMeals) this.state.cookedMeals = {};
+                this.showScreen('main-screen');
+                this.renderAll();
+            } else {
+                 this.showWizard();
             }
+        } else {
+            console.log("New user or no data. Starting wizard.");
+            this.showWizard();
         }
+        this.hideNotification();
     },
 
     resetState() {
-        localStorage.removeItem('familyMenuState');
-        localStorage.removeItem('hasSeenSplash');
-        window.location.reload();
+        const { signOut, auth } = window.firebaseServices;
+        signOut(auth).catch(error => console.error('Sign out failed', error));
+        // onAuthStateChanged will handle UI changes
     },
 
     showScreen(screenId) {
@@ -2057,7 +2090,6 @@ const app = {
         const { currentStep, totalSteps } = this.wizard;
         
         // Populate inputs from state
-        this.dom.apiKeyInput.value = this.state.settings.apiKey || '';
         this.dom.wizardDuration.value = this.state.settings.menuDuration;
         this.dom.wizardBudget.value = this.state.settings.totalBudget;
         this.dom.wizardPreferences.value = this.state.settings.preferences;
@@ -2081,13 +2113,12 @@ const app = {
         // Validation for 'Next' button
         let isStepValid = false;
         switch(currentStep) {
-            case 1: isStepValid = this.dom.apiKeyInput.value.trim().length > 0; break;
-            case 2: isStepValid = this.state.settings.family.length > 0; break;
+            case 1: isStepValid = this.state.settings.family.length > 0; break;
             default: isStepValid = true;
         }
         this.dom.wizardNextBtn.disabled = !isStepValid;
 
-        if (currentStep === 2) {
+        if (currentStep === 1) {
             this.renderFamilyMembers(true);
         }
     },
@@ -2096,16 +2127,14 @@ const app = {
         const { currentStep, totalSteps } = this.wizard;
         // Validation & State saving for current step before navigating
         if (direction > 0) {
-            if (currentStep === 1) {
-                this.state.settings.apiKey = this.dom.apiKeyInput.value.trim();
-            } else if (currentStep === 3) {
+            if (currentStep === 2) { // Step 2 is preferences
                 this.state.settings.menuDuration = parseInt(this.dom.wizardDuration.value) || 7;
                 this.state.settings.totalBudget = parseInt(this.dom.wizardBudget.value) || 10000;
                 this.state.settings.preferences = this.dom.wizardPreferences.value;
                 this.state.settings.cuisine = this.dom.wizardCuisine.value;
                 this.state.settings.difficulty = this.dom.wizardDifficulty.value;
-            } else if (currentStep === totalSteps) {
-                this.saveState();
+            } else if (currentStep === totalSteps) { // Last step
+                await this.saveState();
                 await this.startGenerationProcess();
                 return;
             }
@@ -2196,11 +2225,16 @@ const app = {
     
     async generateComprehensiveData(purchasedItems = '', extraPrompt = '') {
         const { family, menuDuration, preferences, cuisine, difficulty, totalBudget } = this.state.settings;
-        const familyDescription = family.map(p => `${p.gender === 'male' ? 'Мужчина' : 'Женщина'}, ${p.age} лет, активность: ${p.activity}`).join('; ');
+
+        const familyDescription = family.map(p =>
+            `- ${p.name}: Вес ${p.weight}кг, Рост ${p.height}см. Цель: ${
+                {'lose': 'постепенное снижение веса', 'maintain': 'поддержание текущего веса', 'gain': 'набор мышечной массы'}[p.goal]
+            }.`
+        ).join('\n');
 
         let promptText = `Сгенерируй одним JSON-ответом полный план питания. Ответ должен содержать три ключа верхнего уровня: "menu", "recipes", "shoppingList".
 
-1.  **menu**: Разнообразное меню на ${menuDuration} дней (с воскресенья по субботу) для семьи: ${familyDescription}.
+1.  **menu**: Разнообразное меню на ${menuDuration} дней (с воскресенья по субботу) для семьи:\n${familyDescription}.
     *   Учти их потребности в калориях.
     *   Общие предпочтения: ${preferences}.
     *   Предпочитаемая кухня: ${cuisine}.
@@ -3120,69 +3154,94 @@ const app = {
     renderFamilyMembers(isWizard = false) {
         const container = isWizard ? this.dom.wizardFamilyContainer : this.dom.settings.familyContainer;
         container.innerHTML = '';
-        if (this.state.settings.family.length === 0) {
-            container.innerHTML = '<p style="font-size:14px; color: var(--soft-text);">Добавьте членов семьи для расчета рациона.</p>';
+        if (this.state.settings.family.length === 0 && !isWizard) {
+            container.innerHTML = '<p style="color: var(--soft-text); text-align: center;">Пока не добавлено ни одного члена семьи.</p>';
+            return;
         }
-        this.state.settings.family.forEach((person, index) => {
+        this.state.settings.family.forEach((member, index) => {
             const card = document.createElement('div');
             card.className = 'family-member-card';
-            const genderText = person.gender === 'male' ? 'муж.' : 'жен.';
-            const activityMap = { sedentary: 'сидячий', light: 'легкая', moderate: 'умеренная', high: 'высокая' };
             card.innerHTML = `
-                <span>${person.age} лет, ${genderText}, ${activityMap[person.activity] || person.activity}</span>
-                <button data-index="${index}" class="delete-member-btn">✖</button>
+                <div>
+                    <strong>${member.name}</strong>
+                    <div style="font-size: 12px; color: var(--soft-text);">
+                        ${member.weight}кг, ${member.height}см, Цель: ${
+                            {'lose': 'Снижение', 'maintain': 'Поддержание', 'gain': 'Набор'}[member.goal]
+                        }
+                    </div>
+                </div>
+                <button class="edit-member-btn" data-index="${index}">✏️</button>
             `;
             container.appendChild(card);
         });
-        container.querySelectorAll('.delete-member-btn').forEach(btn => {
+
+        container.querySelectorAll('.edit-member-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                this.state.settings.family.splice(e.target.dataset.index, 1);
+                const index = parseInt(e.currentTarget.dataset.index);
+                const member = this.state.settings.family[index];
+                this.openFamilyMemberModal(isWizard, member, index);
+            });
+        });
+    },
+
+    openFamilyMemberModal(isWizard = false, member = null, memberIndex = -1) {
+        const title = member ? 'Редактировать данные' : 'Добавить члена семьи';
+        const buttonText = member ? 'Сохранить' : 'Добавить';
+
+        const bodyHtml = `
+            <div class="modal-form-group">
+                <label for="modal-member-name">Имя</label>
+                <input type="text" id="modal-member-name" class="modal-input" value="${member?.name || ''}" placeholder="Например, Папа">
+            </div>
+            <div class="modal-form-group">
+                <label for="modal-member-weight">Вес (кг)</label>
+                <input type="number" id="modal-member-weight" class="modal-input" value="${member?.weight || 70}" placeholder="70">
+            </div>
+            <div class="modal-form-group">
+                <label for="modal-member-height">Рост (см)</label>
+                <input type="number" id="modal-member-height" class="modal-input" value="${member?.height || 175}" placeholder="175">
+            </div>
+            <div class="modal-form-group">
+                <label for="modal-member-goal">Цель</label>
+                <select id="modal-member-goal" class="settings-select" style="height: 45px;">
+                    <option value="lose" ${member?.goal === 'lose' ? 'selected' : ''}>Снижение веса</option>
+                    <option value="maintain" ${!member || member?.goal === 'maintain' ? 'selected' : ''}>Поддержание веса</option>
+                    <option value="gain" ${member?.goal === 'gain' ? 'selected' : ''}>Набор массы</option>
+                </select>
+            </div>
+        `;
+
+        const buttons = [
+            { text: 'Отмена', class: 'secondary', action: () => {} },
+            member ? { text: 'Удалить', class: 'secondary', action: () => {
+                this.state.settings.family.splice(memberIndex, 1);
                 this.saveState();
                 this.renderFamilyMembers(isWizard);
                 if (!isWizard) this.renderFamilyMembers(false);
                 this.updateWizardView();
-            });
-        });
-    },
-    openFamilyMemberModal(isWizard = false) {
-        const bodyHtml = `
-            <div class="modal-form-group">
-                <label for="member-age">Возраст</label>
-                <input type="number" id="member-age" class="modal-input" placeholder="30">
-            </div>
-            <div class="modal-form-group">
-                <label for="member-gender">Пол</label>
-                <select id="member-gender" class="settings-select" style="height: 45px;">
-                    <option value="female">Женский</option>
-                    <option value="male">Мужской</option>
-                </select>
-            </div>
-            <div class="modal-form-group">
-                <label for="member-activity">Уровень активности</label>
-                <select id="member-activity" class="settings-select" style="height: 45px;">
-                    <option value="sedentary">Сидячий</option>
-                    <option value="light">Легкая</option>
-                    <option value="moderate">Умеренная</option>
-                    <option value="high">Высокая</option>
-                </select>
-            </div>
-        `;
-        const buttons = [
-            { text: 'Отмена', class: 'secondary', action: () => {} },
-            { text: 'Добавить', class: 'primary', action: () => {
-                const newMember = {
-                    age: parseInt(document.getElementById('member-age').value) || 30,
-                    gender: document.getElementById('member-gender').value,
-                    activity: document.getElementById('member-activity').value,
+            }} : null,
+            { text: buttonText, class: 'primary', action: () => {
+                const memberData = {
+                    name: document.getElementById('modal-member-name').value.trim() || 'Член семьи',
+                    weight: parseInt(document.getElementById('modal-member-weight').value) || 70,
+                    height: parseInt(document.getElementById('modal-member-height').value) || 175,
+                    goal: document.getElementById('modal-member-goal').value
                 };
-                this.state.settings.family.push(newMember);
+
+                if (memberIndex > -1) {
+                    this.state.settings.family[memberIndex] = memberData;
+                } else {
+                    this.state.settings.family.push(memberData);
+                }
+
                 this.saveState();
                 this.renderFamilyMembers(isWizard);
                 if (!isWizard) this.renderFamilyMembers(false);
                 this.updateWizardView();
             }},
-        ];
-        this.showModal("Новый член семьи", bodyHtml, buttons);
+        ].filter(Boolean); // Filter out null for new members
+
+        this.showModal(title, bodyHtml, buttons);
     },
     confirmRegenerateAll() {
         this.showModal(
