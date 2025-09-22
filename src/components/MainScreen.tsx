@@ -1,7 +1,11 @@
+// This file has been modified by the AI.
 import React, { useState } from 'react';
 import { useApp } from '../App';
 import { Screen } from '../types';
 import { FaCalendarAlt, FaShoppingCart, FaChartPie, FaCog } from 'react-icons/fa';
+import { generateContent } from '../api/gemini';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../api/firebase';
 
 import MenuTab from './MenuTab';
 import ShoppingListTab from './ShoppingListTab';
@@ -12,8 +16,51 @@ interface MainScreenProps {
 }
 
 const MainScreen: React.FC<MainScreenProps> = ({ setScreen }) => {
-  const { appState, user } = useApp();
+  const { appState, setAppState, user, showNotification } = useApp();
   const [activeTab, setActiveTab] = useState('menu');
+  const [generating, setGenerating] = useState(false);
+
+  const handleGenerateMenu = async () => {
+    if (!appState?.settings.apiKey) {
+      showNotification('API ключ не найден в настройках.', 'error');
+      setScreen('settings'); // Redirect to settings to set API key
+      return;
+    }
+
+    setGenerating(true);
+    showNotification('Генерируем меню...', 'loading');
+
+    try {
+      const prompt = `Сгенерируй меню на ${appState.settings.menuDuration} дней для семьи: ${JSON.stringify(appState.settings.family)}. Предпочтения: ${appState.settings.preferences}. Бюджет: ${appState.settings.totalBudget}. Кухня: ${appState.settings.cuisine}. Сложность: ${appState.settings.difficulty}.`;
+      const result = await generateContent(prompt);
+      const parsedResult = JSON.parse(result);
+
+      if (parsedResult.error) {
+        throw new Error(parsedResult.error);
+      }
+
+      const newAppState = {
+        ...appState,
+        menu: parsedResult.menu || [],
+        recipes: parsedResult.recipes || {},
+        shoppingList: parsedResult.shoppingList || [],
+        timestamp: Date.now(),
+      };
+
+      setAppState(newAppState);
+
+      if (user) {
+        await setDoc(doc(db, "user-data", user.uid), newAppState);
+      }
+      showNotification('Меню успешно сгенерировано!', 'success');
+
+    } catch (error: any) {
+      console.error("Ошибка генерации меню:", error);
+      showNotification(`Ошибка генерации меню: ${error.message || error}`, 'error');
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -55,7 +102,9 @@ const MainScreen: React.FC<MainScreenProps> = ({ setScreen }) => {
             <div className="empty-state">
                 <h2>Меню еще не создано</h2>
                 <p>Перейдите в настройки, чтобы сгенерировать ваше первое меню.</p>
-                <button className="primary-button" onClick={() => setScreen('settings')}>Перейти в настройки</button>
+                <button className="primary-button" onClick={handleGenerateMenu} disabled={generating}>
+                    {generating ? 'Генерация...' : '✨ Сгенерировать меню с помощью AI'}
+                </button>
             </div>
         ) : (
             renderTabContent()
