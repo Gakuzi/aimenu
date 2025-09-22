@@ -40,12 +40,9 @@ const App = () => {
 
     // Splash screen logic
     const splashTimer = setTimeout(() => {
-        if (screen === 'splash') {
-           // The onAuthStateChanged will handle the screen transition
-           // so we just need to ensure the splash doesn't show forever
-           // if firebase auth is slow.
-           // If after 3s we are still loading, we might go to welcome.
-           if(loading) setScreen('welcome');
+        if (loading) { // If we are still loading after 3 seconds
+           setScreen('welcome');
+           setLoading(false);
         }
     }, 3000);
 
