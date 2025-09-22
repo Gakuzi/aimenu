@@ -7,7 +7,7 @@ export const generateWeeklyMenu = async (apiKey: string, userPromptData: any) =>
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  const model = genAI ? genAI.getGenerativeModel({ model: "gemini-1.0-pro" }) : null;
 
   const generationConfig: GenerationConfig = {
     temperature: 0.7,
