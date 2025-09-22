@@ -1,9 +1,39 @@
 // Комментарий: Инициализация и сервисы для Firebase. Client-side только: Realtime DB для sync, Auth для авторизации, Cloud Messaging для push. Offline-first с merge LocalStorage.
 
 import { initializeApp, FirebaseApp } from 'firebase/app';
-import { getDatabase, Database, ref, onValue, set } from 'firebase/database';
-import { getAuth, Auth, signInWithEmailAndPassword } from 'firebase/auth';
-import { getMessaging, Messaging, getToken } from 'firebase/messaging';
+import { 
+  getDatabase, 
+  Database, 
+  ref, 
+  onValue, 
+  set, 
+  push,
+  remove,
+  update
+} from 'firebase/database';
+import { 
+  getAuth, 
+  Auth, 
+  signInAnonymously, 
+  onAuthStateChanged,
+  User
+} from 'firebase/auth';
+import { 
+  getMessaging, 
+  Messaging, 
+  getToken,
+  onMessage
+} from 'firebase/messaging';
+import { 
+  getFirestore, 
+  Firestore,
+  collection,
+  addDoc,
+  query,
+  orderBy,
+  limit,
+  getDocs
+} from 'firebase/firestore';
 
 // Проверяем, есть ли переменные окружения
 const hasFirebaseConfig = import.meta.env.VITE_FIREBASE_API_KEY && 
@@ -15,9 +45,11 @@ const hasFirebaseConfig = import.meta.env.VITE_FIREBASE_API_KEY &&
                          import.meta.env.VITE_FIREBASE_APP_ID;
 
 let app: FirebaseApp | undefined;
-let db: Database | undefined;
-let auth: Auth | undefined;
+export let db: Database | undefined;
+export let firestore: Firestore | undefined;
+export let auth: Auth | undefined;
 let messaging: Messaging | undefined;
+let currentUser: User | null = null;
 
 if (hasFirebaseConfig) {
   const firebaseConfig = {
@@ -32,47 +64,187 @@ if (hasFirebaseConfig) {
 
   app = initializeApp(firebaseConfig);
   db = getDatabase(app);
+  firestore = getFirestore(app);
   auth = getAuth(app);
   messaging = getMessaging(app);
+  
+  // Слушатель состояния аутентификации
+  if (auth) {
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      if (!user && auth) {
+        // Анонимная аутентификация при запуске
+        signInAnonymously(auth).catch((error) => {
+          console.error('Ошибка анонимной аутентификации:', error);
+        });
+      }
+    });
+  }
 }
 
-export async function firebaseSync(state: any, dispatch: any) {
-  // Если Firebase не настроен, просто возвращаемся
-  if (!hasFirebaseConfig || !auth || !db || !messaging) {
-    console.log('Firebase не настроен, синхронизация отключена');
-    return;
-  }
-
-  // Авторизация (пример: email/password)
+// Инициализация FCM
+export async function initializeFCM() {
+  if (!messaging || !hasFirebaseConfig) return null;
+  
   try {
-    await signInWithEmailAndPassword(auth, 'user@example.com', 'password');
-  } catch (error) {
-    console.error('Ошибка авторизации:', error);
-  }
-
-  // Realtime слушатель для /families/{familyId}
-  const familyRef = ref(db, `/families/${state.familyId}`);
-  onValue(familyRef, (snapshot) => {
-    const data = snapshot.val();
-    if (data) {
-      dispatch({ type: 'SET_MENU', payload: data.menu });  // Merge с локальным
-    }
-  });
-
-  // Push-уведомления
-  getToken(messaging, { vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY }).then((token) => {
+    const token = await getToken(messaging, { 
+      vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY 
+    });
     console.log('FCM Token:', token);
+    return token;
+  } catch (error) {
+    console.error('Ошибка получения FCM токена:', error);
+    return null;
+  }
+}
+
+// Слушатель входящих сообщений
+export function onFCMMessage(callback: (payload: any) => void) {
+  if (!messaging) return;
+  
+  onMessage(messaging, (payload) => {
+    console.log('Получено сообщение:', payload);
+    callback(payload);
   });
 }
 
+// Синхронизация данных семьи
+export async function syncFamilyData(familyId: string, onDataChange: (data: any) => void) {
+  if (!db || !familyId) return null;
+  
+  try {
+    const familyRef = ref(db, `families/${familyId}`);
+    
+    return onValue(familyRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        onDataChange(data);
+      }
+    }, (error) => {
+      console.error('Ошибка синхронизации данных семьи:', error);
+    });
+  } catch (error) {
+    console.error('Ошибка при настройке синхронизации:', error);
+    return null;
+  }
+}
+
+// Обновление данных меню в Firebase
 export async function updateMenuInDB(familyId: string, menu: any) {
-  // Если Firebase не настроен, просто возвращаемся
-  if (!hasFirebaseConfig || !db) {
-    console.log('Firebase не настроен, сохранение в БД отключено');
+  if (!db || !familyId) {
+    console.log('Firebase не настроен или отсутствует ID семьи');
     return;
   }
 
-  const familyRef = ref(db, `/families/${familyId}/menu`);
-  await set(familyRef, menu);
-  // Отправка push о изменениях (через FCM)
+  try {
+    const menuRef = ref(db, `families/${familyId}/menu`);
+    await set(menuRef, menu);
+    console.log('Меню успешно обновлено в Firebase');
+  } catch (error) {
+    console.error('Ошибка обновления меню в Firebase:', error);
+  }
+}
+
+// Обновление списка покупок в Firebase
+export async function updateShoppingListInDB(familyId: string, shoppingList: any) {
+  if (!db || !familyId) {
+    console.log('Firebase не настроен или отсутствует ID семьи');
+    return;
+  }
+
+  try {
+    const shoppingListRef = ref(db, `families/${familyId}/shoppingList`);
+    await set(shoppingListRef, shoppingList);
+    console.log('Список покупок успешно обновлен в Firebase');
+  } catch (error) {
+    console.error('Ошибка обновления списка покупок в Firebase:', error);
+  }
+}
+
+// Отправка запроса в семью
+export async function sendFamilyRequest(familyId: string, request: any) {
+  if (!db || !familyId) {
+    console.log('Firebase не настроен или отсутствует ID семьи');
+    return;
+  }
+
+  try {
+    const requestsRef = ref(db, `families/${familyId}/requests`);
+    const newRequestRef = push(requestsRef);
+    await set(newRequestRef, {
+      ...request,
+      timestamp: new Date().toISOString(),
+      authorId: currentUser?.uid || 'anonymous'
+    });
+    console.log('Запрос успешно отправлен');
+  } catch (error) {
+    console.error('Ошибка отправки запроса:', error);
+    throw error;
+  }
+}
+
+// Получение запросов семьи
+export async function getFamilyRequests(familyId: string, callback: (requests: any[]) => void) {
+  if (!db || !familyId) return;
+  
+  try {
+    const requestsRef = ref(db, `families/${familyId}/requests`);
+    return onValue(requestsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const requests = Object.keys(data).map(key => ({
+          id: key,
+          ...data[key]
+        }));
+        callback(requests);
+      } else {
+        callback([]);
+      }
+    });
+  } catch (error) {
+    console.error('Ошибка получения запросов:', error);
+  }
+}
+
+// Логирование события аналитики
+export async function logAnalyticsEvent(event: any) {
+  if (!firestore) {
+    console.log('Firestore не настроен');
+    return;
+  }
+
+  try {
+    const docRef = await addDoc(collection(firestore, 'analytics', 'events'), {
+      ...event,
+      timestamp: new Date()
+    });
+    console.log('Событие аналитики сохранено с ID:', docRef.id);
+  } catch (error) {
+    console.error('Ошибка логирования события аналитики:', error);
+  }
+}
+
+// Получение последних событий аналитики
+export async function getRecentAnalyticsEvents(limitCount: number = 50) {
+  if (!firestore) return [];
+  
+  try {
+    const q = query(
+      collection(firestore, 'analytics', 'events'),
+      orderBy('timestamp', 'desc'),
+      limit(limitCount)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const events: any[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      events.push({ id: doc.id, ...doc.data() });
+    });
+    
+    return events;
+  } catch (error) {
+    console.error('Ошибка получения событий аналитики:', error);
+    return [];
+  }
 }

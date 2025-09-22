@@ -1,17 +1,30 @@
-// Комментарий: Точка входа приложения. Рендерит App в root, использует StrictMode для отладки, инициализирует QueryClient для react-query (кэширование API-запросов).
+// Комментарий: Точка входа в приложение. Инициализирует React, подключает контекст и рендерит корневой компонент.
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import './styles/global.css';  // Глобальные стили
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AppContextProvider } from './context/AppContext';
+import { initializeFCM, onFCMMessage } from './services/firebaseService';
+import './styles/global.css';
 
-const queryClient = new QueryClient();
+// Инициализация Firebase Cloud Messaging
+initializeFCM().then(token => {
+  if (token) {
+    console.log('FCM токен получен:', token);
+  }
+});
 
+// Слушатель входящих сообщений
+onFCMMessage((payload) => {
+  console.log('Получено FCM сообщение:', payload);
+  // Здесь можно показать уведомление пользователю
+});
+
+// Рендеринг приложения
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
+    <AppContextProvider>
       <App />
-    </QueryClientProvider>
+    </AppContextProvider>
   </React.StrictMode>,
 );
