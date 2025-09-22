@@ -1,192 +1,122 @@
 import React, { useState } from 'react';
-import { Screen } from '../types';
-import { auth, db } from '../api/firebase';
-import { doc, setDoc } from "firebase/firestore";
+import { useApp } from '../App';
+import { FamilyMember } from '../types';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../api/firebase';
+import { FaArrowLeft, FaArrowRight, FaPlus, FaTrash, FaUser } from 'react-icons/fa';
 
 interface SetupWizardProps {
-  setScreen: (screen: Screen) => void;
+  setScreen: (screen: 'main') => void;
 }
 
 const SetupWizard: React.FC<SetupWizardProps> = ({ setScreen }) => {
+  const { appState, setAppState, user } = useApp();
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-    apiKey: '',
-    familyName: '',
-    familyMembers: [],
-    preferences: '',
-    dietaryRestrictions: '',
-    kitchenAppliances: '',
-  });
-  const [newMember, setNewMember] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const totalSteps = 4;
+  // Local form state, initialized from global state
+  const [formData, setFormData] = useState(appState?.settings);
 
-  const handleNext = () => {
-    if (step < totalSteps) {
-      setStep(step + 1);
-    }
-  };
+  if (!formData) {
+    return <div>Загрузка настроек...</div>; // Or a proper loader
+  }
 
-  const handleBack = () => {
-    if (step > 1) {
-      setStep(step - 1);
-    }
-  };
+  const handleNext = () => setStep(prev => prev + 1);
+  const handleBack = () => setStep(prev => prev - 1);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev!, [name]: value }));
   };
 
-  const handleAddMember = () => {
-    if (newMember.trim() !== '') {
-      setFormData(prev => ({
-        ...prev,
-        familyMembers: [...prev.familyMembers, newMember.trim()],
-      }));
-      setNewMember('');
-    }
+  const handleFamilyChange = (index: number, field: keyof FamilyMember, value: any) => {
+    const updatedFamily = [...formData.family];
+    updatedFamily[index] = { ...updatedFamily[index], [field]: value };
+    setFormData(prev => ({ ...prev!, family: updatedFamily }));
   };
 
-  const handleRemoveMember = (indexToRemove: number) => {
-    setFormData(prev => ({
-      ...prev,
-      familyMembers: prev.familyMembers.filter((_, index) => index !== indexToRemove),
-    }));
+  const addFamilyMember = () => {
+    const newMember: FamilyMember = {
+      id: new Date().toISOString(),
+      name: 'Новый член семьи',
+      age: 30,
+      weight: 70,
+      height: 170,
+      gender: 'male',
+      activityLevel: 'moderate',
+      goal: 'maintain',
+    };
+    setFormData(prev => ({ ...prev!, family: [...prev!.family, newMember] }));
   };
 
-  const handleSubmit = async () => {
-    if (!auth.currentUser) {
-      console.error("Пользователь не аутентифицирован. Невозможно сохранить настройки.");
-      // Показать уведомление об ошибке
-      return;
-    }
-    setLoading(true);
-    try {
-      const userDocRef = doc(db, "users", auth.currentUser.uid);
-      await setDoc(userDocRef, {
-        ...formData,
-        setupComplete: true,
-        createdAt: new Date(),
-      });
+  const removeFamilyMember = (index: number) => {
+    const updatedFamily = formData.family.filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev!, family: updatedFamily }));
+  };
+
+  const handleFinish = async () => {
+    if (user && appState) {
+      const newState: AppState = { ...appState, settings: formData };
+      setAppState(newState);
+      await setDoc(doc(db, "user-data", user.uid), newState);
       setScreen('main');
-    } catch (error) {
-      console.error("Ошибка сохранения настроек:", error);
-      // Показать уведомление об ошибке
-    } finally {
-      setLoading(false);
     }
   };
 
-  const renderStep = () => {
+  const renderStepContent = () => {
     switch (step) {
       case 1:
         return (
           <div>
-            <h2 className="wizard-step-title">Шаг 1: Настройка подключения</h2>
-            <p className="wizard-step-description">Введите ваш API-ключ от Google AI Studio для генерации меню. Это безопасно, ключ хранится только на вашем устройстве.</p>
-            <div className="settings-form-group">
-              <label htmlFor="api-key-input">Ваш Google Gemini API Ключ</label>
-              <input
-                id="api-key-input"
-                name="apiKey"
-                type="password"
-                value={formData.apiKey}
-                onChange={handleChange}
-                placeholder="Введите ваш API ключ"
-              />
-               <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="api-key-help-link">Где взять ключ?</a>
-            </div>
+            <h2 className="wizard-step-title">Шаг 1: Ваша семья</h2>
+            <p className="wizard-step-description">Добавьте членов семьи, чтобы ИИ мог рассчитать потребности в питании.</p>
+            {formData.family.map((member, index) => (
+              <div key={member.id} className="family-member-card-wizard">
+                 <FaUser className="family-member-icon" />
+                <div className="family-member-inputs">
+                    <input type="text" value={member.name} onChange={(e) => handleFamilyChange(index, 'name', e.target.value)} placeholder="Имя" />
+                    <input type="number" value={member.age} onChange={(e) => handleFamilyChange(index, 'age', parseInt(e.target.value))} placeholder="Возраст" />
+                    <input type="number" value={member.weight} onChange={(e) => handleFamilyChange(index, 'weight', parseInt(e.target.value))} placeholder="Вес (кг)" />
+                </div>
+                <button onClick={() => removeFamilyMember(index)} className="remove-member-btn"><FaTrash /></button>
+              </div>
+            ))}
+            <button onClick={addFamilyMember} className="add-member-btn"><FaPlus /> Добавить члена семьи</button>
           </div>
         );
       case 2:
         return (
             <div>
-              <h2 className="wizard-step-title">Шаг 2: Ваша семья</h2>
-              <p className="wizard-step-description">Давайте познакомимся! Назовите вашу семью и добавьте ее членов. Это поможет AI лучше адаптировать меню.</p>
-              <div className="settings-form-group">
-                  <label htmlFor="familyName">Название семьи (например, "Ивановы")</label>
-                  <input
-                      id="familyName"
-                      name="familyName"
-                      type="text"
-                      value={formData.familyName}
-                      onChange={handleChange}
-                      placeholder="Семья Ивановых"
-                  />
-              </div>
-              <div className="settings-form-group">
-                  <label>Члены семьи</label>
-                  <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                      <input
-                          type="text"
-                          value={newMember}
-                          onChange={(e) => setNewMember(e.target.value)}
-                          placeholder="Имя"
-                          style={{ flexGrow: 1 }}
-                      />
-                      <button type="button" onClick={handleAddMember} className="secondary-button" style={{width: 'auto', padding: '0 20px'}}>Добавить</button>
-                  </div>
-                  <div>
-                      {formData.familyMembers.map((member, index) => (
-                          <div key={index} className="family-member-card">
-                              <span>{member}</span>
-                              <button onClick={() => handleRemoveMember(index)}>&times;</button>
-                          </div>
-                      ))}
-                  </div>
-              </div>
+                <h2 className="wizard-step-title">Шаг 2: Предпочтения и бюджет</h2>
+                 <div className="settings-form-group">
+                    <label>Общие предпочтения</label>
+                    <textarea name="preferences" value={formData.preferences} onChange={handleChange} rows={3} placeholder="Например: любим итальянскую кухню, нежирное мясо..." />
+                </div>
+                 <div className="settings-form-group">
+                    <label>Предпочитаемая кухня</label>
+                    <input type="text" name="cuisine" value={formData.cuisine} onChange={handleChange} placeholder="Любая, Итальянская, Азиатская..." />
+                </div>
+                 <div className="settings-form-group">
+                    <label>Желаемая сложность блюд</label>
+                    <input type="text" name="difficulty" value={formData.difficulty} onChange={handleChange} placeholder="Любая, Простая, Средняя..." />
+                </div>
+                 <div className="settings-form-group">
+                    <label>Бюджет на неделю, ₽</label>
+                    <input type="number" name="totalBudget" value={formData.totalBudget} onChange={handleChange} />
+                </div>
             </div>
         );
-      case 3:
-        return (
-          <div>
-            <h2 className="wizard-step-title">Шаг 3: Предпочтения в еде</h2>
-            <p className="wizard-step-description">Расскажите о ваших вкусах, чтобы меню было максимально подходящим.</p>
-            <div className="settings-form-group">
-              <label htmlFor="preferences">Общие предпочтения</label>
-              <textarea
-                id="preferences"
-                name="preferences"
-                value={formData.preferences}
-                onChange={handleChange}
-                placeholder="Например: любим итальянскую кухню, нежирное мясо, больше овощей, простые рецепты"
-                rows={3}
-              />
-            </div>
-            <div className="settings-form-group">
-              <label htmlFor="dietaryRestrictions">Диетические ограничения или аллергии</label>
-              <textarea
-                id="dietaryRestrictions"
-                name="dietaryRestrictions"
-                value={formData.dietaryRestrictions}
-                onChange={handleChange}
-                placeholder="Например: без глютена, аллергия на орехи, вегетарианство"
-                rows={3}
-              />
-            </div>
-            <div className="settings-form-group">
-              <label htmlFor="kitchenAppliances">Какая кухонная техника у вас есть?</label>
-              <textarea
-                id="kitchenAppliances"
-                name="kitchenAppliances"
-                value={formData.kitchenAppliances}
-                onChange={handleChange}
-                placeholder="Например: мультиварка, блендер, духовка, микроволновка"
-                rows={3}
-              />
-            </div>
-          </div>
-        );
-      case 4:
-        return (
-          <div>
-            <h2 className="wizard-step-title">Шаг 4: Все готово!</h2>
-            <p className="wizard-step-description">Проверьте введенные данные. Вы всегда сможете изменить их позже в настройках. Нажмите "Завершить", чтобы создать ваше первое семейное меню!</p>
-            {/* Здесь можно добавить краткий обзор введенных данных */}
-          </div>
-        );
+        case 3:
+            return (
+                 <div>
+                    <h2 className="wizard-step-title">Шаг 3: API Ключ</h2>
+                    <p className="wizard-step-description">Введите ваш API-ключ от Google AI Studio. Он нужен для генерации меню.</p>
+                    <div className="settings-form-group">
+                        <label>Google Gemini API Key</label>
+                        <input type="password" name="apiKey" value={formData.apiKey || ''} onChange={handleChange} placeholder="Введите ваш ключ" />
+                        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="api-key-help-link">Где взять ключ?</a>
+                    </div>
+                </div>
+            )
       default:
         return null;
     }
@@ -194,19 +124,19 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ setScreen }) => {
 
   return (
     <div className="screen" id="setup-screen">
-       <div className="setup-container">
-        <svg className="setup-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="45" fill="#F0E7DD"></circle><path d="M50,10 A40,40 0 0,1 90,50" fill="none" stroke="#8B5E3C" strokeWidth="8"></path><path d="M50,90 A40,40 0 0,1 10,50" fill="none" stroke="#D4A373" strokeWidth="8"></path><circle cx="50" cy="50" r="20" fill="#fff"></circle><path d="M50 38 C 55 42, 55 48, 50 52 S 45 58, 50 62" stroke="#5E7A6E" strokeWidth="4" fill="none" strokeLinecap="round"></path></svg>
+      <div className="setup-container">
         <h1 className="setup-title">Мастер настройки</h1>
-        <p className="wizard-step-counter">Шаг {step} из {totalSteps}</p>
+        <p className="wizard-step-counter">Шаг {step} из 3</p>
         <div id="setup-wizard">
-          <div className="wizard-step active">
-            {renderStep()}
-          </div>
+          {renderStepContent()}
         </div>
         <div id="wizard-nav">
-          {step > 1 && <button onClick={handleBack} className="secondary-button" disabled={loading}>Назад</button>}
-          {step < totalSteps && <button onClick={handleNext} className="primary-button" disabled={loading}>Далее</button>}
-          {step === totalSteps && <button onClick={handleSubmit} className="primary-button" disabled={loading}>{loading ? 'Сохранение...' : 'Завершить и создать меню'}</button>}
+          {step > 1 && <button onClick={handleBack} className="secondary-button"><FaArrowLeft /> Назад</button>}
+          {step < 3 ? (
+            <button onClick={handleNext} className="primary-button">Далее <FaArrowRight /></button>
+          ) : (
+            <button onClick={handleFinish} className="primary-button">Завершить</button>
+          )}
         </div>
       </div>
     </div>
