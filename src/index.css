@@ -455,8 +455,8 @@ body::before {
 }
 #main-header-title {
     font-family: var(--font-nunito);
-    font-size: 24px;
     font-weight: 800;
+    font-size: 24px;
     color: var(--accent-color);
     margin: 0;
 }
