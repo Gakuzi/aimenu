@@ -21,20 +21,43 @@ const App = () => {
   const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
+    console.log("Setting up onAuthStateChanged listener...");
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log("onAuthStateChanged triggered.");
       if (user) {
+        console.log("User is logged in:", user.uid);
         setUser(user);
-        const userDocRef = doc(db, "users", user.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists() && userDocSnap.data().setupComplete) {
-          setScreen('main');
-        } else {
+        try {
+          const userDocRef = doc(db, "users", user.uid);
+          console.log("Attempting to get user document from Firestore...");
+          const userDocSnap = await getDoc(userDocRef);
+          console.log("Successfully got response from Firestore.");
+
+          if (userDocSnap.exists()) {
+            console.log("User document exists.", userDocSnap.data());
+            if (userDocSnap.data().setupComplete) {
+              console.log("Setup is complete, navigating to main screen.");
+              setScreen('main');
+            } else {
+              console.log("Setup is not complete, navigating to setup screen.");
+              setScreen('setup');
+            }
+          } else {
+            console.log("User document does not exist, navigating to setup screen.");
+            setScreen('setup');
+          }
+        } catch (error) {
+          console.error("Error getting user document from Firestore:", error);
+          // Если произошла ошибка (например, из-за правил безопасности), 
+          // все равно переводим на экран настроек, чтобы пользователь мог продолжить.
           setScreen('setup');
         }
       } else {
+        console.log("User is logged out, navigating to welcome screen.");
         setUser(null);
         setScreen('welcome');
       }
+      console.log("Setting loading to false.");
       setLoading(false);
     });
 
