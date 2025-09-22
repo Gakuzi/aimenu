@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useApp } from '../App';
 import { Screen } from '../types';
 import { FaCalendarAlt, FaShoppingCart, FaChartPie, FaCog } from 'react-icons/fa';
-import { generateContent } from '../api/gemini';
+import { generateWeeklyMenu } from '../api/gemini';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../api/firebase';
 
